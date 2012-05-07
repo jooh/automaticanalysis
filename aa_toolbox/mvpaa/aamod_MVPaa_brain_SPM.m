@@ -32,16 +32,16 @@ switch task
                 Mimg = deblank(Mimg(a,:));
                 break
             end
-        end           
+        end
         
         % FWHM in millimetres
         FWHMmm = aap.tasklist.currenttask.settings.FWHM;
         
         V = spm_vol(Mimg);
-            
+        
         brainSize = V.dim;
         
-        %% GET MASK        
+        %% GET MASK
         mask = spm_read_vols(V);
         
         % Write out mask image...
@@ -66,7 +66,7 @@ switch task
             V.fname = fullfile(aas_getsubjpath(aap,p), sprintf('spmT_%04d.img', c));
             Flist = strvcat(Flist, V.fname);
             spm_write_vol(V, squeeze(Stats(:,:,:,c,2)));
-        end        
+        end
         
         %% NORMALISE
         if aap.tasklist.currenttask.settings.normalise == 1
@@ -79,7 +79,7 @@ switch task
             % This automatically reslices images to warped size
             spm_write_sn(Flist, normMAT, normPars);
         end
-                
+        
         %% SMOOTH IMAGES
         if FWHMmm > 0
             
@@ -110,7 +110,7 @@ switch task
             end
             spm_write_vol(V, Y);
         end
-                
+        
         %% Modify SPM!
         % Clear SPM.xCon
         SPM.xCon = [];
@@ -129,7 +129,10 @@ switch task
         % Smoothness of the volume...
         % ...Get the number of mm per voxel...
         mmVox = vox2mm(V);
-        % ...then get the FWHM       
+        % ...then get the FWHM
+        if FWHMmm < min(mmVox./2) % To avoid errors...
+            FWHMmm = min(mmVox./2);
+        end
         SPM.xVol.FWHM = [FWHMmm FWHMmm FWHMmm];
         SPM.xVol.FWHM = SPM.xVol.FWHM ./ mmVox;
         
@@ -150,7 +153,7 @@ switch task
         
         % Filehandle of resels per voxel image (i.e. none!)
         SPM.xVol.VRpv = [];
-                
+        
         for c = 1:length(EP.contrasts)
             % SPM.xCon (.name)
             SPM.xCon(c).name = EP.contrasts(c).name;
