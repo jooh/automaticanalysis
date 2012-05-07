@@ -54,7 +54,7 @@ switch task
         for r = 1:ROInum %#ok<BDSCI>
             % We get the time that has ellapsed every 25000 voxels
             if rem(r, ROIcheck) == 0
-                fprintf('Working with data from roi %d / %d.', r, ROInum)
+                fprintf('Working with data from roi %d / %d\n', r, ROInum)
             end            
             
             [x y z] = ind2sub(brainSize, r);            
