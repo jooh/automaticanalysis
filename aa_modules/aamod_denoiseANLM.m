@@ -25,13 +25,15 @@ switch task
         
         Sfn = aas_getfiles_bystream(aap,subj,'structural');
         
-        try
-            DCMfn = aas_getfiles_bystream(aap,subj,'structural_dicom_header');
-            
-            % dcmhdr{n}.SeriesDescription
-            dcmhdr = [];
-            load(DCMfn);
-        catch
+        DHimg = [];
+        for Sind=1:length(aap.tasklist.currenttask.inputstreams.stream)
+            if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'structural_dicom_header'))
+                DHimg = aas_getfiles_bystream(aap,subj,aap.tasklist.currenttask.inputstreams.stream{Sind});
+                
+                % dcmhdr{n}.SeriesDescription
+                dcmhdr = [];
+                load(DHimg);
+            end
         end
         
         %% Denoise the images
@@ -41,9 +43,9 @@ switch task
         
         for d = aap.tasklist.currenttask.settings.structurals
             fprintf('Denoise structural image %s!\n', Sfn(d,:))
-            try
+            if ~isempty(DHimg)
                 fprintf('\t structural type %s!\n', dcmhdr{d}.SeriesDescription)
-            catch
+            else
                 fprintf('\t structural type UNKNOWN!\n')
             end
             
@@ -87,7 +89,7 @@ switch task
                 
                 spm_orthviews('reposition', [0 0 0])
                 
-                figure(1);
+                try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
                 set(gcf,'PaperPositionMode','auto')
                 print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
                     [mfilename '__' mriname '_' num2str(d) '.jpeg']));
@@ -135,12 +137,11 @@ switch task
         
         %% DESCRIBE OUTPUTS!
         
-        try
+        if ~isempty(DHimg)
             dcmhdr = {dcmhdr{aap.tasklist.currenttask.settings.structurals}};
-            save(DCMfn, 'dcmhdr')
+            save(DHimg, 'dcmhdr')
             
-            aap=aas_desc_outputs(aap,subj,'structural_dicom_header', DCMfn);
-        catch
+            aap=aas_desc_outputs(aap,subj,'structural_dicom_header', DHimg);
         end
         
         % Structural image after denoising
