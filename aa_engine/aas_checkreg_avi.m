@@ -34,9 +34,8 @@ if aap.tasklist.currenttask.settings.diagnostic
         fJframe.fFigureClient.getWindow.setAlwaysOnTop(true)
     catch
     end
-    %windowSize = get(1,'Position');
     % It does not work if it's larger than the window, conservative...
-    windowSize = [1 1 400 600]; %windowSize(3) windowSize(4)];
+    windowSize = [1 1 400 600];
     set(1,'Position', windowSize)    
     
     if axisDim == 1

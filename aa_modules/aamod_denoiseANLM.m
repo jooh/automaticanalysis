@@ -105,7 +105,7 @@ switch task
                 
                 try close(2); catch; end
                 figure(2)
-                set(2, 'Position', [0 0 1000 600])
+                set(2, 'Position', [0 0 1000 800])
                 windowSize = get(2,'Position');
                 
                 % Get resliced structural
