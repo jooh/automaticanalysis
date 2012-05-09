@@ -126,8 +126,8 @@ switch task
                     'xtick', 1:length(aap.tasklist.currenttask.settings.contrasts), ...
                 'xticklabel', {SPM.xCon(aap.tasklist.currenttask.settings.contrasts).name})
             
-                xlabel('T-values')
-                ylabel('Contrasts')
+                xlabel('Contrasts')
+                ylabel('T-values')
             end
             
             set(gcf,'PaperPositionMode','auto')

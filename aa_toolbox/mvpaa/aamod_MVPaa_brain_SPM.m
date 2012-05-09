@@ -104,6 +104,7 @@ switch task
             if strfind(Flist(f,:), 'spmT')
                 % Zero mask in statistics...
                 Y(~mask) = 0;
+                Y(isnan(Y)) = 0;
             elseif strfind(Flist(f,:), 'con')
                 % NaN mask in statistics...
                 Y(~mask) = NaN;
