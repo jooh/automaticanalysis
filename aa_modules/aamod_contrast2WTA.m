@@ -36,7 +36,7 @@ switch task
         tvalY = cell( size(aap.tasklist.currenttask.settings.contrasts));
         
         % Go through each of the contrasts of interest
-        for c = aap.tasklist.currenttask.settings.contrasts            
+        for c = aap.tasklist.currenttask.settings.contrasts
             % And the T values corresponding to the contrast
             tvalV = spm_vol(fullfile(anadir, SPM.xCon(c).Vspm.fname));
             tvalY{c==aap.tasklist.currenttask.settings.contrasts} = spm_read_vols(tvalV);
@@ -69,29 +69,34 @@ switch task
         
         %% Now get the ROI and do the average direction & histogram...
         
-        try
+        ROIimg = aas_findstream(aap,'rois', subj);
+        
+        if ~isempty(ROIimg)
+            
             % Load the ROIs from which to extract the data
             ROIimg = aas_getfiles_bystream(aap,subj,'rois');
+            ROI = cell(size(ROIimg,1));
+            Rfn = cell(size(ROIimg,1));
             
             for r = 1:size(ROIimg,1)
-                [Rpth Rfn Rext] = fileparts(deblank(ROIimg(r,:)));
+                [Rpth Rfn{r} Rext] = fileparts(deblank(ROIimg(r,:)));
                 
                 % Need to extract betas from normalised brains for each: subject, ROI,
                 % voxel, epoch, quadrant, subblock
-                ROI = int8(spm_read_vols(spm_vol(fullfile(Rpth, [Rfn Rext]))));
+                ROI{r} = int8(spm_read_vols(spm_vol(fullfile(Rpth, [Rfn{r} Rext]))));
                 % Trick for non-binary ROIs...
-                if length(unique(ROI))>2
-                    ROI = ROI > 0;
+                if length(unique(ROI{r}))>2
+                    ROI{r} = ROI{r} > 0;
                 end
-                ROI = logical(ROI);
-                voxels = sum(ROI(:));
+                ROI{r} = logical(ROI{r});
+                voxels = sum(ROI{r}(:));
                 
-                fprintf('\t ROI = %s; vox. = %d\n',Rfn, voxels)
+                fprintf('\t ROI = %s; vox. = %d\n',Rfn{r}, voxels)
                 
                 rWTA = WTA;
-                rWTA(~ROI) = 0;
+                rWTA(~ROI{r}) = 0;
                 
-                V.fname = fullfile(anadir, ['WTA_' Rfn '.nii']);
+                V.fname = fullfile(anadir, ['WTA_' Rfn{r} '.nii']);
                 spm_write_vol(V,rWTA);
                 
                 WTAimg = strvcat(WTAimg, V.fname);
@@ -101,11 +106,9 @@ switch task
                     voxels);
                 
                 for c = 1:length(aap.tasklist.currenttask.settings.contrasts)
-                    tvalMat(c,:) = tvalY{c}(ROI);
+                    tvalMat(c,:) = tvalY{c}(ROI{r});
                 end
             end
-        catch aa_error
-            error('No idea what happened')
         end
         
         %% DIAGNOSTIC IMAGE
@@ -114,7 +117,8 @@ switch task
             mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-        try
+        if ~isempty(ROIimg)
+            % Display the pattern of voxel-wise T-values across the contrasts
             figure(2)
             set(2, 'Position', [0 0 1000 800])
             
@@ -124,17 +128,94 @@ switch task
                 
                 set(gca, ...
                     'xtick', 1:length(aap.tasklist.currenttask.settings.contrasts), ...
-                'xticklabel', {SPM.xCon(aap.tasklist.currenttask.settings.contrasts).name})
-            
+                    'xticklabel', {SPM.xCon(aap.tasklist.currenttask.settings.contrasts).name})
+                
                 xlabel('Contrasts')
                 ylabel('T-values')
+                
+                % Display the correlation between the T-values across voxels
+                figure(3)
+                set(3, 'Position', [0 0 1000, 600])
+                subplot(1,3,1)
+                tvalSimil = squareform(pdist(tvalMat'));
+                imagesc(tvalSimil)
+                axis equal off
+                colorbar
+                title('Voxel dissimilarity across regressors')
+                
+                subplot(1,3,2)
+                indROI = find(ROI{r});
+                [xROI yROI zROI] = ind2sub(size(ROI{r}), indROI);
+                roiSimil = squareform(pdist([xROI yROI zROI]));
+                imagesc(roiSimil);
+                axis equal off
+                colorbar
+                title('Voxel distance within ROI')
+                
+                
+                %% CLUSTERING (move out?!)
+                CtvalSimil = tvalSimil;
+                uniqueSimil = logical(triu(ones(sum(ROI{r}(:))), 1));
+                regs = [];
+                distPow = [1:6]; %[(1/3) (1/2) 1 2 3];
+                for w = distPow
+                    regs = [regs roiSimil(uniqueSimil).^w - mean(roiSimil(uniqueSimil).^w)];
+                end
+                
+                [b, dev, stats] = glmfit(regs, ...
+                    CtvalSimil(uniqueSimil));
+                
+                for w = 1:length(distPow)
+                    CtvalSimil = CtvalSimil - ...
+                        b(1+w).*(roiSimil.^w - mean(roiSimil(:).^w));
+                end
+                
+                subplot(1,3,3)
+                imagesc(CtvalSimil);
+                axis equal off
+                colorbar
+                title('Voxel dissimilarity across regressors (corrected)')
+                
+                fprintf('%s distance to contrast similarity: %0.3f\n', Rfn{r}, corr(tvalSimil(uniqueSimil), roiSimil(uniqueSimil)))
+                fprintf('%s distance to contrast similarity: %0.3f (corrected)\n', Rfn{r}, corr(CtvalSimil(uniqueSimil), roiSimil(uniqueSimil)))
+                fprintf('Shared variance between original & corrected: %0.3f\n', corr(CtvalSimil(uniqueSimil), tvalSimil(uniqueSimil)).^2)
+                
+                set(gcf,'PaperPositionMode','auto')
+                print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+                    [mfilename '__' mriname '_' Rfn{r} '.jpeg']));
+                
+                % Cluster analysis
+                clusterNum = 100;
+                CtvalSimil(logical(eye(size(CtvalSimil)))) = 0;
+                CtvalLinkage = linkage(squareform(CtvalSimil), 'single');
+                CtvalCluster = cluster(CtvalLinkage, 'cutoff', 2, 'criterion', 'inconsistent');
+                
+                clusterNum = max(CtvalCluster(:));
+                
+                clusterROI = zeros(size(ROI{r}));
+                clusterROI(~ROI{r}) = nan;
+                clusterROI(ROI{r}) = 0;
+                for c = 1:clusterNum
+                    clusterROI(indROI(CtvalCluster==c)) = c;
+                end
+                
+                figure(4)
+                for z = 1:size(clusterROI,3)
+                    sliceROI = clusterROI(:,:,z);
+                    if nansum(sliceROI(:)) > 0
+                        imagescnan(sliceROI)
+                        caxis([0 clusterNum])
+                        axis equal off
+                        colorbar
+                        pause(1)
+                    end
+                end                
             end
             
+            figure(2)
             set(gcf,'PaperPositionMode','auto')
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-            [mfilename '__' mriname '_timecourse.jpeg']));
-            
-        catch
+            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+                [mfilename '__' mriname '_timecourse.jpeg']));
         end
         
         %% DESCRIBE OUTPUTS!

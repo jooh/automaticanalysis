@@ -25,15 +25,12 @@ switch task
         
         Sfn = aas_getfiles_bystream(aap,subj,'structural');
         
-        DHimg = [];
-        for Sind=1:length(aap.tasklist.currenttask.inputstreams.stream)
-            if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'structural_dicom_header'))
-                DHimg = aas_getfiles_bystream(aap,subj,aap.tasklist.currenttask.inputstreams.stream{Sind});
-                
-                % dcmhdr{n}.SeriesDescription
-                dcmhdr = [];
-                load(DHimg);
-            end
+        DHimg = aas_findstream(aap,'structural_dicom_header', subj);
+        
+        if ~isempty(DHimg)
+            % dcmhdr{n}.SeriesDescription
+            dcmhdr = [];
+            load(DHimg);
         end
         
         %% Denoise the images

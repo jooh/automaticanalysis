@@ -1,11 +1,11 @@
 % MVPAA Load Data
 % Automatically attempts to load data, based on the model you have...
 
-function [aap data] = mvpaa_loadData(aap, p)
+function [aap data] = mvpaa_loadData(aap, subj)
 
 fprintf('Loading beta images \r')
 
-load(aas_getfiles_bystream(aap,p,'firstlevel_spm'));
+load(aas_getfiles_bystream(aap,subj,'firstlevel_spm'));
 
 % Factor number in each session (must NOT be different)
 factorNum = cell(size(SPM.Sess));
@@ -105,15 +105,14 @@ end
 aap.tasklist.currenttask.settings.conditionNames = tempCond;
 
 %% PREPARATION BEFORE LOADING DATA
-fprintf('\nThis experiment contains \n\t%d sessions\n\t%d blocks\n\t%d conditions', ...
-    aap.tasklist.currenttask.settings.sessions, ...
-    aap.tasklist.currenttask.settings.blocks, ...
-    aap.tasklist.currenttask.settings.conditions)
 
 % Define data structure
 data = cell(aap.tasklist.currenttask.settings.conditions, ...
     aap.tasklist.currenttask.settings.blocks, ...
     aap.tasklist.currenttask.settings.sessions);
+
+fprintf('\nThis experiment contains \n\t%d conditions\n\t%d blocks\n\t%d sessions', ...
+    size(data,1), size(data,2), size(data,3))
 
 % Define multiplier depending on the basis function set used...
 if strcmp(aap.tasklist.currenttask.settings.basisF, '_TD')
@@ -127,16 +126,7 @@ end
 % Do we grey/white/CSF matter mask the data?
 % Get segmentation masks we wish to use, if any
 
-SEGimg = [];
-for Sind=1:length(aap.tasklist.currenttask.inputstreams.stream)
-    if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'mask'))
-        if isempty(SEGimg)
-            SEGimg = aas_getfiles_bystream(aap,p,aap.tasklist.currenttask.inputstreams.stream{Sind});
-        else
-            aas_log(aap, true, 'Several masking streams have been found, not sure what we should do here!')
-        end
-    end
-end
+SEGimg = aas_findstream(aap, 'mask', subj);
 
 if ~isempty(SEGimg)
     if aap.tasklist.currenttask.settings.native
@@ -169,37 +159,22 @@ end
 
 nuis = 0;
 
-Bimg = [];
-for Sind=1:length(aap.tasklist.currenttask.inputstreams.stream)
-    if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'spmts')) || ...
-            ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'betas'))
-        try
-            Bimg = aas_getfiles_bystream(aap,p,aap.tasklist.currenttask.inputstreams.stream{Sind});
-            break
-        catch
-        end
-    end
+Bimg = aas_findstream(aap,'spmts', subj);
+datatype = 'spmts';
+if ~isempty(Bimg)
+    Bimg = aas_findstream(aap,'betas', subj);
+    datatype = 'betas';    
 end
 
-if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'betas'))
-    dataType = 'betas';
-elseif ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'spmts'))
-    dataType = 'spmts';
-end
+Bimg = aas_getfiles_bystream(aap,subj,aap.tasklist.currenttask.inputstreams.stream{Sind});
 
 if strcmp(dataType, 'betas')
     prevSess = 0;
     for s = 1:aap.tasklist.currenttask.settings.sessions
-        
         % Works for movement parameters and spikes!
         if s > 1
             prevSess = prevSess + size(SPM.Sess(s - 1).C.C, 2) + length(SPM.Sess(s - 1).U);
         end
-        
-        % This assumes no order...
-        %   sessions
-        %       conditions
-        %           blocks
         for c=1:aap.tasklist.currenttask.settings.conditions
             for b=1:aap.tasklist.currenttask.settings.blocks
                 
@@ -227,10 +202,6 @@ if strcmp(dataType, 'betas')
     end
 elseif strcmp(dataType, 'spmts')
     for s = 1:aap.tasklist.currenttask.settings.sessions
-        % This assumes no order...
-        %   sessions
-        %       conditions
-        %           blocks
         for c=1:aap.tasklist.currenttask.settings.conditions
             for b=1:aap.tasklist.currenttask.settings.blocks
                 
