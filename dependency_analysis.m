@@ -41,7 +41,7 @@ end
 for ind = 1:length(Dependencies)    
     fprintf('\nWorking %d/%d: %s', ind, length(Dependencies), Dependencies(ind).name)
     
-    depsI = search_code(Dependencies(ind).name);
+    depsI = search_code(Dependencies(ind).name, 0, {'*.m'});
     
     for e = size(depsI,1):-1:1
         % If toolbox path is not in the dependency, ignore it!

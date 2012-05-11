@@ -1,6 +1,9 @@
-function filesFound = search_code(snippet, editFile)
+function filesFound = search_code(snippet, editFile, filters)
 if nargin < 2
     editFile = 0;
+end
+if nargin < 3;
+    filters = {'*.m' '*.xml'};
 end
 
 % We need to be inside the toolbox to work on it
@@ -14,7 +17,6 @@ addpath(fldrDir); % To add the path to this toolbox!
 ind = 0;
 
 filesFound = '';
-filters = {'*.m' '*.xml'};
 
 % Then recurse inside each directory until you run out of paths
 while ~isempty(strtok(fldrDir, ':'))

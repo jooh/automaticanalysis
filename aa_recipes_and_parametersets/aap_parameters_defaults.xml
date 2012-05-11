@@ -99,6 +99,8 @@
          <name desc='Session name' ui='dir_part'/>
        </sessions>
        <selected_sessions desc='Allows subselection of a subset of series, usually during branching' ui='intarray'/>
+       <EPImatrix desc='Size of the EPI matrix'></>
+       <EPInumber desc='Estimate of the number of EPIs'></>
    </acq_details>
    
    <timeouts>
