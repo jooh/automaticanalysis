@@ -1,39 +1,36 @@
 % Create a movie
+% aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations)
+function aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations)
 
-function aas_image_avi(imageFN, axisDim, frameSize, rotations, outlineFN)
 if ischar(imageFN)
     imageFN = {imageFN};
 end
 if nargin < 2
-    axisDim = 1;
-end
-if nargin < 3
-    frameSize = [400 500];
-end
-if nargin < 4
-    rotations = 0;
-end
-if nargin < 5
     outlineFN = [];
 end
-
-% Save graphical output to common diagnostics directory
-if ~exist(fullfile(getHome, 'diagnostics'), 'dir')
-    mkdir(fullfile(getHome, 'diagnostics'))
+if nargin < 3
+    [~, movieFN] = fileparts(imageFN{1});
+    
+    % Make a movie file
+    movieFN = fullfile(getHome, ...
+        [movieFN '.avi']);
 end
-
-[~, movieFN] = fileparts(imageFN{1});
-
-% Make a movie file
-movieFilename = fullfile(getHome, 'diagnostics', ...
-    [movieFN '.avi']);
+if nargin < 4 || isempty(axisDim)
+    axisDim = 1;
+end
+if nargin < 5 || isempty(frameSize)
+    frameSize = [400 500];
+end
+if nargin < 6 || isempty(rotations)
+    rotations = 0;
+end
 
 % Create movie file by defining aviObject
-if exist(movieFilename,'file')
-    delete(movieFilename);
+if exist(movieFN,'file')
+    delete(movieFN);
 end
 
-aviObject = avifile(movieFilename,'compression','none');
+aviObject = avifile(movieFN,'compression','none');
 
 % Get the figure!
 figure(2)
@@ -54,9 +51,23 @@ for f = 1:length(imageFN)
     Y{f} = spm_read_vols(spm_vol(imageFN{f}));
     limsY{f} = [min(Y{f}(:)) max(Y{f}(:))];
 end
+
 % Load the outline
 if ~isempty(outlineFN)
     oY = spm_read_vols(spm_vol(outlineFN));
+    % Get a good threshold
+    thresh = zeros(size(Y{1},axisDim),2);
+    for d = 1:size(Y{1},axisDim)
+        if axisDim == 1
+                outlineSlice = squeeze(oY(d,:,:));
+            elseif axisDim == 2
+                outlineSlice = squeeze(oY(:,d,:));
+            elseif axisDim == 3
+                outlineSlice = squeeze(oY(:,:,d));
+            end
+            [outlineSlice thresh(d,:)] = edge(outlineSlice, 'canny');
+    end
+    thresh = mean(thresh);
 end
 
 colormap gray
@@ -64,6 +75,8 @@ colormap gray
 for d = 1:size(Y{1},axisDim)
     for f = 1:length(imageFN)
         h = subplot(1, length(imageFN), f);
+        
+        % Get image slice to draw
         if axisDim == 1
             imageSlice = squeeze(Y{f}(d,:,:));
         elseif axisDim == 2
@@ -72,22 +85,26 @@ for d = 1:size(Y{1},axisDim)
             imageSlice = squeeze(Y{f}(:,:,d));
         end
         
+        % If present, get outline slice to draw
         if ~isempty(outlineFN)
             if axisDim == 1
-                outlineSlice = edge(squeeze(oY(d,:,:)),'canny');
+                outlineSlice = squeeze(oY(d,:,:));
             elseif axisDim == 2
-                outlineSlice = edge(squeeze(oY(:,d,:)),'canny');
+                outlineSlice = squeeze(oY(:,d,:));
             elseif axisDim == 3
-                outlineSlice = edge(squeeze(oY(:,:,d)),'canny');
+                outlineSlice = squeeze(oY(:,:,d));
             end
-            
-            %imageSlice(logical(outlineSlice)) = NaN;
+            outlineSlice = edge(outlineSlice, 'canny', thresh);
         end
         
-        for r = 1:rotations
-            imageSlice = rot90(imageSlice);
+        % Rotate slices
+        
+        imageSlice = rot90(imageSlice, rotations);
+        if ~isempty(outlineFN)
+            outlineSlice = rot90(outlineSlice,rotations - 1);
         end
         
+        % Draw slices
         imagescnan(imageSlice, 'NanColor', [1 0 0])
         if ~isempty(outlineFN)
            hold on
@@ -105,10 +122,9 @@ for d = 1:size(Y{1},axisDim)
     
     % Capture frame and store in aviObject
     F = getframe(2,windowSize);
-        
     aviObject = addframe(aviObject,F);
 end
-
+% Save video
 aviObject = close(aviObject);
 
 try
