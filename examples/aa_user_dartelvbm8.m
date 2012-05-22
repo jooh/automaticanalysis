@@ -33,8 +33,7 @@ aap.directory_conventions.remotefilesystem = 'none';         % none, s3
 aap.options.wheretoprocess = 'localsingle';                  % aws, localsingle, localparallel
 
 % Set any other options
-aap.tasksettings.aamod_segment8.samp = 4;
-
+aap.tasksettings.aamod_segment8.samp = 2;
 
 %% Add subjects
 % For many subjects, this can also be scripted to loop through a list.

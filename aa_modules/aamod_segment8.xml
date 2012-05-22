@@ -5,7 +5,7 @@
         
             <permanenceofoutput>2</permanenceofoutput>
             
-            <samp desc='Sampling distance (mm)'>1</samp>
+            <samp desc='Sampling distance (mm)'>2</samp>
             <tpm desc='Full path to tissue probability map file'></tpm> <!-- if blank default to Seg/TPM.nii -->
             <vox desc='Voxel size of segmented images'>1.5</vox>
             <affreg desc='Initial affine registration'>mni</affreg>
