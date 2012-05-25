@@ -38,6 +38,8 @@
       <ROIdir desc='Directory where ROIs (in template space) are kept' ui='text'>/home/rcusack/ROIs</ROIdir>
       <ANTSdir desc='Path to Advanced Normalisation Tools (ANTS)' ui='dir'>/cn_apps/ANTs-1.9.x-Linux</ANTSdir>
       <fieldtripdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/fieldtrip</fieldtripdir>
+      <niftyregdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/niftyreg</niftyregdir>
+      <niftysegdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/niftyseg</niftysegdir>
       <allowremotecache desc='Allow local caching of files from remote server' ui='optionlist'>1</allowremotecache>
   </directory_conventions>
    <options>
@@ -99,8 +101,8 @@
          <name desc='Session name' ui='dir_part'/>
        </sessions>
        <selected_sessions desc='Allows subselection of a subset of series, usually during branching' ui='intarray'/>
-       <EPImatrix desc='Size of the EPI matrix'></>
-       <EPInumber desc='Estimate of the number of EPIs'></>
+       <EPImatrix desc='Size of the EPI matrix'></EPImatrix>
+       <EPInumber desc='Estimate of the number of EPIs'></EPInumber>
    </acq_details>
    
    <timeouts>
