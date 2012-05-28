@@ -82,7 +82,7 @@ switch task
         end
         
         % Any extra options?...
-        if ~isempty(aap.tasklist.currenttask.settings.SyN)
+        if ~isempty(aap.tasklist.currenttask.settings.extraoptions)
             extraoptions = aap.tasklist.currenttask.settings.extraoptions;
         else
             extraoptions = '';
