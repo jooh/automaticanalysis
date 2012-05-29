@@ -47,6 +47,8 @@
         This specifies which block-subblock comparisons are considered, and
         whether they are averaged or not. More detail in... mvpaa_statisticsM-->
             <triangulation>1</triangulation>
+            <!--Pretend that there is only one session by merging them? (0 - no [DEFAULT], 1 - yes)-->
+            <mergeSessions>0</mergeSessions>
             
             <!-- Empty structure to put contrast matrices in... -->
             <model>

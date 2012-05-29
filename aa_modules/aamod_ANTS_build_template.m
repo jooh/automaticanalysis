@@ -13,7 +13,7 @@ switch task
     case 'doit'
         
         % Make template path
-        Tpth = fullfile(aas_getstudypath(aap), aap.tasklist.currenttask.name, 'ANTStemplate');
+        Tpth = fullfile(aas_getstudypath(aap), 'ANTStemplate');
         if ~exist(Tpth, 'dir')
             mkdir(Tpth)
         else
@@ -32,7 +32,7 @@ switch task
                     aap.tasklist.currenttask.settings.structural);
             end
             % Copy images to right location
-            copyfile(Simg, fullfile(Tpth, ['subj' num2str(subj) Sext]));
+            copyfile(Simg, fullfile(Tpth, sprintf('subj%04d%s', subj, Sext)));
         end
         
         %% Use ANTS to make a template!
@@ -40,6 +40,8 @@ switch task
         % Set the ANTS path
         setenv('ANTSPATH', fullfile(aap.directory_conventions.ANTSdir, 'bin/'))
         ANTSpath = [' sh ' fullfile(getenv('ANTSPATH'), 'buildtemplateparallel.sh') ' '];
+        % Add the path with functions to interact with torque (qsub) <-- changed
+        %setenv('PATH', [getenv('PATH') ':' fullfile(aap.directory_conventions.fieldtripdir, 'qsub')])
         
         % What we get out...
         outfiles = '-o ANTS ';
@@ -47,18 +49,20 @@ switch task
         % Dimension number (always 3 for structural)
         Ndim = ['-d ' num2str(3) ' '];
         
-        ANTS_command = [ ANTSpath Ndim outfiles ' -c 0 *'];
+        ANTS_command = [ ANTSpath Ndim outfiles '-c ' num2str(aap.tasklist.currenttask.settings.parallel ' *'];
         
         cd(Tpth)
         
         % Run ANTS
         fprintf('Running ANTS using command:\n')
         fprintf([ANTS_command '\n'])
+        
         [s w] = aas_shell(ANTS_command);
+        disp(w)
         
         %% Describe the outputs
-        
-        aap = aas_desc_outputs(aap,subj,'ANTStemplate', fullfile(Tpth, ['ANTStemplate' Sext]));
+        unix(['gunzip ANTStemplate.nii.gz'])
+        aap = aas_desc_outputs(aap,'ANTStemplate', fullfile(Tpth, ['ANTStemplate' Sext]));
         
     case 'checkrequirements'
         aas_log(aap,0,'No need to trim or skull strip structural\n' );

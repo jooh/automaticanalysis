@@ -19,7 +19,8 @@
             </outputstreams>
             
             <structural>1</structural>
-            <parallel>1</parallel>
+            <!-- Do we paralellise the building of the template? -->
+            <parallel>0</parallel>
             
             <diagnostic>1</diagnostic>
             

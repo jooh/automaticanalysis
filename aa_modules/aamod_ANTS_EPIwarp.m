@@ -9,8 +9,6 @@ resp='';
 switch task
     case 'doit'
         
-        warning off
-        
         % Set the ANTS path
         setenv('ANTSPATH', aap.directory_conventions.ANTSdir)
         warpANTSpath = [fullfile(getenv('ANTSPATH'), 'bin', 'WarpImageMultiTransform') ' '];

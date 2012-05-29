@@ -9,8 +9,6 @@ resp='';
 switch task
     case 'doit'
         
-        warning off
-        
         %% Template image
         % [AVG] Changed to allow specification of any T1 template, does not
         % need to be in the SPM folder any more...
@@ -102,7 +100,7 @@ switch task
             ' -R ' sTimg ' '... % reference image
             fullfile(Spth, 'antsWarp.nii')]; % transform
         if exist(fullfile(Spth,'antsAffine.txt'), 'file')
-            warpANTS_command = [warpANTS_command ' antsAffine.txt']; % and affine, if this exists...
+            warpANTS_command = [warpANTS_command ' ' fullfile(Spth,'antsAffine.txt')]; % and affine, if this exists...
         end    
         
         [s w] = aas_shell(warpANTS_command);

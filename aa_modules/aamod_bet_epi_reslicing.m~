@@ -14,6 +14,7 @@ switch task
     case 'report'
         
     case 'doit'
+     
         
         % RESLICE THE MASKS & MESHES
         EPIimg = aas_getfiles_bystream(aap,subj,1,'meanepi');

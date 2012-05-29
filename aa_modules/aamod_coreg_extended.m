@@ -136,7 +136,6 @@ switch task
         
         %% Diagnostic VIDEO of coregistration
         
-        warning off
         if aap.tasklist.currenttask.settings.diagnostic
             %% Realignment params
             defs = aap.spm.defaults.realign;

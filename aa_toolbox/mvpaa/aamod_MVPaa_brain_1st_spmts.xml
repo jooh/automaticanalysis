@@ -46,6 +46,8 @@
         This specifies which block-subblock comparisons are considered, and
         whether they are averaged or not. More detail in... mvpaa_statisticsM-->
             <triangulation>1</triangulation>
+            <!--Pretend that there is only one session by merging them? (0 - no [DEFAULT], 1 - yes)-->
+            <mergeSessions>0</mergeSessions>
             
             <!-- ROIradius: the radius of the ROI (0 = single voxel, 1 = ~7 voxels, etc.), 4 by [DEFAULT] -->
             <ROIradius>4</ROIradius>

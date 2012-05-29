@@ -54,11 +54,7 @@ for s = 1:length(SPM.Sess)
     blockNum{s} = length(blocks);
     if s > 1
         if blockNum{s} ~= blockNum{s-1}
-            if aap.tasklist.currenttask.settings.mergeSessions
-                warning('Unequal number of blocks across the two sessions')
-            else
-                error('Unequal number of blocks across the two sessions')
-            end
+            error('Unequal number of blocks across the two sessions')
         end
     end
     
@@ -74,51 +70,26 @@ for s = 1:length(SPM.Sess)
     % Get rid of nuisance conditions...
     factorNum{s}(isnan(factorNum{s})) = [];
     
-    if isempty(factorNum{s})
-        if  aap.tasklist.currenttask.settings.mergeSessions
-            warning('You have no trials in session %d...', s)
-            factorNum{s} = 0;
-        else
-            error('You have no trials in session %d...', s)
-        end
+    if all(factorNum{s} == factorNum{s}(1))
+        % If number of conditions is constant...
     else
-        % If we have conditions in this session, check constancy of blocks
-        if all(factorNum{s} ~= factorNum{s}(1))
-            % If number of conditions is not constant...
-            error('There is something wrong with your regressors...')
-        end
-        
-        % Now factorNum becomes the number of real different cells
-        % Not anymore the number of factors...
-        factorNum{s} = sum(factorNum{s}>0)/blockNum{s};
-        
-        if s > 1
-            if factorNum{s} ~= factorNum{s-1}
-                error('Unequal number of factors across the two sessions')
-            end
+        error('There is something wrong with your regressors...')
+    end
+    % Now factorNum becomes the number of real different cells
+    % Not anymore the number of factors...
+    factorNum{s} = sum(factorNum{s}>0)/blockNum{s};
+    if s > 1
+        if factorNum{s} ~= factorNum{s-1}
+            error('Unequal number of factors across the two sessions')
         end
     end
 end
 
 %% SAVE SOME PARAMETERS TO AAP
-if aap.tasklist.currenttask.settings.mergeSessions
-    factors = [factorNum{:}];
-    factors(factors == 0) = [];
-    aap.tasklist.currenttask.settings.conditions = factors(1);
-else
-    aap.tasklist.currenttask.settings.conditions = factorNum{1};
-end
-if aap.tasklist.currenttask.settings.mergeSessions
-    aap.tasklist.currenttask.settings.blocks = sum(blockNum{:});
-else
-    aap.tasklist.currenttask.settings.blocks = blockNum{1};
-end
+aap.tasklist.currenttask.settings.conditions = factorNum{1};
+aap.tasklist.currenttask.settings.blocks = blockNum{1};
 aap.tasklist.currenttask.settings.nuisance = nuisanceNum{1};
-if aap.tasklist.currenttask.settings.mergeSessions
-    aap.tasklist.currenttask.settings.sessions = 1;
-else
-    aap.tasklist.currenttask.settings.sessions = length(SPM.Sess);
-end
+aap.tasklist.currenttask.settings.sessions = length(SPM.Sess);
 % Get rid of repeated condition names...
 tempCond = conditions{1}( ...
     (1:aap.tasklist.currenttask.settings.conditions*aap.tasklist.currenttask.settings.blocks) + ...
@@ -192,25 +163,21 @@ Bimg = aas_findstream(aap,'spmts', subj);
 datatype = 'spmts';
 if ~isempty(Bimg)
     Bimg = aas_findstream(aap,'betas', subj);
-    datatype = 'betas';
+    datatype = 'betas';    
 end
 
 Bimg = aas_getfiles_bystream(aap,subj,aap.tasklist.currenttask.inputstreams.stream{Sind});
 
-
-prevSess = 0;
-mergeInd = 0;
-for s = 1:length(SPM.Sess)
-    % Works for movement parameters and spikes! Relevant only for betas...
-    if s > 1
-        prevSess = prevSess + size(SPM.Sess(s - 1).C.C, 2) + length(SPM.Sess(s - 1).U);
-    end
-    
-    for b=1:blockNum{s}
-        mergeInd = mergeInd + 1;
+if strcmp(dataType, 'betas')
+    prevSess = 0;
+    for s = 1:aap.tasklist.currenttask.settings.sessions
+        % Works for movement parameters and spikes!
+        if s > 1
+            prevSess = prevSess + size(SPM.Sess(s - 1).C.C, 2) + length(SPM.Sess(s - 1).U);
+        end
         for c=1:aap.tasklist.currenttask.settings.conditions
-            % Do we want betas or T-values?
-            if strcmp(dataType, 'betas')
+            for b=1:aap.tasklist.currenttask.settings.blocks
+                
                 condStr =  [aap.tasklist.currenttask.settings.conditionNames{c} '_sub' num2str(b)];
                 
                 imageNum = find(strcmp([SPM.Sess(s).U(:).name], ...
@@ -222,26 +189,37 @@ for s = 1:length(SPM.Sess)
                     error(['Something went wrong with the condition labelling' ...
                         '\This is probably not your fault! Contact the developer!'])
                 end
-            elseif strcmp(dataType, 'spmts')
+                
+                % Get either betas or or T values...
+                V = spm_vol(deblank(Bimg(imageNum*2,:))); % We want .img, not .hdr
+                data{c,b,s}=spm_read_vols(V);
+                
+                if ~isempty(SEGimg)
+                    data{c,b,s}(M==0) = NaN;
+                end
+            end
+        end
+    end
+elseif strcmp(dataType, 'spmts')
+    for s = 1:aap.tasklist.currenttask.settings.sessions
+        for c=1:aap.tasklist.currenttask.settings.conditions
+            for b=1:aap.tasklist.currenttask.settings.blocks
+                
                 condStr =  [aap.tasklist.currenttask.settings.conditionNames{c} '_sub' num2str(b)];
                 
                 imageNum = find(strcmp({SPM.xCon.name}, ...
                     condStr));
                 imageNum = imageNum(s);
-            end
-            
-            % Get either betas or or T values...
-            V = spm_vol(deblank(Bimg(imageNum*2,:))); % We want .img, not .hdr
-            Y=spm_read_vols(V);
-            % Set anything that is 0 to NaN
-            Y(data{c,b,s}==0) = NaN;
-            if ~isempty(SEGimg)
-                Y(M==0) = NaN;
-            end
-            if aap.tasklist.currenttask.settings.mergeSessions
-                data{c,mergeInd,1} = Y;
-            else
-                data{c,b,s} = Y;
+                
+                % Get either betas or or T values...
+                V = spm_vol(deblank(Bimg(imageNum*2,:))); % We want .img, not .hdr
+                data{c,b,s}=spm_read_vols(V);
+                
+                % Set anything that is 0 to NaN
+                data{c,b,s}(data{c,b,s}==0) = NaN;
+                if ~isempty(SEGimg)
+                    data{c,b,s}(M==0) = NaN;
+                end
             end
         end
     end
