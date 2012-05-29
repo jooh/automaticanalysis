@@ -183,12 +183,8 @@ switch task
                 defs.estimate.weight, objMask, ...
                 defs.estimate);
 
-            aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
             % SPM2 normalization doesn't generate the inverse transformation
-            try
-                aap=aas_desc_outputs(aap,subj,'normalisation_seg_inv_sn',invSNmat);
-            catch
-            end
+            aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
 
         end
         
