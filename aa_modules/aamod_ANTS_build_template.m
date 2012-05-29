@@ -49,7 +49,7 @@ switch task
         % Dimension number (always 3 for structural)
         Ndim = ['-d ' num2str(3) ' '];
         
-        ANTS_command = [ ANTSpath Ndim outfiles '-c ' num2str(aap.tasklist.currenttask.settings.parallel ' *'];
+        ANTS_command = [ ANTSpath Ndim outfiles '-c 0 *'];
         
         cd(Tpth)
         
