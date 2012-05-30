@@ -36,7 +36,7 @@ switch task
             % Get the headers from the file, so that we don't have to guess...
             DICOMHEADERS=load(fullfile(dirn,'dicom_headers'));
             V = spm_vol(deblank(imgs(1,:)));
-            aap = aas_getSliceOrder(aap, V, DICOMHEADERS.DICOMHEADERS{1});
+            aap = aas_getSliceOrder(aap, subj, sess, V, DICOMHEADERS.DICOMHEADERS{1});
         end
         if (length(aap.tasklist.currenttask.settings.TRs)==0)
             DICOMHEADERS=load(fullfile(dirn,'dicom_headers'));

@@ -116,7 +116,7 @@ switch task
                 if aap.tasklist.currenttask.settings.reslicewhich == 0            
                     rimgs=strvcat(rimgs,fullfile(pth,[nme ext]));
                 else
-                    rimgs=strvcat(rimgs,fullfile(pth,['r' nme ext]))
+                    rimgs=strvcat(rimgs,fullfile(pth,['r' nme ext]));
                 end
             end;
             sessdir=aas_getsesspath(aap,i,j);

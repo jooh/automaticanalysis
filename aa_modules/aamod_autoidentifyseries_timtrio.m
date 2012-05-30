@@ -73,8 +73,8 @@ switch task
                 rawdata_allseries=unique(serieslist);
                 disp(rawdata_allseries)
                 
-                for sess=1:length(rawdata_allseries);
-                    H=aas_dicom_headers_light(alldicomfiles{sess}{1});
+                for sess=1:length(rawdata_allseries)
+                    H=aas_dicom_headers_light(alldicomfiles{rawdata_allseries(sess)}{1});
                     aas_log(aap,false,sprintf('Series %d with %d dicom files [%s]', ...
                         rawdata_allseries(sess), ...
                         length(alldicomfiles{rawdata_allseries(sess)}), ...

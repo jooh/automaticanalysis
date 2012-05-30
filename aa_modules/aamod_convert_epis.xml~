@@ -4,7 +4,7 @@
         <currenttask domain='session' desc='Convert EPIs'>
             
             <qsub>
-                <timeBase>0.15</timeBase>
+                <timeBase>0.25</timeBase>
                 <memoryBase>0.25</memoryBase>
             </qsub>
             
