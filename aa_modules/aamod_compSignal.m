@@ -55,9 +55,6 @@ switch task
         
     case 'doit'
         
-        % @@@ NOT YET IMPLEMENTED @@@ :
-        % 1 - FOR OOB, WE WANT TOP CORNERS RELATIVE TO HEAD, TO AVOID GHOSTING
-        
         % Let us use the native space...
         SMimg = aas_getfiles_bystream(aap,subj,'segmasksStrict');
         EPIimg = aas_getfiles_bystream(aap,subj,sess,'epi');

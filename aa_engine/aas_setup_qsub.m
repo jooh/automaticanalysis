@@ -21,7 +21,7 @@ if length(matrixSize) ~= 1
 end
 
 % Add the path with functions to interact with torque (qsub) <-- changed
-addpath(genpath(aap.directory_conventions.fieldtripdir))
+addpath(genpath(fullfile(aap.directory_conventions.fieldtripdir, 'qsub')))
 
 % Remove previous jobs
 qsublist('killall')
