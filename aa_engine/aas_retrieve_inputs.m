@@ -192,7 +192,7 @@ if (sourcestagenumber==-1)
         if isempty(fns)
             aas_log(aap,false,sprintf('No inputs in stream %s',streamname));
         end;
-        fclose(fid_inp);
+        try fclose(fid_inp); catch; end % [alevic] Sometimes breaks...
         
         gotinputs=fns;
     else
@@ -202,7 +202,7 @@ if (sourcestagenumber==-1)
     if (~doneremotefetch)
         fid=fopen(remotefetchfn,'w');
         fprintf(fid,sprintf('%f',now));
-        fclose(fid);
+        try fclose(fid); catch; end % [alevic] Sometimes breaks...
     end;
 else
     
@@ -294,8 +294,7 @@ else
                         end;
                         %                    fprintf('Loaded datecheck was %s and calc %s\n',datecheck,datecheck_md5_recalc);
                     end;
-                    fclose(fid_inp);
-                    
+                    try fclose(fid_inp); catch; end % [alevic] Sometimes breaks...
                     
                 end;
                 
@@ -304,7 +303,7 @@ else
                 else
                     aas_log(aap,false,sprintf(' retrieve stream %s from %s to %s',streamname,src,dest),aap.gui_controls.colours.inputstreams);
                     
-                    fclose(fid);
+                    try fclose(fid); catch; end % [alevic] Sometimes breaks...
                     oldpth='';
                     % Get read to write the stream file
                     fid_inp=fopen(inputstreamdesc,'w');
@@ -327,7 +326,7 @@ else
                     if isempty(fns)
                         aas_log(aap,false,sprintf('No inputs in stream %s',streamname));
                     end;
-                    fclose(fid_inp);
+                    try fclose(fid_inp); catch; end % [alevic] Sometimes breaks...
                 end;
                 gotinputs=fns;
             else
@@ -385,7 +384,7 @@ else
                 % Get filelist from stream
                 fns=textscan(fid,'%s');
                 fns=fns{1};
-                fclose(fid);
+                try fclose(fid); catch; end % [alevic] Sometimes breaks...
                 
                 % Retrieve these files from the cold store
                 aas_log(aap,false,sprintf(' retrieve stream %s from s3:%s to %s',streamname,src,dest));

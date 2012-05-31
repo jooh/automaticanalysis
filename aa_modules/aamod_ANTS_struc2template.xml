@@ -46,7 +46,7 @@
             <!-- NOTE: More metrics & weights and parameters can be added up to 9 -->
                         
             <!-- Diagnostic videos? -->
-            <diagnostic>1</diagnostic>
+            <diagnostic>0</diagnostic>
             
             
         </currenttask>

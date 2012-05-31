@@ -317,35 +317,40 @@ switch task
         fprintf('\nDisplaying the results of the timecourse analysis')
         
         try close(2); catch; end
-        
         figure(2)
         set(2, 'Position', [0 0 1200 700])
         
+        legStr = 'legend(';
+        
         for r = 1:size(ROIimg,1)
-            subplot(size(ROIimg,1),1,r)
+            %subplot(size(ROIimg,1),1,r)
             hold on
             
             % We need to make a string for eval, that will print the legend...
-            legStr = ['legend(sprintf(''%s (%.0fv)'', ' ...
+            legStr = [legStr 'sprintf(''%s (%.0fv)'', ' ...
                 'ROIname{' num2str(r) '}, ' ...
-                'sum(EPIsnROI{' num2str(r) '}(:))));'];
+                'sum(EPIsnROI{' num2str(r) '}(:))),'];
                         
             % Plot main results (errorbars displayed differently now...)
             plot(mROI{r}, ['.' colorsB{r}])
+        end
+        legStr = [legStr(1:end-1) ');'];
+        eval(legStr);
+        
+        for r = 1:size(ROIimg,1)
             plot(mROI{r} - sROI{r}, '--k')
             plot(mROI{r} + sROI{r}, '--k')
-            
-            xlabel('Scan')
-            ylabel('Mean signal')
-            set(gca,'XTick', 0:ceil(size(EPIimg,1)./25):size(EPIimg,1))
-            xlim([0 size(EPIimg,1)])
-            ylim([mean(mROI{r} - 2*mean(sROI{r})) mean(mROI{r} + 2*mean(sROI{r}))])
-            title(sprintf('\nTimecourse for session %s, using %.0f scans and TR %.3f', ...
-                regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
-                size(EPIimg,1), ...
-                K.RT))
-            eval(legStr);
         end
+        
+        xlim([0 size(EPIimg,1)])
+        %ylim([mean(mROI{r} - 2*mean(sROI{r})) mean(mROI{r} + 2*mean(sROI{r}))])
+        xlabel('Scan')
+        ylabel('Mean signal')
+        set(gca,'XTick', 0:ceil(size(EPIimg,1)./25):size(EPIimg,1))
+        title(sprintf('\nTimecourse for session %s, using %.0f scans and TR %.3f', ...
+            regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
+            size(EPIimg,1), ...
+            K.RT))
         
         set(gcf,'PaperPositionMode','auto')
         print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...

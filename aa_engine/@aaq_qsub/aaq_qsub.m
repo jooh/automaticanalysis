@@ -93,6 +93,7 @@ classdef aaq_qsub<aaq
                             fprintf(fid,'%s\n',moduleName);
                             fprintf(fid,'Job used %0.4f hours. and %0.9f GB\n', ...
                                 JobLog.optout{2}./(60*60), JobLog.optout{4}./(1024^3));
+                            fclose(fid);
                             
                             % Job finished, so no need to monitor
                             donemonitoring(ftmind)=true;

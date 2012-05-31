@@ -26,7 +26,7 @@
             <C2Odist>5</C2Odist>
             <maskOrder>GM,WM,CSF</maskOrder>
             
-            <diagnostic>1</diagnostic>
+            <diagnostic>0</diagnostic>
             
         </currenttask>
     </tasklist>

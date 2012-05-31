@@ -22,7 +22,7 @@
             <!-- Do we paralellise the building of the template? -->
             <parallel>0</parallel>
             
-            <diagnostic>1</diagnostic>
+            <diagnostic>0</diagnostic>
             
         </currenttask>
     </tasklist>

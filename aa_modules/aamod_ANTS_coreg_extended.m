@@ -38,6 +38,8 @@ switch task
         
         Spth = fileparts(Simg);
         
+        keyboard
+        
         %%
         
         %% Set up ANTS
