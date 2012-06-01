@@ -77,7 +77,7 @@ switch task
         while ~isempty(ROIstr)
             [tmp, ROIstr] = strtok(ROIstr,',');
             ROIlist = [ROIlist fullfile(...
-                aap.directory_conventions.ROIdir, tmp)];
+                aap.directory_conventions.ROIdir, strtrim(tmp))];
         end
         
         outstream = '';
