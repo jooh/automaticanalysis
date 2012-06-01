@@ -92,43 +92,18 @@ switch task
                     [mfilename '__' mriname '_' num2str(d) '.jpeg']));
             catch
             end
+            
+            %% Diagnostic VIDEO
             if aap.tasklist.currenttask.settings.diagnostic
+                [~, ROIname{r}] = fileparts(ROIimg(r,:));
                 
-                movieFilename = fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname '_' num2str(d) '.avi']);
-                % Create movie file by defining aviObject
-                try delete(movieFilename); catch; end
-                aviObject = avifile(movieFilename,'compression','none');
-                
+                aas_image_avi({V.fname dV.fname}, ...
+                    [], ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' num2str(d) '.avi']), ...
+                    3, ... % Axis
+                    [800 600], ...
+                    2); % Rotations
                 try close(2); catch; end
-                figure(2)
-                set(2, 'Position', [0 0 1000 800])
-                windowSize = get(2,'Position');
-                
-                % Get resliced structural
-                EPIlims = [min(Y(:)) max(Y(:))];
-                
-                for z = 1:size(Y,3)
-                    h = subplot(1,2,1);
-                    imagesc(rot90(squeeze(Y(:,:,z))))
-                    caxis(EPIlims)
-                    axis equal off
-                    title('Before denoiseANLM')
-                    zoomSubplot(h, 1.2)
-                    
-                    h = subplot(1,2,2);
-                    imagesc(rot90(squeeze(dY(:,:,z))))
-                    caxis(EPIlims)
-                    axis equal off
-                    title('After denoiseANLM')
-                    zoomSubplot(h, 1.2)
-                    
-                    % Capture frame and store in aviObject
-                    pause(0.01)
-                    aviObject = addframe(aviObject,getframe(2,windowSize));
-                end
-                
-                aviObject = close(aviObject);
             end
         end
         

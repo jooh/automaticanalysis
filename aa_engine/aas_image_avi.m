@@ -7,6 +7,8 @@ if ischar(imageFN)
 end
 if nargin < 2
     outlineFN = [];
+elseif ischar(outlineFN)
+    outlineFN = {outlineFN};
 end
 if nargin < 3
     [~, movieFN] = fileparts(imageFN{1});
@@ -54,20 +56,27 @@ end
 
 % Load the outline
 if ~isempty(outlineFN)
-    oY = spm_read_vols(spm_vol(outlineFN));
-    % Get a good threshold
-    thresh = zeros(size(Y{1},axisDim),2);
-    for d = 1:size(Y{1},axisDim)
-        if axisDim == 1
+    colorsB = {'r' 'g' 'b' 'c' 'm' 'y' 'w'};
+    % Variables we need for outlining...
+    thresh = cell(size(outlineFN));
+    outlineSlice = cell(size(outlineFN));
+    
+    for o = 1:length(outlineFN)
+        oY = spm_read_vols(spm_vol(outlineFN{o}));
+        % Get a good threshold
+        thresh = zeros(size(Y{1},axisDim),2);
+        for d = 1:size(Y{1},axisDim)
+            if axisDim == 1
                 outlineSlice = squeeze(oY(d,:,:));
             elseif axisDim == 2
                 outlineSlice = squeeze(oY(:,d,:));
             elseif axisDim == 3
                 outlineSlice = squeeze(oY(:,:,d));
             end
-            [outlineSlice thresh(d,:)] = edge(outlineSlice, 'canny');
+            [outlineSlice thresh{o}(d,:)] = edge(outlineSlice, 'canny');
+        end
+        thresh{o} = mean(thresh{o});
     end
-    thresh = mean(thresh);
 end
 
 colormap gray
@@ -87,30 +96,36 @@ for d = 1:size(Y{1},axisDim)
         
         % If present, get outline slice to draw
         if ~isempty(outlineFN)
-            if axisDim == 1
-                outlineSlice = squeeze(oY(d,:,:));
-            elseif axisDim == 2
-                outlineSlice = squeeze(oY(:,d,:));
-            elseif axisDim == 3
-                outlineSlice = squeeze(oY(:,:,d));
+            for o = 1:length(outlineFN)
+                if axisDim == 1
+                    outlineSlice{o} = squeeze(oY(d,:,:));
+                elseif axisDim == 2
+                    outlineSlice{o} = squeeze(oY(:,d,:));
+                elseif axisDim == 3
+                    outlineSlice{o} = squeeze(oY(:,:,d));
+                end
+                outlineSlice{o} = edge(outlineSlice{o}, 'canny', thresh{o});
             end
-            outlineSlice = edge(outlineSlice, 'canny', thresh);
         end
         
         % Rotate slices
         
         imageSlice = rot90(imageSlice, rotations);
-        if ~isempty(outlineFN)
-            outlineSlice = rot90(outlineSlice,rotations - 1);
+        if ~isempty(outlineFN{o})
+            for o = 1:length(outlineFN)
+                outlineSlice{o} = rot90(outlineSlice{o},rotations - 1);
+            end
         end
         
         % Draw slices
         imagescnan(imageSlice, 'NanColor', [1 0 0])
         if ~isempty(outlineFN)
-           hold on
-           [x y] = find(flipdim(outlineSlice,2));
-           scatter(x,y,3,'r', 'd') 
-           hold off
+            for o = 1:length(outlineFN)
+                hold on
+                [x y] = find(flipdim(outlineSlice{o},2));
+                scatter(x,y,3,colorsB{o}, 'd')
+                hold off
+            end
         end
         
         caxis([limsY{f}(1), limsY{f}(2)])

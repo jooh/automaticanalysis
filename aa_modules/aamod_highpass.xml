@@ -17,9 +17,13 @@
             <outputstreams>
                 <stream>epi</stream>
             </outputstreams>
+            
+            <!-- Type of high pass filter: detrend, spm, butterworth -->
+            <HFtype>spm</HFtype>
+            
+            <!-- Temporal parameter for high-pass filter -->
             <HParam>100</HParam>
             
-            <diagnostic>0</diagnostic>
         </currenttask>
     </tasklist>
 </aap>

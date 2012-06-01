@@ -162,81 +162,18 @@ switch task
         print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
-        %% Diagnostic VIDEO of coregistration
+        %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
-            
             Ydims = {'X', 'Y', 'Z'};
-            % Get resliced structural
-            sY = spm_read_vols(spm_vol(fullfile(pthS, ['r' fnS extS])));
-            EPIlims = [min(pY(:)) max(pY(:))];
-            dEPIlims = [min(dY(:)) max(dY(:))];
-                
             for d = 1:length(Ydims)
-                movieFilename = fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname '_' Ydims{d} '.avi']);
-                % Create movie file by defining aviObject
-                try delete(movieFilename); catch; end
-                aviObject = avifile(movieFilename,'compression','none');
-                
-                try close(2); catch; end
-                figure(2)
-                set(2, 'Position', [0 0 1000 800])
-                windowSize = get(2,'Position');                  
-                
-                for n = 1:size(sY,d)
-                    if d == 1
-                        sOutline = edge(rot90(squeeze(sY(n,:,:))),'canny');
-                    elseif d == 2
-                        sOutline = edge(rot90(squeeze(sY(:,n,:))),'canny');
-                    elseif d == 3
-                        sOutline = edge(rot90(squeeze(sY(:,:,n))),'canny');
-                    end
-                    
-                    if d == 1
-                        h = subplot(2,1,1);
-                        sImage = rot90(squeeze(dY(n,:,:)));
-                    elseif d == 2
-                        h = subplot(2,1,1);
-                        sImage = rot90(squeeze(dY(:,n,:)));
-                    elseif d == 3
-                        h = subplot(1,2,1);
-                        sImage = rot90(squeeze(dY(:,:,n)));
-                    end
-                    
-                    sImage(sOutline) = dEPIlims(2) * 2;
-                    imagesc(sImage)
-                    
-                    caxis(dEPIlims)
-                    axis equal off
-                    title('Difference before/after')
-                    zoomSubplot(h, 1.2)
-                    
-                    if d == 1
-                        h = subplot(2,1,2);
-                        sImage = rot90(squeeze(pY(n,:,:)));
-                    elseif d == 2
-                        h = subplot(2,1,2);
-                        sImage = rot90(squeeze(pY(:,n,:)));
-                    elseif d == 3
-                        h = subplot(1,2,2);
-                        sImage = rot90(squeeze(pY(:,:,n)));
-                    end
-                    
-                    sImage(sOutline) = EPIlims(2) * 2;
-                    imagesc(sImage)
-                    
-                    caxis(EPIlims)
-                    axis equal off
-                    title('After PEwarp')
-                    zoomSubplot(h, 1.2)
-                    
-                    % Capture frame and store in aviObject
-                    pause(0.01)
-                    aviObject = addframe(aviObject,getframe(2,windowSize));
-                end
-                
-                aviObject = close(aviObject);
+                aas_image_avi({fullfile(pthM, ['p' fnM extM]) fullfile(pthM, ['d' fnM extM])}, ...
+                fullfile(Spth, ['r' Sfn Sext]), ...
+                fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                d, ... % Axis
+                [800 600], ...
+                2); % Rotations
             end
+            try close(2); catch; end
         end
         
         %% Describe the outputs

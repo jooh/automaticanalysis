@@ -33,9 +33,14 @@ switch task
         end
         
         % High pass filter or detrend data
+        
         % Let's first set up the parameters...
         K.row = 1:size(EPIimg, 1);
         K.HParam = aap.tasklist.currenttask.settings.HParam; % cut-off period in seconds
+        
+        if K.RT * length(K.row) < K.HParam && ~strcmp(aap.tasklist.currenttask.settings.HFtype, 'detrend')
+            aas_log(aap, true, 'The data length is shorter than the cutoff of the filter, consider detrending instead')
+        end
         
         if K.RT * length(K.row) > K.HParam
             fprintf('\nWill do high pass filtering of time series with a %d second cut-off', K.HParam)
@@ -84,22 +89,36 @@ switch task
                                 EPIdata(e,:,:,:) = Y(Xind,Yind,Zind);
                             end
                             
-                            if K.RT * length(K.row) > K.HParam
+                            
+                            
+                            if strcmp(aap.tasklist.currenttask.settings.HFtype, 'spm')
                                 % Create the frequencies to be removed and apply them...
                                 % Important: first dimension must be time dimension!
                                 
                                 EPIdata = spm_filter(K, EPIdata);
-                            else
+                                
+                            elseif strcmp(aap.tasklist.currenttask.settings.HFtype, 'detrend')
                                 % Use linear detrending instead (might be slower due to loops)
-                                for a = 1:length(Xind)
-                                    for b = 1:length(Yind)
-                                        vRow = squeeze(EPIdata(:,a,b,:));
-                                        mRow = repmat(mean(vRow,1), [size(EPIimg,1) 1]);
-                                        vRow = detrend(vRow);
-                                        % Add mean back after detrending!
-                                        EPIdata(:,a,b,:) = vRow + mRow;
-                                    end
-                                end
+                                
+                                szY=size(EPIdata);
+                                Y=reshape(EPIdata,[size(EPIimg,1) prod(szY(2:4))]);
+                                mY = repmat(mean(Y,1), [size(EPIimg,1) 1]);
+                                % Add mean back after detrending!
+                                Y=detrend(Y)+mY;
+                                EPIdata = reshape(Y,szY);
+                                
+                            elseif strcmp(aap.tasklist.currenttask.settings.HFtype, 'butterworth')
+                                % Regress out discrete cosine components to do filtering
+                                
+                                szY=size(EPIdata);
+                                Y=reshape(EPIdata,[size(EPIimg,1) prod(szY(2:4))]);
+                                X0 = spm_dctmtx( size(EPIimg,1), ...
+                                    fix(2*(size(EPIimg,1) * aap.tasklist.currenttask.settings.TRs) / aap.tasklist.currenttask.settings.HParam + 1));
+                                X0 = X0(:,2:end);
+                                beta = X0\Y;
+                                Y = Y-X0*beta;
+                                EPIdata = reshape(Y,szY);
+                                
                             end
                             
                             % Now save the data back...
@@ -114,7 +133,7 @@ switch task
                 end
                 % If we get here, then we completed the task...
                 taskComplete = 1;
-            catch tSNR_error
+            catch aa_error
                 %disp(tSNR_error)
                 
                 if x > 1 || y > 1 || z > 1

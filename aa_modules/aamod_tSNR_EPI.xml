@@ -20,8 +20,6 @@
                 <stream>tSNR</stream>
             </outputstreams>
             
-            <HParam>100</HParam>
-            
             <diagnostic>0</diagnostic>
             
         </currenttask>

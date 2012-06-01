@@ -141,6 +141,7 @@ switch task
             for r = 1:size(outstream,1)
                 spm_orthviews('addcolouredimage',1,outstream(r,:), OVERcolours{r})
             end
+            
             %% Diagnostic VIDEO of segmentations
             aas_checkreg_avi(aap, subj, 2)
             

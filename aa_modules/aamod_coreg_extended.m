@@ -134,10 +134,9 @@ switch task
         print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
-        %% Diagnostic VIDEO of coregistration
-        
+        %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
-            %% Realignment params
+            % Realignment params
             defs = aap.spm.defaults.realign;
             
             % ...flags to pass to routine to create resliced images
@@ -149,68 +148,21 @@ switch task
                 'which', 1,...     % what images to reslice
                 'mean', 0);           % write mean image
             
-            %% Video
-            Ydims = {'X', 'Y', 'Z'};
-            
-            % Get mean EPI
-            Y = spm_read_vols(spm_vol(mEPIimg));
-            
             % Get resliced structural
             [Spth, Sfn, Sext] = fileparts(deblank(Simg(aap.tasklist.currenttask.settings.structural,:)));
             spm_reslice(strvcat(mEPIimg, fullfile(Spth, [Sfn Sext])), resFlags);
-            sY = spm_read_vols(spm_vol(fullfile(Spth, ['r' Sfn Sext])));            
             
-            EPIlims = [min(Y(:)) max(Y(:))];
-            
+            Ydims = {'X', 'Y', 'Z'};
             for d = 1:length(Ydims)
-                movieFilename = fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname '_' Ydims{d} '.avi']);
-                % Create movie file by defining aviObject
-                try delete(movieFilename); catch; end
-                aviObject = avifile(movieFilename,'compression','none');
-                
-                try close(2); catch; end
-                figure(2)
-                set(2, 'Position', [0 0 1000 800])
-                windowSize = get(2,'Position');                
-                
-                for n = 1:size(sY,d)
-                    % Get outline of structural image slice
-                    h = subplot(1,1,1);
-                    if d == 1
-                        sOutline = edge(rot90(squeeze(sY(n,:,:))),'canny');
-                    elseif d == 2
-                        sOutline = edge(rot90(squeeze(sY(:,n,:))),'canny');
-                    elseif d == 3
-                        sOutline = edge(rot90(squeeze(sY(:,:,n))),'canny');
-                    end
-                    
-                    % Get EPI image slice
-                    if d == 1
-                        sImage = rot90(squeeze(Y(n,:,:)));
-                    elseif d == 2
-                        sImage = rot90(squeeze(Y(:,n,:)));
-                    elseif d == 3
-                        sImage = rot90(squeeze(Y(:,:,n)));
-                    end
-                    
-                    % Draw overlay of structural image on EPI image
-                    sImage(logical(sOutline)) = EPIlims(2) * 2;
-                    imagesc(sImage)
-                    
-                    caxis(EPIlims)
-                    axis equal off
-                    zoomSubplot(h, 1.2)
-                    
-                    % Capture frame and store in aviObject
-                    pause(0.01)
-                    aviObject = addframe(aviObject,getframe(2,windowSize));
-                end
-                
-                aviObject = close(aviObject);
+                aas_image_avi(mEPIimg, ...
+                fullfile(Spth, ['r' Sfn Sext]), ...
+                fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                d, ... % Axis
+                [800 600], ...
+                2); % Rotations
             end
             try close(2); catch; end
-        end      
+        end
         
         %% Describe the outputs
         
