@@ -24,8 +24,6 @@
         
             <!--Is the MVPA performed in native space? (0 - no, 1 - yes)-->
             <native>1</native>
-            <!--What basis functions do we use? '' - none; '_T' - time; '_TD' - time & dispersion -->
-            <basisF>''</basisF>
             <!-- Minimum number of valid voxels present in ROI (otherwise error)-->
             <minVoxels>30</minVoxels>
             <!--Similarity measure type: 'Pearson', 'Spearman', 'Euclid', 'Mahalanobis' -->

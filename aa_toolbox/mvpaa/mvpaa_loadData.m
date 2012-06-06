@@ -109,7 +109,7 @@ else
     aap.tasklist.currenttask.settings.conditions = factorNum{1};
 end
 if aap.tasklist.currenttask.settings.mergeSessions
-    aap.tasklist.currenttask.settings.blocks = sum(blockNum{:});
+    aap.tasklist.currenttask.settings.blocks = sum([blockNum{:}]);
 else
     aap.tasklist.currenttask.settings.blocks = blockNum{1};
 end
@@ -136,21 +136,12 @@ aap.tasklist.currenttask.settings.conditionNames = tempCond;
 %% PREPARATION BEFORE LOADING DATA
 
 % Define data structure
-data = cell(aap.tasklist.currenttask.settings.conditions, ...
+data = cell(length(aap.tasklist.currenttask.settings.conditions), ...
     aap.tasklist.currenttask.settings.blocks, ...
     aap.tasklist.currenttask.settings.sessions);
 
 fprintf('\nThis experiment contains \n\t%d conditions\n\t%d blocks\n\t%d sessions', ...
     size(data,1), size(data,2), size(data,3))
-
-% Define multiplier depending on the basis function set used...
-if strcmp(aap.tasklist.currenttask.settings.basisF, '_TD')
-    mult = 3;
-elseif strcmp(aap.tasklist.currenttask.settings.basisF, '_T')
-    mult = 2;
-else
-    mult = 1;
-end
 
 % Do we grey/white/CSF matter mask the data?
 % Get segmentation masks we wish to use, if any
@@ -186,20 +177,15 @@ end
 
 %% NOW LET US ACTUALLY LOAD DATA (& MASK it with segmentation mask...)
 
-nuis = 0;
-
 Bimg = aas_findstream(aap,'spmts', subj);
-datatype = 'spmts';
-if ~isempty(Bimg)
+dataType = 'spmts';
+if isempty(Bimg)
     Bimg = aas_findstream(aap,'betas', subj);
-    datatype = 'betas';
+    dataType = 'betas';
 end
 
-Bimg = aas_getfiles_bystream(aap,subj,aap.tasklist.currenttask.inputstreams.stream{Sind});
-
-
 prevSess = 0;
-mergeInd = 0;
+mergeInd = 0; % Used only if we want to merge sessions...
 for s = 1:length(SPM.Sess)
     % Works for movement parameters and spikes! Relevant only for betas...
     if s > 1
@@ -234,7 +220,7 @@ for s = 1:length(SPM.Sess)
             V = spm_vol(deblank(Bimg(imageNum*2,:))); % We want .img, not .hdr
             Y=spm_read_vols(V);
             % Set anything that is 0 to NaN
-            Y(data{c,b,s}==0) = NaN;
+            Y(Y==0) = NaN;
             if ~isempty(SEGimg)
                 Y(M==0) = NaN;
             end

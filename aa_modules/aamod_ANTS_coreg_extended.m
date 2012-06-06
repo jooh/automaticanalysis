@@ -5,21 +5,6 @@
 % 3) Coregister mean EPI to Structural
 % 4) Apply transformation matrix of mean EPI to all EPIs
 
-% Because of the way that ANTS works (i.e. always reslicing the moving
-% image to the fixed image, what we actually do for each coregistration is...)
-% A) Estimate the coregistration parameters in antsRegistration
-% B) Apply the parameters to an image
-% C) Use SPM coreg, to coregister the moving image to the ANTS moved image
-% This is a bit dirty, but until we find a different way of applying the
-% transformation without reslicing, this is what we might have to do
-
-%%
-
-% GET LATEST STUFF FROM WHAT WE DID AT WORK... @@@
-% CHECK IF TRUE! @@@
-
-%%
-
 function [aap,resp]=aamod_ANTS_coreg_extended(aap,task,subj)
 
 resp='';
@@ -27,22 +12,9 @@ resp='';
 switch task
     case 'doit'
         
-        %% 0) Check that the tamplates we need exist!
-        % Get the template
-        sTimg = fullfile(spm('dir'), 'templates', 'T1.nii');
-        if ~exist(sTimg, 'file')
-            aas_log(aap, true, sprintf('Couldn''t find template T1 image %s.', Timg));
-        end
+        %% 0) Check that the tamplates and images we need exist!
         
-        % Get the template
-        eTimg = fullfile(spm('dir'), 'templates', 'EPI.nii');
-        if ~exist(eTimg, 'file')
-            aas_log(aap, true, sprintf('Couldn''t find template EPI image %s.', eTimg));
-        end
-        
-        %% 1) Structural to T1 template
-        % Check local structural directory exists
-        
+        % Get the structural
         Simg = aas_getfiles_bystream(aap,subj,'structural');
         if isempty(Simg)
             aas_log(aap, true, 'Problem finding structural image.');
@@ -50,21 +22,70 @@ switch task
             aas_log(aap, false, 'Found more than 1 structural images, using structural %d', ...
                 aap.tasklist.currenttask.settings.structural);
         end
-        
         Spth = fileparts(Simg);
         
-        %% Set up ANTS
+        % Get the mean functional
+        mEPIimg = aas_getfiles_bystream(aap,subj,1,'meanepi');
+                
+        if isempty(mEPIimg)
+            aas_log(aap, true, 'Problem finding mean functional image.');
+        elseif size(mEPIimg,1) > 1
+            aas_log(aap, false, 'Found more than 1 mean functional images, using first.');
+        end
+        mEPIimg = deblank(mEPIimg(1,:));
+        mEPIpth = fileparts(mEPIimg);
         
+        % Get the template
+        sTimg = fullfile(spm('dir'), 'templates', 'T1.nii');
+        if ~exist(sTimg, 'file')
+            aas_log(aap, true, sprintf('Couldn''t find template T1 image %s.', Timg));
+        end
+        [sTpth sTfn sText] = fileparts(sTimg);
+        copyfile(sTimg, Spth)
+        sTimg = fullfile(Spth, [sTfn sText]);
+        
+        % Get the template
+        eTimg = fullfile(spm('dir'), 'templates', 'EPI.nii');
+        if ~exist(eTimg, 'file')
+            aas_log(aap, true, sprintf('Couldn''t find template EPI image %s.', eTimg));
+        end
+        [eTpth eTfn eText] = fileparts(eTimg);
+        copyfile(eTimg, mEPIpth)
+        eTimg = fullfile(mEPIpth, [eTfn eText]);
+        
+        %% Get realignment defaults
+        defs = aap.spm.defaults.realign;
+        
+        % Flags to pass to routine to create resliced images
+        % (spm_reslice)
+        resFlags = struct(...
+            'interp', defs.write.interp,...       % interpolation type
+            'wrap', defs.write.wrap,...           % wrapping info (ignore...)
+            'mask', defs.write.mask,...           % masking (see spm_reslice)
+            'which', 1,...     % what images to reslice
+            'mean', 0);           % write mean image
+        
+        % Reslice T1 template to T1 structural
+        % to keep the structural image in its own space
+        spm_reslice(strvcat(Simg, sTimg), resFlags);
+        sTimg = fullfile(Spth, ['r' sTfn sText]);
+        
+        % Reslice EPI template to mean EPI
+        % to keep the structural image in its own space
+        spm_reslice(strvcat(mEPIimg, eTimg), resFlags);
+        eTimg = fullfile(mEPIpth, ['e' eTfn eText]);
+        
+        %% Set up ANTS
         % Set the ANTS path
         setenv('ANTSPATH', aap.directory_conventions.ANTSdir)
-        ANTSpath = [fullfile(getenv('ANTSPATH'), 'bin', 'ANTS') ' '];
+        ANTSpath = [fullfile(getenv('ANTSPATH'), 'bin', 'antsRegistration') ' '];
         warpANTSpath = [fullfile(getenv('ANTSPATH'), 'bin', 'WarpImageMultiTransform') ' '];
         
         % What we get out...
-        outfiles = '-o ants.nii ';
+        outfiles = ' -o [ANTS,ANTS.nii.gz] ';
         
         % Dimension number (always 3 for structural)
-        Ndim = [num2str(3) ' '];
+        Ndim = ['-d ' num2str(3) ' '];
         
         % Any extra options?...
         if ~isempty(aap.tasklist.currenttask.settings.extraoptions)
@@ -73,11 +94,28 @@ switch task
             extraoptions = '';
         end
         
-        %% Coregister T1 to template
+        transform = ['-t Rigid[' num2str(aap.tasklist.currenttask.settings.gradient) '] '];
         
-        metrics = ['-m MI[' sTimg ',' Simg ',1,' aap.tasklist.currenttask.settings.parameters '] '];
+        %% 1) Structural to T1 template
+        metrics = '';
+        for m = 1:9
+            if isfield(aap.tasklist.currenttask.settings, ['metric' num2str(m)])
+                tmpM = aap.tasklist.currenttask.settings.(['metric' num2str(m)]);
+                tmpW = num2str(aap.tasklist.currenttask.settings.(['weight' num2str(m)]));
+                tmpP = aap.tasklist.currenttask.settings.(['parameters' num2str(m)]);
+                if isnumeric(tmpP)
+                    tmpP = num2str(tmpP);
+                end
+                
+                metrics = [ metrics ...
+                    '-m ' tmpM '[' sTimg ',' Simg ',' tmpW ',' tmpP '] '];
+            else
+                break
+            end
+        end
         
-        ANTS_command = [ ANTSpath Ndim outfiles metrics extraoptions ' --rigid-affine true'];
+        
+        ANTS_command = [ ANTSpath Ndim metrics transform extraoptions outfiles];
         
         cd(Spth)
         
@@ -87,6 +125,9 @@ switch task
         [s w] = aas_shell(ANTS_command);
         
         keyboard
+        
+        %%
+        %%%%%%%%%%%%%%%%%%
         
         warpANTS_command = [ warpANTSpath Ndim ... % dimension number
             Simg ' ' fullfile(Spth, ['w' Sfn Sext]) ... % moving image & output
@@ -116,15 +157,7 @@ switch task
         
         %% 2) Mean Functional to EPI template
         
-        % Look for mean functional
-        mEPIimg = aas_getfiles_bystream(aap,subj,1,'meanepi');
-                
-        if isempty(mEPIimg)
-            aas_log(aap, true, 'Problem finding mean functional image.');
-        elseif size(mEPIimg,1) > 1
-            aas_log(aap, false, 'Found more than 1 mean functional images, using first.');
-        end
-        mEPIimg = deblank(mEPIimg(1,:));
+        
         
         % Coregister mean functional to template
         x = spm_coreg(spm_vol(eTimg), spm_vol(mEPIimg), flags.estimate);
@@ -192,6 +225,8 @@ switch task
         print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
+        %% Diagnostic VIDEO of coregistration
+        
         %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
             % Realignment params
@@ -220,7 +255,7 @@ switch task
                 2); % Rotations
             end
             try close(2); catch; end
-        end      
+        end   
         
         %% Describe the outputs
         
