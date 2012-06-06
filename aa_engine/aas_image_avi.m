@@ -60,20 +60,21 @@ if ~isempty(outlineFN)
     % Variables we need for outlining...
     thresh = cell(size(outlineFN));
     outlineSlice = cell(size(outlineFN));
+    oY = cell(size(outlineFN));
     
     for o = 1:length(outlineFN)
-        oY = spm_read_vols(spm_vol(outlineFN{o}));
+        oY{o} = spm_read_vols(spm_vol(outlineFN{o}));
         % Get a good threshold
-        thresh = zeros(size(Y{1},axisDim),2);
+        thresh{o} = zeros(size(Y{1},axisDim),2);
         for d = 1:size(Y{1},axisDim)
             if axisDim == 1
-                outlineSlice = squeeze(oY(d,:,:));
+                outlineSlice{o} = squeeze(oY{o}(d,:,:));
             elseif axisDim == 2
-                outlineSlice = squeeze(oY(:,d,:));
+                outlineSlice{o} = squeeze(oY{o}(:,d,:));
             elseif axisDim == 3
-                outlineSlice = squeeze(oY(:,:,d));
+                outlineSlice{o} = squeeze(oY{o}(:,:,d));
             end
-            [outlineSlice thresh{o}(d,:)] = edge(outlineSlice, 'canny');
+            [outlineSlice{o} thresh{o}(d,:)] = edge(outlineSlice{o}, 'canny');
         end
         thresh{o} = mean(thresh{o});
     end
@@ -98,18 +99,17 @@ for d = 1:size(Y{1},axisDim)
         if ~isempty(outlineFN)
             for o = 1:length(outlineFN)
                 if axisDim == 1
-                    outlineSlice{o} = squeeze(oY(d,:,:));
+                    outlineSlice{o} = squeeze(oY{o}(d,:,:));
                 elseif axisDim == 2
-                    outlineSlice{o} = squeeze(oY(:,d,:));
+                    outlineSlice{o} = squeeze(oY{o}(:,d,:));
                 elseif axisDim == 3
-                    outlineSlice{o} = squeeze(oY(:,:,d));
+                    outlineSlice{o} = squeeze(oY{o}(:,:,d));
                 end
                 outlineSlice{o} = edge(outlineSlice{o}, 'canny', thresh{o});
             end
         end
         
         % Rotate slices
-        
         imageSlice = rot90(imageSlice, rotations);
         if ~isempty(outlineFN{o})
             for o = 1:length(outlineFN)
@@ -120,12 +120,12 @@ for d = 1:size(Y{1},axisDim)
         % Draw slices
         imagescnan(imageSlice, 'NanColor', [1 0 0])
         if ~isempty(outlineFN)
+            hold on
             for o = 1:length(outlineFN)
-                hold on
                 [x y] = find(flipdim(outlineSlice{o},2));
-                scatter(x,y,3,colorsB{o}, 'd')
-                hold off
+                scatter(x,y,round(800./min(size(outlineSlice{o}))),colorsB{o}, 'd')
             end
+            hold off
         end
         
         caxis([limsY{f}(1), limsY{f}(2)])

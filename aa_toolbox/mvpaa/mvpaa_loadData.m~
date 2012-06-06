@@ -118,12 +118,11 @@ else
     aap.tasklist.currenttask.settings.sessions = length(SPM.Sess);
 end
 % Get rid of repeated condition names...
-for s = 1:length(conditions)
-    tempCond = conditions{s}(~nuisanceNum{s});
-    if ~isempty(tempCond)
-        break
-    end
-end
+tempCond = [];
+for t = 1:leng
+tempCond = conditions{1}( ...
+    (1:aap.tasklist.currenttask.settings.conditions*aap.tasklist.currenttask.settings.blocks) + ...
+    aap.tasklist.currenttask.settings.nuisance);
 for t1 = length(tempCond):-1:1
     for t2 = t1-1:-1:1
         if strcmp(tempCond{t1}, tempCond{t2})

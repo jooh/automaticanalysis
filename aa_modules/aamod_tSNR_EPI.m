@@ -33,7 +33,11 @@ switch task
         fprintf('\nWorking on session %s', aap.acq_details.sessions(sess).name)
         
         fprintf('\n\tLoading ROIs')
+        ROIlist = {};
         for r = 1:size(ROIimg,1)
+            ROIlist = [ROIlist ROIimg(r,:)];
+            [~, ROIname{r}] = fileparts(ROIimg(r,:));
+            
             % Now load each of the ROIs we wish to examine (usually using the grey matter)
             rV = spm_vol(ROIimg(r,:));
             ROIvol{r} = spm_read_vols(rV);
@@ -118,7 +122,8 @@ switch task
         
         fprintf('\n\tCalculating & saving the tSNR image')
         % Calculate SNR as ratio of the two...
-        EPIsnr = EPIsignal ./ EPInoise;
+        EPIsnr = zeros(size(EPIsignal));
+        EPIsnr(EPIsignal ~= 0) = EPIsignal(EPIsignal ~= 0) ./ EPInoise(EPIsignal ~= 0);
         EPIsnr(isnan(EPIsnr)|isinf(EPIsnr)) = 0;
         
         % Save the SNR image!
@@ -196,10 +201,9 @@ switch task
         xlabel('SNR')
         ylabel('Proportion of voxels')
         set(gca,'XTick', 0:ceil(maxI./50):maxI)
-        title(sprintf('\nSNR for session %s, using %.0f scans and TR %.3f', ...
+        title(sprintf('\nSNR for session %s, using %.0f scans', ...
             regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
-            size(EPIimg,1), ...
-            K.RT))
+            size(EPIimg,1)))
         eval(legStr);
         
         set(gcf,'PaperPositionMode','auto')
@@ -241,29 +245,23 @@ switch task
         xlabel('Scan')
         ylabel('Mean signal')
         set(gca,'XTick', 0:ceil(size(EPIimg,1)./25):size(EPIimg,1))
-        title(sprintf('\nTimecourse for session %s, using %.0f scans and TR %.3f', ...
+        title(sprintf('\nTimecourse for session %s, using %.0f scans', ...
             regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
-            size(EPIimg,1), ...
-            K.RT))
+            size(EPIimg,1)))
         
         set(gcf,'PaperPositionMode','auto')
         print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '_timecourse.jpeg']));
         
         %% Diagnostic VIDEO
-        if aap.tasklist.currenttask.settings.diagnostic
-            ROIlist = {};
-            for r = 1:size(ROIimg,1)
-                ROIlist = [ROIlist ROIimg(r,:)];
-                [~, ROIname{r}] = fileparts(ROIimg(r,:));
-            end
+        if aap.tasklist.currenttask.settings.diagnostic            
             
             aas_image_avi(sV.fname, ...
                 ROIlist, ...
                 fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' ROIname{r} '.avi']), ...
-                d, ... % Axis
+                2, ... % Axis
                 [800 600], ...
-                2); % Rotations
+                1); % Rotations
             try close(2); catch; end
         end
         
