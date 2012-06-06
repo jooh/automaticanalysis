@@ -16,7 +16,9 @@
             </inputstreams>
             
             <outputstreams>
+                <stream>structural</stream>
                 <stream>segmentation</stream>
+                <stream>BETmask</stream>
             </outputstreams>
             
             <diagnostic>0</diagnostic>

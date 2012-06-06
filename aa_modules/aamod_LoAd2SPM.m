@@ -1,6 +1,7 @@
 % AA module
 % Use the Anatomical Transformation Toolbox to normalise the structural to
 % a template image
+% It also outputs a precise BET mask, by using all the segmented tissues
 
 function [aap,resp]=aamod_LoAd2SPM(aap,task,subj)
 

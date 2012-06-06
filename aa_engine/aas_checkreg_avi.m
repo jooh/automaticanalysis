@@ -1,4 +1,5 @@
-% Create a movie
+% Create a movie of the image inside the spm check registration tool for
+% later viewing...
 
 function aas_checkreg_avi(aap, p, axisDim, suffix)
 

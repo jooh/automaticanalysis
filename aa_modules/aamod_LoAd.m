@@ -54,7 +54,39 @@ switch task
             [s w] = aas_shell(segmaths_command);
         end
         
-        aap=aas_desc_outputs(aap,subj,'segmentation',outSeg);
         
+        %% BET mask
+        mY = 0;
+        % There are 5 sensible tissue classes, the rest are not
+        for t = 1:5 
+            mY = mY + spm_read_vols(spm_vol(deblank(SEGimg(t,:))));
+        end
+        mY = mY > 0;
+        
+        %% @@
+        % CAN WE MAKE SURE THAT THERE ARE NO NOISY ISOLATED VOXELS IN BRAIN
+        % MASK? TAKE LARGEST CLUSTER...
+        %% @@
+        
+        V.fname = fullfile(Spth, [Sfn '_brain_mask' Sext ]);
+        spm_write_vol(V,Y);
+        
+        % Mask current structural with the more accurate mask, to improve
+        % future normalisation
+        sV = spm_vol(Simg);
+        sY = spm_read_vols(sV);
+        sY = sY .* mY;
+        spm_write_vol(sV,sY);
+        
+        %% @@
+        % WE NEED SOME NICE DIAGNOSTICS, PERHAPS USING OUR aas_image_avi
+        %% @@
+        
+        % Now put our BETmask in the BETmask stream, but without deleting
+        % the original BET mask...
+        aap=aas_desc_outputs(aap,subj,'BETmask', ...
+            strvcat(V.fname, aas_getfiles_bystream(aap,subj,'BETmask')));
+        aap=aas_desc_outputs(aap,subj,'structural',Simg);
+        aap=aas_desc_outputs(aap,subj,'segmentation',outSeg);
 end
 end

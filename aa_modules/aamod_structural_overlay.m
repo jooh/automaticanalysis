@@ -157,4 +157,4 @@ switch task
         %% DESCRIBE OUTPUTS
         aap=aas_desc_outputs(aap,'overlap_structural',outstream);
         
-endfullfile(pthM, ['p' fnM extM])
+end

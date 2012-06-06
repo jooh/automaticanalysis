@@ -9,19 +9,7 @@ function [aap,resp]=aamod_tSNR_EPI(aap,task,subj,sess)
 
 resp='';
 
-switch task
-    case 'domain'
-        resp='subject';  % this module needs to be run once per subject
-        
-    case 'description'
-        resp='SPM5 align';
-        
-    case 'summary'
-        sesspath=aas_getsesspath(aap,subj,sess);
-        resp=sprintf('Estimate tSNR of EPI series of %s\n',sesspath);
-        
-    case 'report'
-        
+switch task        
     case 'doit'
         
         EPIimg = aas_getfiles_bystream(aap,subj,sess,'epi');

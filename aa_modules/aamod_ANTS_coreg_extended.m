@@ -5,6 +5,21 @@
 % 3) Coregister mean EPI to Structural
 % 4) Apply transformation matrix of mean EPI to all EPIs
 
+% Because of the way that ANTS works (i.e. always reslicing the moving
+% image to the fixed image, what we actually do for each coregistration is...)
+% A) Estimate the coregistration parameters in antsRegistration
+% B) Apply the parameters to an image
+% C) Use SPM coreg, to coregister the moving image to the ANTS moved image
+% This is a bit dirty, but until we find a different way of applying the
+% transformation without reslicing, this is what we might have to do
+
+%%
+
+% GET LATEST STUFF FROM WHAT WE DID AT WORK... @@@
+% CHECK IF TRUE! @@@
+
+%%
+
 function [aap,resp]=aamod_ANTS_coreg_extended(aap,task,subj)
 
 resp='';
@@ -37,10 +52,6 @@ switch task
         end
         
         Spth = fileparts(Simg);
-        
-        keyboard
-        
-        %%
         
         %% Set up ANTS
         
