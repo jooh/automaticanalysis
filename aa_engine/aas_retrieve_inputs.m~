@@ -201,11 +201,19 @@ if (sourcestagenumber==-1)
         gotinputs={};
     end;
     
+<<<<<<< HEAD
     if (~doneremotefetch)
         fid=fopen(remotefetchfn,'w');
         fprintf(fid,sprintf('%f',now));
         try fclose(fid); catch; end % [alevic] Sometimes breaks...
     end;
+=======
+%     if (~doneremotefetch)
+%         fid=fopen(remotefetchfn,'w');
+%         fprintf(fid,sprintf('%f',now));
+%         fclose(fid);
+%     end;
+>>>>>>> master
 else
     
     % Not remote pull
