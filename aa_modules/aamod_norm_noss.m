@@ -162,11 +162,15 @@ switch task
             % [AVG] so instead, we group it all into segmentation stream
             outSeg = '';
             d = 0;
+            nativeSeg = {};
+            warpedSeg = {};
             while ~isnan(d)
                 d = d+1;
                 if exist(fullfile(Spth,sprintf('c%d%s',d,['m' Sfn Sext])), 'file')
-                    outSeg = strvcat(outSeg, fullfile(Spth,sprintf('c%d%s',d,['m' Sfn Sext])));
-                    outSeg = strvcat(outSeg, fullfile(Spth,sprintf('wc%d%s',d,['m' Sfn Sext])));
+                    nativeSeg{d} = fullfile(Spth,sprintf('c%d%s',d,['m' Sfn Sext]));
+                    warpedSeg{d} = fullfile(Spth,sprintf('wc%d%s',d,['m' Sfn Sext]));
+                    outSeg = strvcat(outSeg, nativeSeg{d});
+                    outSeg = strvcat(outSeg, warpedSeg{d});
                 else
                     d = NaN;
                 end
@@ -182,14 +186,14 @@ switch task
             spm_normalise(temp_imgs, Simg, SNmat,...
                 defs.estimate.weight, objMask, ...
                 defs.estimate);
-
+            
             aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
             % SPM2 normalization doesn't generate the inverse transformation
             try
                 aap=aas_desc_outputs(aap,subj,'normalisation_seg_inv_sn',invSNmat);
             catch
             end
-
+            
         end
         
         spm_write_sn(Simg,SNmat,defs.write);
@@ -235,7 +239,23 @@ switch task
             mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-         try
+        
+        %% Diagnostic VIDEO
+        if aap.tasklist.currenttask.settings.diagnostic
+            
+            if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
+                aas_image_avi(fullfile(Spth,['mm' Sfn Sext]), ...
+                    nativeSeg, ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '.avi']), ...
+                    2, ... % Axis
+                    [800 600], ...
+                    1, ... % Rotations
+                    'none'); % No outline...
+                try close(2); catch; end
+            end
+        end
+        
+        try
             % This will only work for 1-7 segmentations
             OVERcolours = {[1 0 0], [0 1 0], [0 0 1], ...
                 [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
@@ -246,8 +266,6 @@ switch task
             for r = 1:(size(outSeg,1)/2)
                 spm_orthviews('addcolouredimage',1,fullfile(Spth,sprintf('c%d%s',r, ['m' Sfn Sext])), OVERcolours{r})
             end
-            %% Diagnostic VIDEO of segmentations
-            aas_checkreg_avi(aap, subj, 2)
             
             spm_orthviews('reposition', [0 0 0])
             

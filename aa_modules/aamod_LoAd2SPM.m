@@ -23,7 +23,9 @@ switch task
         
         for s = 1:size(SEGimg,1)
             for t = 1:length(tissues)
-                if ~isempty(strfind(deblank(SEGimg(s,:)), tissues{t}))
+                % Make sure the entire string matches the name...
+                [Tpath, Tfn, Text] = fileparts(deblank(SEGimg(s,:)));
+                if strcmp(Tfn, tissues{t})
                     tissuesV{t} =  spm_vol(deblank(SEGimg(s,:)));
                     tissuesY{t} = spm_read_vols(tissuesV{t}); 
                     break
@@ -61,6 +63,27 @@ switch task
         V.fname = fullfile(Spth, ['c3' Sfn Sext]);
         spm_write_vol(V,Y);
         outSeg = strvcat(outSeg, V.fname);
+        
+        % Save graphical output to common diagnostics directory
+        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
+            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
+        end
+        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        %% Diagnostic VIDEO
+        if aap.tasklist.currenttask.settings.diagnostic
+            
+            Ydims = {'X', 'Y', 'Z'};
+            for d = 1:length(Ydims)
+                aas_image_avi( Simg, ...
+                    outSeg, ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                    d, ... % Axis
+                    [800 600], ...
+                    2, ... % Rotations
+                    'none');
+            end
+            try close(2); catch; end
+        end
         
         aap=aas_desc_outputs(aap,subj,'segmentation',outSeg);
         

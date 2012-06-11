@@ -22,7 +22,9 @@
             </outputstreams>
             
             <diagnostic>0</diagnostic>
-        
+            
+            <brainMask desc='Do we make a brain mask?'>0</brainMask>
+            
             </currenttask>
     </tasklist>
 </aap>

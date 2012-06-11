@@ -25,7 +25,7 @@ switch task
         %% retrieve TR from DICOM header & set up the HiPass filter
         % if TR is manually specified (not recommended as source of error)
         if (isfield(aap.tasklist.currenttask.settings,'TR'))
-            K.RT =aap.tasklist.currenttask.settings.TR;
+            K.RT = aap.tasklist.currenttask.settings.TR;
         else
             % Get TR from DICOM header
             DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_header'));
@@ -113,7 +113,7 @@ switch task
                                 szY=size(EPIdata);
                                 Y=reshape(EPIdata,[size(EPIimg,1) prod(szY(2:4))]);
                                 X0 = spm_dctmtx( size(EPIimg,1), ...
-                                    fix(2*(size(EPIimg,1) * aap.tasklist.currenttask.settings.TRs) / aap.tasklist.currenttask.settings.HParam + 1));
+                                    fix(2*(size(EPIimg,1) * K.RT) / aap.tasklist.currenttask.settings.HParam + 1));
                                 X0 = X0(:,2:end);
                                 beta = X0\Y;
                                 Y = Y-X0*beta;

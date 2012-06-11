@@ -1,14 +1,14 @@
 % Create a movie
-% aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations)
-function aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations)
+% aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations, outlineType)
+function aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations, outlineType)
 
 if ischar(imageFN)
-    imageFN = {imageFN};
+    imageFN = strvcat2cell(imageFN);
 end
 if nargin < 2
     outlineFN = [];
 elseif ischar(outlineFN)
-    outlineFN = {outlineFN};
+    outlineFN = strvcat2cell(outlineFN);
 end
 if nargin < 3
     [~, movieFN] = fileparts(imageFN{1});
@@ -25,6 +25,11 @@ if nargin < 5 || isempty(frameSize)
 end
 if nargin < 6 || isempty(rotations)
     rotations = 0;
+end
+if nargin < 7 || isempty(outlineType)
+    outlineType = 'canny';
+    % Can be 'none' (no outline...)
+    % or 'sobel', 'prewitt', 'roberts', 'log', 'zerocross', 'canny'
 end
 
 % Create movie file by defining aviObject
@@ -60,23 +65,35 @@ if ~isempty(outlineFN)
     % Variables we need for outlining...
     thresh = cell(size(outlineFN));
     outlineSlice = cell(size(outlineFN));
+    max_oY = -Inf;
     oY = cell(size(outlineFN));
     
     for o = 1:length(outlineFN)
         oY{o} = spm_read_vols(spm_vol(outlineFN{o}));
-        % Get a good threshold
-        thresh{o} = zeros(size(Y{1},axisDim),2);
-        for d = 1:size(Y{1},axisDim)
-            if axisDim == 1
-                outlineSlice{o} = squeeze(oY{o}(d,:,:));
-            elseif axisDim == 2
-                outlineSlice{o} = squeeze(oY{o}(:,d,:));
-            elseif axisDim == 3
-                outlineSlice{o} = squeeze(oY{o}(:,:,d));
+        if ~strcmp(outlineType, 'none')
+            % Get a good threshold
+            thresh{o} = zeros(size(Y{1},axisDim),2);
+            for d = 1:size(Y{1},axisDim)
+                if axisDim == 1
+                    outlineSlice{o} = squeeze(oY{o}(d,:,:));
+                elseif axisDim == 2
+                    outlineSlice{o} = squeeze(oY{o}(:,d,:));
+                elseif axisDim == 3
+                    outlineSlice{o} = squeeze(oY{o}(:,:,d));
+                end
+                
+                [outlineSlice{o} thresh{o}(d,:)] = edge(outlineSlice{o}, 'canny');
             end
-            [outlineSlice{o} thresh{o}(d,:)] = edge(outlineSlice{o}, 'canny');
+            thresh{o} = mean(thresh{o});
+        else
+            max_oY = max(max_oY, oY{o});
         end
-        thresh{o} = mean(thresh{o});
+    end
+end
+% Ensure that we don't get overlap between our masks...
+if strcmp(outlineType, 'none')
+    for o = 1:length(outlineFN)
+        oY{o}(oY{o}<max_oY) = 0;
     end
 end
 
@@ -105,7 +122,9 @@ for d = 1:size(Y{1},axisDim)
                 elseif axisDim == 3
                     outlineSlice{o} = squeeze(oY{o}(:,:,d));
                 end
-                outlineSlice{o} = edge(outlineSlice{o}, 'canny', thresh{o});
+                if ~strcmp(outlineType, 'none')
+                    outlineSlice{o} = edge(outlineSlice{o}, 'canny', thresh{o});
+                end
             end
         end
         
@@ -123,7 +142,7 @@ for d = 1:size(Y{1},axisDim)
             hold on
             for o = 1:length(outlineFN)
                 [x y] = find(flipdim(outlineSlice{o},2));
-                scatter(x,y,round(800./min(size(outlineSlice{o}))),colorsB{o}, 'd')
+                scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, 'd')
             end
             hold off
         end

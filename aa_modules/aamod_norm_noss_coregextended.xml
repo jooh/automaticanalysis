@@ -10,10 +10,7 @@
             
             <permanenceofoutput>2</permanenceofoutput>
             
-            <usesegmentnotnormalise>1</usesegmentnotnormalise>
-             <affinestartingestimate><x>0</x></affinestartingestimate>
-            
-             <inputstreams>
+            <inputstreams>
                 <stream>structural</stream>
             </inputstreams>
             
@@ -23,6 +20,9 @@
                 <stream>normalisation_seg_sn</stream>
                 <stream>normalisation_seg_inv_sn</stream>
             </outputstreams>
+            
+            <usesegmentnotnormalise>1</usesegmentnotnormalise>
+            <affinestartingestimate><x>0</x></affinestartingestimate>
             
             <diagnostic>0</diagnostic>
             

@@ -53,7 +53,7 @@ switch task
         end
         
         fprintf(['\tstructural to template realignment parameters:\n' ...
-            '\tx: %0.4f   y: %0.4f   z: %0.4f   p: %0.4f   r: %0.4f   j: %0.4f'], ...
+            '\tx: %0.4f   y: %0.4f   z: %0.4f   p: %0.4f   r: %0.4f   j: %0.4f\n'], ...
             x(1), x(2), x(3), x(4), x(5), x(6))
         
         %% 2) Mean Functional to EPI template
@@ -77,7 +77,7 @@ switch task
         spm_get_space(mEPIimg, Me*MM);
         
         fprintf(['\tmean EPI to template realignment parameters:\n' ...
-            '\tx: %0.4f   y: %0.4f   z: %0.4f   p: %0.4f   r: %0.4f   j: %0.4f'], ...
+            '\tx: %0.4f   y: %0.4f   z: %0.4f   p: %0.4f   r: %0.4f   j: %0.4f\n'], ...
             x(1), x(2), x(3), x(4), x(5), x(6))
         
         %% 3) Mean Functional to Structural
@@ -93,7 +93,7 @@ switch task
         spm_get_space(mEPIimg, Mf*MM);
         
         fprintf(['\tmean EPI to structural realignment parameters:\n' ...
-            '\tx: %0.4f   y: %0.4f   z: %0.4f   p: %0.4f   r: %0.4f   j: %0.4f'], ...
+            '\tx: %0.4f   y: %0.4f   z: %0.4f   p: %0.4f   r: %0.4f   j: %0.4f\n'], ...
             x(1), x(2), x(3), x(4), x(5), x(6))
         
         %% 4) Now apply this transformation to all the EPI images
@@ -148,20 +148,21 @@ switch task
                 'which', 1,...     % what images to reslice
                 'mean', 0);           % write mean image
             
-            % Get resliced structural
-            [Spth, Sfn, Sext] = fileparts(deblank(Simg(aap.tasklist.currenttask.settings.structural,:)));
-            spm_reslice(strvcat(mEPIimg, fullfile(Spth, [Sfn Sext])), resFlags);
+            % Get resliced mean EPI
+            [mEPIpth, mEPIfn, mEPIext] = fileparts(deblank(mEPIimg(aap.tasklist.currenttask.settings.structural,:)));
+            spm_reslice(strvcat(Simg, mEPIimg), resFlags);
             
             Ydims = {'X', 'Y', 'Z'};
             for d = 1:length(Ydims)
-                aas_image_avi(mEPIimg, ...
-                fullfile(Spth, ['r' Sfn Sext]), ...
+                aas_image_avi( fullfile(mEPIpth, ['r' mEPIfn mEPIext]), ...
+                Simg, ...
                 fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
                 d, ... % Axis
                 [800 600], ...
                 2); % Rotations
             end
             try close(2); catch; end
+            delete(fullfile(mEPIpth, ['r' mEPIfn mEPIext]))
         end
         
         %% Describe the outputs

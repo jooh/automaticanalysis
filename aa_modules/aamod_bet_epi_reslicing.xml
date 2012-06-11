@@ -18,7 +18,12 @@
             
             <outputstreams>
                 <stream>epiBETmask</stream>
+                <stream>meanepi</stream>
             </outputstreams>
+            
+            <diagnostic>0</diagnostic>
+            
+            <maskBrain desc='Which mask do we use on the meanepi image with BET (if any)?'></maskBrain>
             
         </currenttask>
     </tasklist>

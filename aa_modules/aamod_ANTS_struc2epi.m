@@ -180,7 +180,7 @@ switch task
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         
-        %% Draw coregistration of structural to functional
+        %% Draw coregistration of structural to functional & delta structurals
         V = spm_vol(Simg);
         Y = spm_read_vols(V) - spm_read_vols(spm_vol(fullfile(Spth, ['w' Sfn Sext])));
         V.fname = fullfile(Spth, ['d' Sfn Sext]);
@@ -191,13 +191,25 @@ switch task
             fullfile(Spth,['d' Sfn Sext]), ...
             mEPIimg))
         
-        %% Diagnostic VIDEO of segmentations
-        aas_checkreg_avi(aap, subj, 2)
-        
         spm_orthviews('reposition', [0 0 0])
         
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
         print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
+        %% Diagnostic VIDEO
+        if aap.tasklist.currenttask.settings.diagnostic
+            
+            Ydims = {'X', 'Y', 'Z'};
+            for d = 1:length(Ydims)
+                aas_image_avi( mEPIimg, ...
+                Simg, ...
+                fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                d, ... % Axis
+                [800 600], ...
+                2); % Rotations
+            end
+            try close(2); catch; end
+            delete(fullfile(mEPIpth, ['r' mEPIfn mEPIext]))
+        end
 end
