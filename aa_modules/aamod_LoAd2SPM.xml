@@ -16,7 +16,6 @@
             </inputstreams>
             
             <outputstreams>
-                <stream>structural</stream>
                 <stream>segmentation</stream>
             </outputstreams>
             
