@@ -142,7 +142,11 @@ for d = 1:size(Y{1},axisDim)
             hold on
             for o = 1:length(outlineFN)
                 [x y] = find(flipdim(outlineSlice{o},2));
-                scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, 'd')
+                if ~strcmp(outlineType, 'none')
+                    scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, 'd')
+                else
+                    scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, '.')
+                end
             end
             hold off
         end

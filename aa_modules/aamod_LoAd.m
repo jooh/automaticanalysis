@@ -1,6 +1,6 @@
 % AA module
-% Use the Anatomical Transformation Toolbox to normalise the structural to
-% a template image
+% Use the niftyseg (& niftyreg) toolboxes to segment the brain
+% ...and optionally make a brain Mask (MATLAB Image Manipulation Toolbox required)
 
 function [aap,resp]=aamod_LoAd(aap,task,subj)
 
@@ -51,14 +51,14 @@ switch task
         looseBits = 1;
         
         while looseBits == 1
-            
+            fprintf('Runing LoAd...\n')
             %% Use LoAd to segment the structural!
             LoAd_command = ['sh LoAd_brainonly.sh ' ... % Run LoAd command
                 Simg ' ' ... % structural
                 BETmask]; % mask
             
             [s w] = aas_shell(LoAd_command);
-            disp(w)
+            %disp(w)
             
             %% Use seg_maths to extract the relevant
             outSeg = '';
@@ -74,7 +74,6 @@ switch task
                     '-tp ' num2str(t-1) ' ' ...
                     Mfn];
                 [s w] = aas_shell(segmaths_command);
-                disp(w)
             end
             
             %% BET mask
@@ -82,34 +81,82 @@ switch task
             % There are 5 sensible tissue classes, the rest are not
             % Exclude CSF, as this will make the brain mask too large...
             for t = [1 2 4 5]
-                mY = mY + spm_read_vols(spm_vol(deblank(SEGimg(t,:))));
+                mY = mY + spm_read_vols(spm_vol(deblank(outSeg(t,:))));
             end
             mY = mY > 0;
             
+            fprintf('Doing image operations on mask to clean it up...\n')
             % Remove loose bits
-            CC = bwconncomp(mY);
-            if length(CC.PixelIdxList) == 1
-                looseBits = 0;
-            else
+            try
+                CC = bwconncomp(mY, 26);
                 numPixels = cellfun(@numel,CC.PixelIdxList);
                 [biggest,idx] = max(numPixels);
-                for b = 1:length(CC.PixelIdxList)
-                    if b~=inx
-                        mY(CC.PixelIdxList{idx}) = 0;
+                numPixels(idx) = []; % For display purposes...
+                sumPixels = sum(numPixels);
+                
+                if length(CC.PixelIdxList) == 1 || sumPixels < aap.tasklist.currenttask.settings.looseBits_voxthresh
+                    looseBits = 0;
+                else
+                    for b = 1:CC.NumObjects
+                        if b~=idx
+                            mY(CC.PixelIdxList{b}) = 0;
+                        end
                     end
+                end
+                fprintf('The brain mask consists of %d clusters, of approx. %0.2f voxels (main cluster = %d)\n', length(CC.PixelIdxList), mean(numPixels), biggest)
+                
+            catch aa_error
+                aas_log(aap, false, 'You may be lacking the MATLAB image toolbox')
+                looseBits = 0;
+            end
+            
+            % Then erode and dilate sequentially, several times
+            if ~isempty(aap.tasklist.currenttask.settings.imopen_se)
+                try
+                    se = strel(mvpaa_makeSphere(aap.tasklist.currenttask.settings.imopen_se));
+                    mY = imopen(mY,se);
+                catch aa_error
+                    aas_log(aap, false, 'Could not imopen brain mask')
+                end
+            end
+            
+            % Then erode and dilate sequentially, several times
+            if ~isempty(aap.tasklist.currenttask.settings.imclose_se)
+                try
+                    se = strel(mvpaa_makeSphere(aap.tasklist.currenttask.settings.imclose_se));
+                    mY = imclose(mY,se);
+                catch aa_error
+                    aas_log(aap, false, 'Could not imclose brain mask')
+                end
+            end
+            
+            % And dilate slightly, to ensure we don't remove anything important
+            if ~isempty(aap.tasklist.currenttask.settings.imdilate_se)
+                try
+                    se = strel(mvpaa_makeSphere(aap.tasklist.currenttask.settings.imdilate_se));
+                    mY = imdilate(mY,se);
+                catch aa_error
+                    aas_log(aap, false, 'Could not imdilate brain mask')
                 end
             end
             
             % Fill any holes that may be remaining
             try
-                mY = imfill(mY,'holes')
+                mY = imfill(mY,'holes');
             catch aa_error
                 aas_log(aap, false, 'Could not fill the holes in brain mask')
             end
             
-            BETmask = fullfile(Spth, [Sfn '_brain_mask' Sext ]);
+            V = spm_vol(BETmask);
+            BETmask = fullfile(Spth, [Sfn '_LoADbrain_mask' Sext ]);
             V.fname = BETmask;
-            spm_write_vol(V,Y);
+            spm_write_vol(V,double(mY));
+            
+            spm_check_registration(strvcat( ...
+                Simg, ... % Get structural
+                BETmask)); % Get BET mask
+            spm_orthviews('reposition', [0 0 0])
+            fprintf('\n')
         end
         
         % Mask current structural with the more accurate mask, to improve
@@ -126,7 +173,6 @@ switch task
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
-            
             Ydims = {'X', 'Y', 'Z'};
             
             for d = 1:length(Ydims)
@@ -139,7 +185,6 @@ switch task
                     'none'); % No outline
             end
             try close(2); catch; end
-            delete(fullfile(mEPIpth, ['r' mEPIfn mEPIext]))
         end
         
         % Now put our BETmask in the BETmask stream, but without deleting

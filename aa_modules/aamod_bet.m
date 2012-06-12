@@ -25,6 +25,7 @@ switch task
         
         [pth nme ext]=fileparts(Simg);
         
+        % Structural image (after BETting, if we mask...)
         outStruct=fullfile(pth,['bet_' nme ext]);
         
         if aap.tasklist.currenttask.settings.robust
@@ -100,47 +101,43 @@ switch task
             outMesh = strvcat(outMesh, fullfile(pth, D(d).name));
         end
         
-        %% Make the BRAIN MASK
-        if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
-            fprintf('Masking the brain with %s \n', aap.tasklist.currenttask.settings.maskBrain)
-            % Get mask...
-            for d = 1:size(outMask,1)
-                if ~isempty(strfind(outMask(d,:), aap.tasklist.currenttask.settings.maskBrain))
-                    M = spm_read_vols(spm_vol(deblank(outMask(d,:))));
-                    break
-                end
-            end
-        else
-            %% As made by BET [and slightly different from inskull_mask]
-            V = spm_vol(fullfile(pth,['bet_' nme ext]));
-            M = spm_read_vols(V);
-        end
-            
-        if aap.tasklist.currenttask.settings.smooth > 0
-            fprintf('Smoothing the brain mask with %d voxel kernel \n', aap.tasklist.currenttask.settings.smooth)
-            M = smooth3(M, 'box', repmat(aap.tasklist.currenttask.settings.smooth, [1 3]));
-        end
+        %% Make the BET BRAIN MASK
+        % As made by BET [and slightly different from inskull_mask]
+        V = spm_vol(outStruct);
+        M = spm_read_vols(V);
         
         % Mask out non-brain
         M = M > 0;
         
+        % Smooth mask if need be
+        if aap.tasklist.currenttask.settings.smooth > 0
+            fprintf('Smoothing the brain mask with %d voxel kernel \n', aap.tasklist.currenttask.settings.smooth)
+            M = smooth3(M, 'box', repmat(aap.tasklist.currenttask.settings.smooth, [1 3]));
+            M = M > 0;
+        end
+        
         % Then write out actual BET mask
         V.fname = fullfile(pth, ['bet_' nme '_brain_mask' ext]);
         spm_write_vol(V,M);
+        % And add the mask to the list...
+        outMask = strvcat(V.fname, outMask);
         
         %% MASK the brain
+        fprintf('Masking the brain with Brain Mask \n')
         V = spm_vol(Simg);
         Y = spm_read_vols(V);
         % Mask brain
         Y = Y.*M;
         % Write brain
-        V.fname = fullfile(pth,['bet_' nme ext]);
+        V.fname = outStruct;
         spm_write_vol(V, Y);
         
         %% DESCRIBE OUTPUTS!
-        
-        % Structural image after BETting
-        aap=aas_desc_outputs(aap,subj,'structural',outStruct);
+        if aap.tasklist.currenttask.settings.maskBrain
+            aap=aas_desc_outputs(aap,subj,'structural',outStruct);
+        else
+           aap=aas_desc_outputs(aap,subj,'structural',Simg); 
+        end
         aap=aas_desc_outputs(aap,subj,'BETmask',outMask);
         if aap.tasklist.currenttask.settings.masks
             aap=aas_desc_outputs(aap,subj,'BETmesh',outMesh);
@@ -195,5 +192,10 @@ switch task
                     2); % Rotations
             end
             try close(2); catch; end
+        end
+        
+        % Clean up...
+        if ~aap.tasklist.currenttask.settings.maskBrain
+            delete(outStruct);
         end
 end

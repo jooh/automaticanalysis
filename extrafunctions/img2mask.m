@@ -7,8 +7,10 @@ Y = spm_read_vols(V);
 % First round the image...
 Y = round(Y);
 
-% Anything above 1 is 1
-Y(Y>1) = 1;
+% Anything above 0 is 1
+Y(Y>0) = 1;
+% Anything below 0 is 0
+Y(Y<0) = 0;
 
 % Any NaNs are 0
 Y(isnan(Y)) = 0;

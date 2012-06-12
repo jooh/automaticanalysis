@@ -38,7 +38,7 @@ switch task
             'mean', 0);           % write mean image
         
         % Get files to reslice
-        outMask=aas_getfiles_bystream(aap,subj,'BETmask');
+        outMask = aas_getfiles_bystream(aap,subj,'BETmask');
         
         spm_reslice(strvcat(mEPIimg, outMask), resFlags);
         
@@ -90,7 +90,6 @@ switch task
             Y = Y.*M;
             % Write brain
             spm_write_vol(V, Y);
-            aap=aas_desc_outputs(aap,subj,1,'meanEPI',mEPIimg);
         else
             %% Diagnostic VIDEO of masks
             if aap.tasklist.currenttask.settings.diagnostic
@@ -109,5 +108,6 @@ switch task
         end
         
         %% DESCRIBE OUTPUTS!
+        aap=aas_desc_outputs(aap,subj,1,'meanEPI',mEPIimg);
         aap=aas_desc_outputs(aap,subj,'epiBETmask',outMaskEPI);
 end

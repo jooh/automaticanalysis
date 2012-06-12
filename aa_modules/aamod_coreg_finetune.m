@@ -145,6 +145,7 @@ switch task
         spm_check_registration(strvcat( ...
             Simg, ... % Get structural
             mEPIimg)); % Get mean EPI across sessions
+        spm_orthviews('reposition', [0 0 0])
         
         % Save graphical output to common diagnostics directory
         if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
