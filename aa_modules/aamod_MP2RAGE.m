@@ -27,34 +27,12 @@ switch task
     case 'doit'
         
         % @@@ FIGURE OUT WAY OF MAKING THIS WORK WITH DEFAULT BET FUNCTIONS?
-
-        % Look for mean functional
-        mEPIimg = aas_getimages_bystream(aap,subj,1,'meanepi');
-        if isempty(mEPIimg)
-            aas_log(aap, true, 'Problem finding mean functional image.');
-        elseif size(mEPIimg,1) > 1
-            aas_log(aap, false, 'Found more than 1 mean functional images, using first.');
-            mEPIimg = deblank(mEPIimg(1,:));
-        end      
         Simg = aas_getfiles_bystream(aap,subj,'structural');
         DCMfile = aas_getfiles_bystream(aap,subj,'structural_dicom_header');
         
         % dcmhdr{n}.SeriesDescription
         dcmhdr = [];
         load(DCMfile);
-        
-        % Cheap and cheerful way of ensuring only one mean EPI is considered!
-        if size(mEPIimg,1) > 1
-            % Not warped!
-            for a = 1:size(mEPIimg,1)
-                if ~strcmp(mEPIimg(a,1), 'w')
-                    mEPIimg = mEPIimg(a,:);
-                    break
-                end
-            end
-            mEPIimg = mEPIimg(1,:);
-            fprintf('\tSeveral mean EPIs found, considering: %s\n', mEPIimg)
-        end
         
         % Find the InvC2 and Flat images...
         for d = 1:length(dcmhdr)
@@ -75,70 +53,6 @@ switch task
         end
         
         Sdir = fileparts(IC2_img);
-        
-        %% 0) Check that the tamplates we need exist!
-        % Get the template
-        sTimg = fullfile(spm('dir'), 'templates', 'T1.nii');
-        if ~exist(sTimg, 'file')
-            aas_log(aap, true, sprintf('Couldn''t find template T1 image %s.', Timg));
-        end
-        
-        %% 1) Structural to T1 template
-        fprintf('Coregistering the T1 template to IC2 structural\n')
-        
-        global defaults %#ok<TLEV>
-        flags = defaults.coreg;
-        
-        % Copy template to structural location
-        copyfile(sTimg, Sdir);
-        sTimg = fullfile(Sdir, 'T1.nii');
-        
-        % Coregister template to IC2
-        x = spm_coreg(spm_vol(IC2_img), spm_vol(sTimg), flags.estimate);
-        
-        % Set the new space for the template
-        MM = spm_get_space(sTimg);
-        spm_get_space(sTimg, spm_matrix(x)\MM);
-        
-        %% 2) Then reslice the Template
-        
-        fprintf('Reslicing T1 template to IC2 structural\n')
-        % Get realignment defaults
-        defs = aap.spm.defaults.realign;
-        
-        % Flags to pass to routine to create resliced images
-        % (spm_reslice)
-        resFlags = struct(...
-            'interp', defs.write.interp,...       % interpolation type
-            'wrap', defs.write.wrap,...           % wrapping info (ignore...)
-            'mask', defs.write.mask,...           % masking (see spm_reslice)
-            'which', 1,...     % what images to reslice
-            'mean', 0);           % write mean image
-        
-        % Reslice
-        spm_reslice(strvcat(IC2_img, sTimg), resFlags);
-        
-        %% 3) Mask the IC2 image using the T1 template
-        
-        fprintf('Mask IC2 structural with resliced T1 template\n')
-        
-        M = spm_read_vols(spm_vol(fullfile(Sdir, 'rT1.nii')));
-        M = M>0;
-        
-        % Mask each of the images we need
-        % IC2
-        V = spm_vol(IC2_img);
-        Y = spm_read_vols(V);
-        Y = Y.*M;
-        spm_write_vol(V,Y);
-        % FI
-        V = spm_vol(FI_img);
-        Y = spm_read_vols(V);
-        Y = Y.*M;
-        spm_write_vol(V,Y);
-        
-        delete(fullfile(Sdir, 'T1.nii'));
-        delete(fullfile(Sdir, 'rT1.nii'));
         
         %% BIAS-FIELD!
         
@@ -252,21 +166,10 @@ switch task
             catch
             end
             
-            %% Diagnostic VIDEO of BET masks
-            if aap.tasklist.currenttask.settings.diagnostic
-                spm_check_registration(strvcat( ...
-                    IC2_img,... % Get structural
-                    mEPIimg)); % Get mean EPI across sessions
-            end
-            aas_checkreg_avi(aap, subj, 2)
-        
-            spm_orthviews('reposition', [0 0 0])
-            
             try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
             print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '.jpeg']));
         
-        % Different thresholding, by gradient?
         
         % Mask out the flat image using the BET masked IC2
         

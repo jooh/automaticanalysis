@@ -13,7 +13,6 @@
             <inputstreams>
                 <stream>structural</stream>
                 <stream>structural_dicom_header</stream>
-                <stream>meanepi</stream>
             </inputstreams>
             
             <outputstreams>

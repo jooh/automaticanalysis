@@ -35,10 +35,11 @@ switch task
         %% Get structural
         % [AVG] Modified the way we get the structural, to be more aa4-like
         Simg = aas_getfiles_bystream(aap,subj,'structural');
-        % Cheap and cheerful way of ensuring only one file is considered!
+        % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
-            Simg = deblank(Simg(1,:));
-            aas_log(aap,0,sprintf('Found more than one structural so using:\n%s',Simg));
+            Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
+            fprintf('WARNING: Several structurals found, considering: \n')
+            fprintf('\t%s\n', Simg(1,:))
         end
         % Get structural directory for this subject
         [Spth, Sfn, Sext] = fileparts(Simg);

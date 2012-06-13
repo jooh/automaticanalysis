@@ -20,24 +20,29 @@ switch task
         % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
             Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
-            fprintf('\tWARNING: Several structurals found, considering: %s\n', Simg)
+            fprintf('WARNING: Several structurals found, considering: \n')
+            for t = 1:length(aap.tasklist.currenttask.settings.structural)
+                fprintf('\t%s\n', Simg(t,:))
+            end
         end
         
-        [pth nme ext]=fileparts(Simg);
+        % Image that we will be using for BET...
+        cSimg = deblank(Simg(1,:));
+        [Spth Sfn Sext]=fileparts(cSimg);
         
         % Structural image (after BETting, if we mask...)
-        outStruct=fullfile(pth,['bet_' nme ext]);
+        bSimg=fullfile(Spth,['bet_' Sfn Sext]);
         
         if aap.tasklist.currenttask.settings.robust
             % Run BET [-R Using robust setting to improve performance!]
             fprintf('1st BET pass (recursive) to find optimal centre of gravity and radius\n')
             [junk, w]=aas_runfslcommand(aap, ...
-                sprintf('bet %s %s -f %f -v -R',Simg,outStruct, ...
+                sprintf('bet %s %s -f %f -v -R',cSimg,bSimg, ...
                 aap.tasklist.currenttask.settings.bet_f_parameter));
         else
             fprintf('1st BET pass\n')
             [junk, w]=aas_runfslcommand(aap, ...
-                sprintf('bet %s %s -f %f -v ',Simg,outStruct, ...
+                sprintf('bet %s %s -f %f -v ',cSimg,bSimg, ...
                 aap.tasklist.currenttask.settings.bet_f_parameter));
         end
         
@@ -50,7 +55,7 @@ switch task
         
         % We don't extract the centre of gravity from here, since it needs
         % to be input in voxels... Instead get it from betted image
-        Y = spm_read_vols(spm_vol(outStruct));
+        Y = spm_read_vols(spm_vol(bSimg));
         Y = Y > 0;
         indY = find(Y);
         [subY_x subY_y subY_z] = ind2sub(size(Y), indY);
@@ -63,7 +68,7 @@ switch task
             fprintf('2nd BET pass extracting brain masks \n')
             % Run BET [-A Now let's get the brain masks and meshes!!]
             [junk, w]=aas_runfslcommand(aap, ...
-                sprintf('bet %s %s -f %f -c %0.4f %0.4f %0.4f -r %s -v -A',Simg,outStruct, ...
+                sprintf('bet %s %s -f %f -c %0.4f %0.4f %0.4f -r %s -v -A',cSimg,bSimg, ...
                 aap.tasklist.currenttask.settings.bet_f_parameter, COG(1), COG(2), COG(3), SRad)...
                 );
             
@@ -76,7 +81,7 @@ switch task
             
             % We don't extract the centre of gravity from here, since it needs
             % to be input in voxels... Instead get it from betted image
-            Y = spm_read_vols(spm_vol(outStruct));
+            Y = spm_read_vols(spm_vol(bSimg));
             Y = Y > 0;
             indY = find(Y);
             [subY_x subY_y subY_z] = ind2sub(size(Y), indY);
@@ -88,22 +93,22 @@ switch task
         
         %% FIND OUTPUT
         % Get the mask images
-        D = dir(fullfile(pth, 'bet*mask*'));
+        D = dir(fullfile(Spth, 'bet*mask*'));
         outMask = '';
         for d = 1:length(D)
-            outMask = strvcat(outMask, fullfile(pth, D(d).name));
+            outMask = strvcat(outMask, fullfile(Spth, D(d).name));
         end
         
         % Get also the meshes
-        D = dir(fullfile(pth, 'bet*mesh*'));
+        D = dir(fullfile(Spth, 'bet*mesh*'));
         outMesh = '';
         for d = 1:length(D)
-            outMesh = strvcat(outMesh, fullfile(pth, D(d).name));
+            outMesh = strvcat(outMesh, fullfile(Spth, D(d).name));
         end
         
         %% Make the BET BRAIN MASK
         % As made by BET [and slightly different from inskull_mask]
-        V = spm_vol(outStruct);
+        V = spm_vol(bSimg);
         M = spm_read_vols(V);
         
         % Mask out non-brain
@@ -117,26 +122,33 @@ switch task
         end
         
         % Then write out actual BET mask
-        V.fname = fullfile(pth, ['bet_' nme '_brain_mask' ext]);
+        V.fname = fullfile(Spth, ['bet_' Sfn '_brain_mask' Sext]);
         spm_write_vol(V,M);
         % And add the mask to the list...
         outMask = strvcat(V.fname, outMask);
         
-        %% MASK the brain
-        fprintf('Masking the brain with Brain Mask \n')
-        V = spm_vol(Simg);
-        Y = spm_read_vols(V);
-        % Mask brain
-        Y = Y.*M;
-        % Write brain
-        V.fname = outStruct;
-        spm_write_vol(V, Y);
+        %% MASK the brain(s)
+        fprintf('Masking the brain(s) with Brain Mask \n')
+        outStruct = '';
+        for t = 1:length(aap.tasklist.currenttask.settings.structural)
+            % Mask structural
+            V = spm_vol(deblank(Simg(t,:)));
+            Y = spm_read_vols(V);
+            % Mask brain
+            Y = Y.*M;
+            % Write brain
+            [pth nme ext]=fileparts(deblank(Simg(t,:)));
+            V.fname = fullfile(pth,['bet_' nme ext]);
+            spm_write_vol(V,Y);
+            % Add to output...
+            outStruct = strvcat(outStruct, V.fname);
+        end
         
         %% DESCRIBE OUTPUTS!
         if aap.tasklist.currenttask.settings.maskBrain
             aap=aas_desc_outputs(aap,subj,'structural',outStruct);
         else
-           aap=aas_desc_outputs(aap,subj,'structural',Simg); 
+            aap=aas_desc_outputs(aap,subj,'structural',Simg); 
         end
         aap=aas_desc_outputs(aap,subj,'BETmask',outMask);
         if aap.tasklist.currenttask.settings.masks
@@ -160,7 +172,7 @@ switch task
         indx = 0;
         
         % Colour the brain extracted bit pink
-        spm_orthviews('addcolouredimage',1,outStruct, [0.9 0.4 0.4])
+        spm_orthviews('addcolouredimage',1,deblank(outStruct(1,:)), [0.9 0.4 0.4])
         % Add mesh outlines, to see if BET has worked properly!
         if aap.tasklist.currenttask.settings.masks
             for r = 1:size(outMesh,1)

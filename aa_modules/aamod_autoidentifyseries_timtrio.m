@@ -126,9 +126,6 @@ switch task
                     dicomfilepath=alldicomfiles{seriesnum}{1};
             end
             
-            
-            
-            
             % For this series, find type from a single DICOM file
             if (~isempty(dicomfilepath))
                 hdr=spm_dicom_headers(dicomfilepath);
@@ -156,7 +153,6 @@ switch task
                             series_spgr=[series_spgr seriesnum];
                         end
                     end
-                    
                     
                     if (aap.options.autoidentifytmaps)
                         % Use directory name rather than protocol to

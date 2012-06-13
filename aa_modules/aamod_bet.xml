@@ -33,7 +33,8 @@
             <!-- Do we apply the brain masking on the structural...? 0 - NO; 1 - YES -->
             <maskBrain>1</maskBrain>
             
-            <!-- This specifies which structural we want to use, typically the first, but can be changed -->
+            <!-- This specifies which structural we want to use, typically the first, but can be changed 
+            Can add multiple, but then only first one will be used for BETting, but operation will be applied on both -->
             <structural>1</structural>
             
             <!-- Diagnostic videos? -->

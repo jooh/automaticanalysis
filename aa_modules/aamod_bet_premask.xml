@@ -18,8 +18,11 @@
                 <stream>structural</stream>
             </outputstreams>
             
-            <!-- This specifies which structural we want to use, typically the first, but can be changed -->
+            <!-- This specifies which structural we want to use, typically the first, but can be changed 
+            Can add multiple, but then only first one will be used for BETting, but operation will be applied on both -->
             <structural>1</structural>
+            
+            <diagnostic>0</diagnostic>
             
         </currenttask>
     </tasklist>

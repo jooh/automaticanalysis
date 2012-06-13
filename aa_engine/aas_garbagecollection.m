@@ -25,6 +25,9 @@ else
         actuallydelete=false;
     end;
     
+    % What things fall under the image category?
+    imgCategory = {'.IMA' '.dcm' '.nii' '.img' '.hdr'};
+    
     numdel=0;
     
     for modind=modulestoscan
@@ -60,13 +63,21 @@ else
         
         % Garbage collect outputs
         if ~isfield(aap.tasklist.currenttask.settings, 'permanenceofoutput')
-            % To be on the safe side!
+            % To be on the safe side keep stuff without a permanenceofoutput flag!
             aap.tasklist.currenttask.settings.permanenceofoutput = Inf;
         end
-        if aap.tasklist.currenttask.settings.permanenceofoutput <= permanencethreshold
-            outdelete = 1;
+        if abs(aap.tasklist.currenttask.settings.permanenceofoutput) <= permanencethreshold
+            delete_outputs = 1;
         else
-            outdelete = 0;
+            delete_outputs = 0;
+        end
+        if aap.tasklist.currenttask.settings.permanenceofoutput < 0
+            % If permanenceofoutput has negative value, delete only images
+            % .nii .img .hdr files
+            delete_onlyImg = 1;
+        else
+            % Otherwise delete also non-image outputs...
+            delete_onlyImg = 0;
         end
         
         % Garbage collect inputs
@@ -93,7 +104,7 @@ else
         end
         
         % Garbage collect outputs
-        if (~isempty(outfn) && exist(aas_getstudypath(aap),'file') && outdelete)
+        if (~isempty(outfn) && exist(aas_getstudypath(aap),'file') && delete_outputs)
             garbagelog=fullfile(aas_getstudypath(aap),sprintf('garbage_collection_outputs.txt'));
             if (actuallydelete)
                 fid=fopen(garbagelog,'a');
@@ -103,8 +114,12 @@ else
             for fn=outfn
                 if (exist(fn{1},'file'))
                     if (actuallydelete)
-                        delete(fn{1});
-                        fprintf(fid,'%s\n',fn{1});
+                        % Also check if it is an image...
+                        [Fpth, Fname, Fext] = fileparts(fn{1});
+                        if any(strcmp(Fext, imgCategory)) || delete_onlyImg == 0
+                            delete(fn{1});
+                            fprintf(fid,'%s\n',fn{1});
+                        end
                     end
                     numdel=numdel+1;
                 end
