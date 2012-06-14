@@ -89,7 +89,10 @@ switch task
                 foundit=false;
                 for fileind=1:size(confiles{s},1);
                     [pth nme ext]=fileparts(confiles{s}(fileind,:));
-                    if strcmp(nme,sprintf('con_%04d',n))
+                    % [alevic] Changed this so that it works even if we
+                    % change (e.g. warp/smooth) the contrast images before
+                    % putting them into the second level...
+                    if ~isempty(strfind(nme,sprintf('con_%04d',n)))
                         foundit=true;
                         break;
                     end;

@@ -23,11 +23,23 @@
             
             <diagnostic>0</diagnostic>
             
-            <brainMask desc='Do we make a brain mask?'>0</brainMask>
-            <looseBits_voxthresh desc='Size of the imopen element?'>100</looseBits_voxthresh>
-            <imopen_se desc='Size of the imopen element?'></imopen_se>
-            <imclose_se desc='Size of the imclose element?'></imclose_se>
-            <imdilate_se desc='Size of the imdilate element?'></imdilate_se>
+            <structural desc='Which structural do we use, if there is more than one?'
+            >1</structural>
+            
+            <brainMask desc='Do we make a brain mask?'
+            >0</brainMask>
+            
+            <looseBits_voxthresh desc='Size of the imopen element?'
+            >100</looseBits_voxthresh>
+            
+            <imopen_se desc='Size of the imopen element?'
+            ></imopen_se>
+            
+            <imclose_se desc='Size of the imclose element?'
+            ></imclose_se>
+            
+            <imdilate_se desc='Size of the imdilate element?'
+            ></imdilate_se>
             
             </currenttask>
     </tasklist>

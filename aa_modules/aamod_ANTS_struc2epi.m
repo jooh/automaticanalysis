@@ -15,10 +15,27 @@ switch task
         if isempty(mEPIimg)
             aas_log(aap, true, 'Problem finding mean functional image.');
         elseif size(mEPIimg,1) > 1
-            aas_log(aap, false, 'Found more than 1 mean functional images, using first.');
+            aas_log(aap, false, 'Found more than 1 mean functional images, using first');
         end
         mEPIimg = deblank(mEPIimg(1,:));
+        [mEPIpth, mEPIfn, mEPIext] = fileparts(mEPIimg);
         
+        
+        %% mean EPI BET
+        if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
+            betEPIimg = aas_getfiles_bystream(aap,subj,'epiBETmask');
+            if isempty(betEPIimg)
+                aas_log(aap, true, 'Problem finding mean functional image');
+            end
+            % Get mask...
+            for m = 1:size(betEPIimg,1)
+                if ~isempty(strfind(betEPIimg(m,:), aap.tasklist.currenttask.settings.maskBrain))
+                    betEPIimg = deblank(betEPIimg(m,:));
+                    break
+                end
+            end
+            [betEPIpth, betEPIfn, betEPIext] = fileparts(betEPIimg);
+        end
         %% Get structural
         % [AVG] Modified the way we get the structural, to be more aa4-like
         Simg = aas_getfiles_bystream(aap,subj,'structural');
@@ -34,19 +51,6 @@ switch task
         % Get structural directory for this subject
         [Spth, Sfn, Sext] = fileparts(Simg);
         wSimg = fullfile(Spth,['w' Sfn Sext]);
-        [mEPIpth, mEPIfn, mEPIext] = fileparts(mEPIimg);
-        % And make EPI mask if we wish
-        if aap.tasklist.currenttask.settings.EPImask
-            mask_mEPIimg = fullfile(mEPIpth, ['M' mEPIfn mEPIext]);
-            
-            % Create a binary mask of the mEPIimg...
-            fprintf('Making a binary mEPI mask, to guide deformation!\n')
-            V = spm_vol(mEPIimg);
-            Y = spm_read_vols(V);
-            Y = ones(size(Y));
-            V.fname = mask_mEPIimg;
-            spm_write_vol(V,Y);
-        end
         
         %% Reslice EPI to structural space
         % to keep the structural image in its own space, and avoid slicing
@@ -69,16 +73,13 @@ switch task
         
         mEPIimg = fullfile(mEPIpth, ['r' mEPIfn mEPIext]);
         
-        if aap.tasklist.currenttask.settings.EPImask
-            spm_reslice(strvcat(Simg, mask_mEPIimg), resFlags);
+        if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
+            spm_reslice(strvcat(Simg, betEPIimg), resFlags);
             
-            mask_mEPIimg = fullfile(mEPIpth, ['rM' mEPIfn mEPIext]);
+            betEPIimg = fullfile(betEPIpth, ['r' betEPIfn betEPIext]);
             
             % Ensure the resliced mask is indeed binary...
-            V = spm_vol(mask_mEPIimg);
-            Y = spm_read_vols(V);
-            Y = Y~=0;
-            spm_write_vol(V,Y);
+            img2mask(betEPIimg);
         end
         
         %% Use ANTS to normalise them!
@@ -139,8 +140,8 @@ switch task
             extraoptions = '';
         end
         
-        if aap.tasklist.currenttask.settings.EPImask
-            EPImask = [' -x ' mask_mEPIimg];
+        if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
+            EPImask = [' -x ' betEPIimg];
         else
             EPImask = '';
         end

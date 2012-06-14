@@ -8,21 +8,12 @@
             <inputstreams>
                 <stream>structural</stream>
                 <stream>meanepi</stream>
-                
-                <!--
-                <stream>segmentation</stream>
-                -->
-                <!-- A mask for -x option?
-                <stream>mask</stream>
-                -->
+                <stream>epiBETmask</stream>
             </inputstreams>
             
             <outputstreams>
                 <stream>structural</stream>
                 <stream>ANTs</stream>
-                <!--
-                <stream>segmentation</stream>
-                -->
             </outputstreams>
             
             <!-- This specifies which structural we want to use, typically the first, but can be changed -->
@@ -44,8 +35,7 @@
             <parameters1>32</parameters1>            
             <!-- NOTE: More metrics & weights and parameters can be added up to 9 -->
                         
-            <!-- Binary EPI mask -->
-            <EPImask>1</EPImask>            
+            <maskBrain desc='Which mask do we use on the meanepi image with BET (if any)?'></maskBrain>
             
             <!-- Diagnostic videos? -->
             <diagnostic>0</diagnostic>

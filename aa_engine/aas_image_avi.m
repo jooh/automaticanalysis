@@ -130,7 +130,7 @@ for d = 1:size(Y{1},axisDim)
         
         % Rotate slices
         imageSlice = rot90(imageSlice, rotations);
-        if ~isempty(outlineFN{o})
+        if ~isempty(outlineFN)
             for o = 1:length(outlineFN)
                 outlineSlice{o} = rot90(outlineSlice{o},rotations - 1);
             end

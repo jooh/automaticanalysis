@@ -22,9 +22,7 @@ switch task
         defs =aap.spm.defaults.normalise;
         defs.estimate.weight = '';
         
-        % Template image; here template image not skull stripped
-        % [AVG] Changed to allow specification of any T1 template, does not
-        % need to be in the SPM folder any more...
+        % Template image
         temp_imgs = aap.directory_conventions.T1template;
         if ~exist(temp_imgs, 'file')
             aas_log(aap, true, sprintf('Couldn''t find template T1 image %s.', temp_imgs));
@@ -33,7 +31,6 @@ switch task
         clear imgs;
         
         %% Get structural
-        % [AVG] Modified the way we get the structural, to be more aa4-like
         Simg = aas_getfiles_bystream(aap,subj,'structural');
         % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
@@ -44,6 +41,10 @@ switch task
         % Get structural directory for this subject
         [Spth, Sfn, Sext] = fileparts(Simg);
         
+        % We will be getting SN transformation matrices...
+        SNmat = fullfile(Spth, [Sfn '_seg_sn.mat']);
+        invSNmat = fullfile(Spth, [Sfn '_seg_inv_sn.mat']);
+        
         %% Set up normalisation, etc.
         
         % Set the mask for subject to empty by default
@@ -53,39 +54,42 @@ switch task
         % We don't reslice anything except the image to be normalized
         
         % call the SPM segment or normalize function to do the work
-        if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
-            % 2 stage process, as proposed by RH, to increased robustness [djm 13/03/06]
+        if aap.tasklist.currenttask.settings.usesegmentnotnormalise
             
-            %%%%%%%% 1st pass:
-            fprintf('Running first pass of norm_noss (get bias corrected structural)\n')
-            estopts.regtype='';    % turn off affine:
-            out = spm_preproc(Simg, estopts);
-            [sn,isn]   = spm_prep2sn(out);
-            
-            % only write out attenuation corrected image
-            writeopts.biascor = 1;
-            writeopts.GM  = [0 0 0];
-            writeopts.WM  = [0 0 0];
-            writeopts.CSF = [0 0 0];
-            writeopts.cleanup = [0];
-            spm_preproc_write(sn, writeopts);
+            if aap.tasklist.currenttask.settings.bias1stpass
+                % 2 stage process, as proposed by RH, to increased robustness
+                % [djm 13/03/06]
+                %%%%%%%% 1st pass:
+                fprintf('Running first pass of norm_noss (get bias corrected structural)\n')
+                estopts.regtype='';    % turn off affine:
+                out = spm_preproc(Simg, estopts);
+                [sn,isn]   = spm_prep2sn(out);
+                
+                % only write out attenuation corrected image
+                writeopts.biascor = 1;
+                writeopts.GM  = [0 0 0];
+                writeopts.WM  = [0 0 0];
+                writeopts.CSF = [0 0 0];
+                writeopts.cleanup = [0];
+                spm_preproc_write(sn, writeopts);
+                
+                mSimg = fullfile(Spth,['m' Sfn Sext]);
+            else
+                mSimg = Simg;
+            end
+            [mSpth, mSfn, mSext] = fileparts(mSimg);
             
             %%%%%%%% 2nd pass using attenuation corrected image
             fprintf('Running second pass of norm_noss (estimate normalisation)\n')
             % mstruc should be the attenuation corrected image
             % look for m prefixed filename
-            mSimg = fullfile(Spth,['m' Sfn Sext]);
-            if size(mSimg,1)>1
-                aas_log(aap,0,sprintf('Found more than one attenuated structural so using first:\n%s',Simg));
-            end
             
             estopts.regtype='mni';    % turn on affine again
             
             % Load header of image to be normalized
-            V=spm_vol(mSimg);
+            V = spm_vol(mSimg);
             
-            % Now adjust parameters according to starting offset parameters
-            % as requested in task settings
+            % Now adjust parameters according to starting offset parameters as requested in task settings
             StartingParameters=[0 0 0   0 0 0   1 1 1   0 0 0];
             ParameterFields={'x','y','z', 'pitch','roll','yaw', 'xscale','yscale','zscale', 'xaffign','yaffign','zaffign'};
             fnames=fieldnames(aap.tasklist.currenttask.settings.affinestartingestimate);
@@ -102,7 +106,7 @@ switch task
                 StartingParameters(whichitem)=aap.tasklist.currenttask.settings.affinestartingestimate.(fnames{fieldind});
             end
             
-            %[AVG] Save original V.mat parameters
+            % Save original V.mat parameters
             oldMAT = V.mat;
             
             % Adjust starting orientation of object image as requested
@@ -112,15 +116,13 @@ switch task
             % Run normalization
             out = spm_preproc(V,estopts);
             
-            % Adjust output Affine to reflect fiddling of starting
-            % orientation of object image
+            % Adjust output Affine to reflect fiddling of starting orientation of object image
             out.Affine=out.Affine*StartingAffine;
             
-            % [AVG] Instead we set the out.image parameters to our original
-            % structural image!
+            % Instead we set the out.image parameters to our original structural image!
             out.image.mat = oldMAT;
             
-            [sn,isn]   = spm_prep2sn(out);
+            [sn,isn] = spm_prep2sn(out);
             
             % [AVG] DEBUG:
             % We could print out the Affines in an orderly way, so that
@@ -145,33 +147,17 @@ switch task
             writeopts.cleanup = [0];
             spm_preproc_write(sn,writeopts);
             
-            SNmat = fullfile(Spth, [Sfn '_seg_sn.mat']);
-            invSNmat = fullfile(Spth, [Sfn '_seg_inv_sn.mat']);
             savefields(SNmat,sn);
             savefields(invSNmat,isn);
-            aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
-            aap=aas_desc_outputs(aap,subj,'normalisation_seg_inv_sn',invSNmat);
             
-            % [AVG] this output is completely different from .xml
-            %{
-            tiss={'grey','white','csf'};
-            for tissind=1:3
-                aap=aas_desc_outputs(aap,subj,sprintf('tissue_%s',tiss{tissind}),fullfile(Spth,sprintf('wc%d%s',tissind,mSimg)));
-                aap=aas_desc_outputs(aap,subj,sprintf('unmod_tissue_%s',tiss{tissind}),fullfile(Spth,sprintf('c%d%s',tissind,mSimg)));
-            end
-            %}
-            % [AVG] so instead, we group it all into segmentation stream
+            % We group it all into segmentation stream
             outSeg = '';
             d = 0;
-            nativeSeg = {};
-            warpedSeg = {};
             while ~isnan(d)
                 d = d+1;
-                if exist(fullfile(Spth,sprintf('c%d%s',d,['m' Sfn Sext])), 'file')
-                    nativeSeg{d} = fullfile(Spth,sprintf('c%d%s',d,['m' Sfn Sext]));
-                    warpedSeg{d} = fullfile(Spth,sprintf('wc%d%s',d,['m' Sfn Sext]));
-                    outSeg = strvcat(outSeg, nativeSeg{d});
-                    outSeg = strvcat(outSeg, warpedSeg{d});
+                if exist(fullfile(mSpth,sprintf('c%d%s',d,[mSfn mSext])), 'file')
+                    outSeg = strvcat(outSeg, fullfile(mSpth,sprintf('c%d%s',d,[mSfn mSext])));
+                    outSeg = strvcat(outSeg, fullfile(mSpth,sprintf('wc%d%s',d,[mSfn mSext])));
                 else
                     d = NaN;
                 end
@@ -181,35 +167,33 @@ switch task
             % Make the default normalization parameters file name
             % Turn off template weighting
             % SPM defaults
-            SNmat = fullfile(Spth, [Sfn '_sn.mat']);
-            
-            invSNmat = fullfile(Spth, [Sfn '_seg_inv_sn.mat']);
             spm_normalise(temp_imgs, Simg, SNmat,...
                 defs.estimate.weight, objMask, ...
                 defs.estimate);
-            
-            aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
-            % SPM2 normalization doesn't generate the inverse transformation
-            try
-                aap=aas_desc_outputs(aap,subj,'normalisation_seg_inv_sn',invSNmat);
-            catch
-            end
-            
+        end
+        
+        aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
+        % SPM2 normalization doesn't generate the inverse transformation
+        try
+            aap=aas_desc_outputs(aap,subj,'normalisation_seg_inv_sn',invSNmat);
+        catch
         end
         
         spm_write_sn(Simg,SNmat,defs.write);
+        
         % [AVG] we need to add all the outputs, including warped structural
-        % [AVG] It is probably best to save the 2ce bias-corrected image
+        % [AVG] It is probably best to also save the last bias-corrected image
         
         % [CW] But we don't have a bias corrected image if we didn't use
         % segmentation.
         if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
             aap=aas_desc_outputs(aap,subj,'structural', strvcat( ...
-                fullfile(Spth,['mm' Sfn Sext]), ...
+                fullfile(mSpth,['m' mSfn mSext]), ...
                 fullfile(Spth,['w' Sfn Sext])));
         else
             aap=aas_desc_outputs(aap,subj,'structural', fullfile(Spth,['w' Sfn Sext]));
         end
+        
         %{
         % Now save graphical check
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
@@ -243,16 +227,19 @@ switch task
         
         %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
+            Ydims = {'X', 'Y', 'Z'};
             
-            if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
-                aas_image_avi(fullfile(Spth,['mm' Sfn Sext]), ...
-                    nativeSeg, ...
-                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '.avi']), ...
-                    2, ... % Axis
-                    [800 600], ...
-                    1, ... % Rotations
-                    'none'); % No outline...
-                try close(2); catch; end
+            for d = 1:length(Ydims)
+                if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
+                    aas_image_avi(fullfile(mSpth,['m' mSfn mSext]), ...
+                        outSeg([1:2:size(outSeg,1)],:), ...
+                        fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                        d, ... % Axis
+                        [800 600], ...
+                        2, ... % Rotations
+                        'none'); % No outline...
+                    try close(2); catch; end
+                end
             end
         end
         
@@ -262,10 +249,10 @@ switch task
                 [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
             
             %% Draw native template
-            spm_check_registration(fullfile(Spth,['mm' Sfn Sext]))
-            % Add normalised segmentations...
-            for r = 1:(size(outSeg,1)/2)
-                spm_orthviews('addcolouredimage',1,fullfile(Spth,sprintf('c%d%s',r, ['m' Sfn Sext])), OVERcolours{r})
+            spm_check_registration(fullfile(mSpth,['m' mSfn mSext]))
+            % Add segmentations...
+            for t = 1:(size(outSeg,1)/2)
+                spm_orthviews('addcolouredimage',1,fullfile(mSpth,sprintf('c%d%s',t, [mSfn mSext])), OVERcolours{t})
             end
             
             spm_orthviews('reposition', [0 0 0])
@@ -277,8 +264,8 @@ switch task
             %% Draw warped template
             spm_check_registration(aap.directory_conventions.T1template)
             % Add normalised segmentations...
-            for r = 1:(size(outSeg,1)/2)
-                spm_orthviews('addcolouredimage',1,fullfile(Spth,sprintf('wc%d%s',r,['m' Sfn Sext])), OVERcolours{r})
+            for t = 1:(size(outSeg,1)/2)
+                spm_orthviews('addcolouredimage',1,fullfile(mSpth,sprintf('wc%d%s',t,[mSfn mSext])), OVERcolours{t})
             end
             spm_orthviews('reposition', [0 0 0])
             

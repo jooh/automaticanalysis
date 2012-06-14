@@ -60,7 +60,7 @@ switch task
             
             fprintf('Masking the brain with %s \n', aap.tasklist.currenttask.settings.maskBrain)
             % Get mask...
-            for m = 1:size(outMask,1)
+            for m = 1:size(outMaskEPI,1)
                 if ~isempty(strfind(outMaskEPI(m,:), aap.tasklist.currenttask.settings.maskBrain))
                     M = spm_read_vols(spm_vol(deblank(outMaskEPI(m,:))));
                     M = M > 0;

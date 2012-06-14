@@ -31,12 +31,17 @@ switch task
             ]);
         
         %% Get structural & mask
-        % [AVG] Modified the way we get the structural, to be more aa4-like
-        Simg = aas_getfiles_bystream(aap,subj,'structural');
-        BETmask=aas_getfiles_bystream(aap,subj,'BETmask');
         
+        Simg = aas_getfiles_bystream(aap,subj,'structural');
+        % Which file is considered, as determined by the structural parameter!
+        if size(Simg,1) > 1
+            Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
+            fprintf('WARNING: Several structurals found, considering: \n')
+            fprintf('\t%s\n', Simg(1,:))
+        end
         [Spth, Sfn, Sext] = fileparts(Simg);
         
+        BETmask=aas_getfiles_bystream(aap,subj,'BETmask');
         for b = 1:size(BETmask,1)
             if ~isempty(strfind(deblank(BETmask(b,:)), 'brain_mask.nii'))
                 BETmask = deblank(BETmask(b,:));
@@ -171,6 +176,20 @@ switch task
             mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        
+        %% Draw native template
+        spm_check_registration(Simg)
+        % Add segmentations...
+        for t = 1:(size(outSeg,1))
+            spm_orthviews('addcolouredimage',1,outSeg(t,:), OVERcolours{t})
+        end
+        
+        spm_orthviews('reposition', [0 0 0])
+        
+        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
+        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
+        
         %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
             Ydims = {'X', 'Y', 'Z'};

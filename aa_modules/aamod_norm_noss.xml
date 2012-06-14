@@ -24,7 +24,11 @@
             <usesegmentnotnormalise>1</usesegmentnotnormalise>
             <affinestartingestimate><y>-30</y><z>17</z><pitch>0.2</pitch></affinestartingestimate>
             
-            <structural desc='Which structural do we use, if there is more than one?'>1</structural>
+            <structural desc='Which structural do we use, if there is more than one?'
+            >1</structural>
+            
+            <bias1stpass desc='1st pass with bias correction, to improve robustness'
+            >1</bias1stpass>
             
             <diagnostic>0</diagnostic>
         
