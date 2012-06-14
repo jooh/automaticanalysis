@@ -141,7 +141,7 @@ switch task
             for echoind=1:numechoes
                 Ymean{echoind}=Ytot{echoind}./N;
                 Ystd{echoind}=sqrt(N/(N-1)*squeeze(CV(echoind,echoind,:,:,:)));
-                Ystd{echoind}(~Ystd{echoind})=nan;
+                Ystd{echoind}(Ystd{echoind}==0) = NaN;
                 Ysnr{echoind}=Ymean{echoind}./Ystd{echoind};
                 
                 %                 dicomheaderfn=fullfile(sesspath,'dicom_headers.mat');
@@ -406,7 +406,7 @@ switch task
             % Sometimes when the value is close to zero, we get slight
             % negative values, which render some voxels "imaginary"
             Ystd(imag(Ystd)~=0) = 0; % Remove these [AVG]
-            Ystd(~Ystd)=nan;
+            Ystd(Ystd==0)=NaN;
             Ysnr=Ymean./Ystd;
             
             TE=DICOMHEADERS{1}.EchoTime;

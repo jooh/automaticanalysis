@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>
     <tasklist>
-        <currenttask domain='subject' desc='Skull stripping with BET' modality='MRI'>
+        <currenttask domain='subject' desc='Reslice BET mask to EPI space, and apply...' modality='MRI'>
             
             <qsub>
                 <timeBase>0.1</timeBase>
@@ -23,7 +23,7 @@
             
             <diagnostic>0</diagnostic>
             
-            <maskBrain desc='Which mask do we use on the meanepi image with BET (if any)?'></maskBrain>
+            <maskBrain desc='Which mask do we use on the meanepi image with BET (if any)?'>outskull_mask</maskBrain>
             
         </currenttask>
     </tasklist>

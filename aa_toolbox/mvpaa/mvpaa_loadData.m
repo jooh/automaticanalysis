@@ -92,7 +92,8 @@ for s = 1:length(SPM.Sess)
         factorNum{s} = sum(factorNum{s}>0)/blockNum{s};
         
         if s > 1
-            if factorNum{s} ~= factorNum{s-1}
+            % Also allows to ignore sessions with no RSA data...
+            if factorNum{s} ~= factorNum{s-1} && (factorNum{s-1}~=0 && factorNum{s}~=0)
                 error('Unequal number of factors across the two sessions')
             end
         end
@@ -141,7 +142,7 @@ data = cell(length(aap.tasklist.currenttask.settings.conditions), ...
     aap.tasklist.currenttask.settings.blocks, ...
     aap.tasklist.currenttask.settings.sessions);
 
-fprintf('\nThis experiment contains \n\t%d conditions\n\t%d blocks\n\t%d sessions', ...
+fprintf('\nThis experiment contains \n\t%d conditions\n\t%d blocks\n\t%d sessions\n\n', ...
     size(data,1), size(data,2), size(data,3))
 
 % Do we grey/white/CSF matter mask the data?

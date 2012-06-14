@@ -4,7 +4,7 @@
         <currenttask domain='session' desc='Get DICOM files for EPIs'>
             
             <qsub>
-                <timeBase>0.5</timeBase>
+                <timeBase>0.4</timeBase>
                 <memoryBase>0.1</memoryBase>
             </qsub>
             

@@ -4,8 +4,8 @@
         <currenttask domain='subject' desc='Automatically identify series numbers'>
             
             <qsub>
-                <timeBase>0.5</timeBase>
-                <memoryBase>0.5</memoryBase>
+                <timeBase>0.2</timeBase>
+                <memoryBase>0.3</memoryBase>
             </qsub>
             
             <permanenceofoutput>1</permanenceofoutput>

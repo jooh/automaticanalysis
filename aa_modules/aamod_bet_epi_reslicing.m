@@ -108,6 +108,6 @@ switch task
         end
         
         %% DESCRIBE OUTPUTS!
-        aap=aas_desc_outputs(aap,subj,1,'meanEPI',mEPIimg);
+        aap=aas_desc_outputs(aap,subj,1,'meanepi',mEPIimg);
         aap=aas_desc_outputs(aap,subj,'epiBETmask',outMaskEPI);
 end

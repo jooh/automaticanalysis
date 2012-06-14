@@ -4,8 +4,8 @@
         <currenttask domain='session' desc='SPM compartment signal' modality='MRI'>
             
             <qsub>
-                <timeBase>0.5</timeBase>
-                <memoryBase>2</memoryBase>
+                <timeBase>0.2</timeBase>
+                <memoryBase>0.3</memoryBase>
             </qsub>
             
             <permanenceofoutput>2</permanenceofoutput>
