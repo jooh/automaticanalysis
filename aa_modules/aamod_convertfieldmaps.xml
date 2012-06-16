@@ -8,7 +8,7 @@
                 <memoryBase>0.2</memoryBase>
             </qsub>
             
-            <permanenceofoutput>1</permanenceofoutput>
+            <permanenceofoutput>-1</permanenceofoutput>
             
             <inputstreams>
                 <stream>dicom_fieldmap</stream>

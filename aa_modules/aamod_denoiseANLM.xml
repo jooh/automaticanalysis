@@ -8,7 +8,7 @@
                 <memoryBase>2</memoryBase>
             </qsub>
             
-            <permanenceofoutput>2</permanenceofoutput>
+            <permanenceofoutput>-1</permanenceofoutput>
             
             <inputstreams>
                 <stream>structural</stream>

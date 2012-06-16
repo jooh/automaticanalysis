@@ -3,7 +3,7 @@
    <tasksettings>
        <aamod_copyt1 domain='subject' desc='Copying T1 structural'>
            
-           <permanenceofoutput>1</permanenceofoutput>
+           <permanenceofoutput>-1</permanenceofoutput>
            
            <inputstreams>
                <stream>dicom_t1</stream>

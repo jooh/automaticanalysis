@@ -2,6 +2,7 @@
 <aap>
     <tasklist>
         <currenttask domain='subject' desc='SPM structural statistics' modality='MRI'>
+            
             <permanenceofoutput>2</permanenceofoutput>
 
             <inputstreams>
@@ -13,6 +14,7 @@
             <outputstreams>
                 <stream>structuralstats</stream>
             </outputstreams>
+            
         </currenttask>
     </tasklist>
 </aap>
