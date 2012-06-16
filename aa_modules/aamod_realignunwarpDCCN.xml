@@ -48,6 +48,8 @@
             
             <!--Reslicing parameters-->            
             <uwroptions>
+                <!-- SPM notes that pedir field is absent, but probably not important
+                In any case, not certain where to find it -->
                 <uwwhich>[2 1]</uwwhich> <!-- reslices all images and creates mean image -->
                 <rinterp>4</rinterp> <!-- interpolation method: DEFAULT: 4th degree B splines -->
                 <wrap>[0 0 0]</wrap> <!-- wrapping: DEFAULT is None -->

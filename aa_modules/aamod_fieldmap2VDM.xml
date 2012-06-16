@@ -19,14 +19,22 @@
                 <stream>fieldmap</stream>
             </outputstreams>
             
-            <te1>10.0</te1>
-            <te2>12.46</te2>
-            <epifm>0</epifm>
-            <tert>23.76</tert>
-            <kdir>-1</kdir>
-            <mask>1</mask>
-            <match>1</match>
-            <writeunwarpedEPI>0</writeunwarpedEPI>
+            <te1 desc='short TE'
+            >10.0</te1>
+            <te2 desc='long TE'
+            >12.46</te2>
+            <epifm desc='epi FM? (0 for GRE)'
+            >0</epifm>
+            <tert desc='totalEPI read out time'
+            >23.76</tert>
+            <kdir desc='blip direction (+1/-1)'
+            >-1</kdir>
+            <mask desc='Mask brain?'
+            >1</mask>
+            <match desc='Match fieldmap to EPI?'
+            >1</match>
+            <writeunwarpedEPI desc='Write unwarped EPI?'
+            >0</writeunwarpedEPI>
             
         </currenttask>
     </tasklist>

@@ -301,6 +301,12 @@ switch task
         SPMdes.xX.iG=cols_nuisance;
         SPMdes.xX.iC=cols_interest;
         
+        % Turn off masking if requested
+        if ~aap.tasklist.currenttask.settings.firstlevelmasking
+            SPMdes.xM.I=0;
+            SPMdes.xM.TH=-inf(size(SPMdes.xM.TH));
+        end
+        
         spm_unlink(fullfile('.', 'mask.img')); % avoid overwrite dialog
         SPMest = spm_spm(SPMdes);
         
@@ -318,7 +324,11 @@ switch task
         for betaind=1:length(allbetas);
             betafns=strvcat(betafns,fullfile(anadir,allbetas(betaind).name));
         end
-        otherfiles={'mask.hdr','mask.img','ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        if ~aap.tasklist.currenttask.settings.firstlevelmasking
+            otherfiles={'ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        else
+            otherfiles={'mask.hdr','mask.img','ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        end
         for otherind=1:length(otherfiles)
             betafns=strvcat(betafns,fullfile(anadir,otherfiles{otherind}));
         end
