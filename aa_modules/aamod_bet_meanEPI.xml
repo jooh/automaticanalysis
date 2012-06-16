@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>
     <tasklist>
-        <currenttask domain='subject' desc='Use the FSL Brain Extraction Tool (BET)' modality='MRI'>
+        <currenttask domain='subject' mfile_alias='aamod_bet' desc='Use the FSL Brain Extraction Tool (BET)' modality='MRI'>
             
             <qsub>
                 <timeBase>0.15</timeBase>
@@ -11,11 +11,11 @@
             <permanenceofoutput>2</permanenceofoutput>
             
             <inputstreams>
-                <stream>structural</stream>
+                <stream>meanepi</stream>
             </inputstreams>
             
             <outputstreams>
-                <stream>structural</stream>                
+                <stream>meanepi</stream>                
                 <stream>BETmask</stream>
                 <stream>BETmesh</stream>
             </outputstreams>
@@ -26,7 +26,7 @@
             <robust>1</robust>
             <!-- Do we want to output the masks & meshes from BET? 0 - NO; 1 - YES 
             This might slightly increase the accuracy of BET -->
-            <masks>1</masks>
+            <masks>0</masks>
             
             <!-- Voxel kernel by which we smooth (essentially dilate) the BET mask [useful if BET eats into brain matter]? -->
             <smooth>0</smooth>

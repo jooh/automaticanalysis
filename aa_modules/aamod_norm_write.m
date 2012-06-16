@@ -1,10 +1,10 @@
 % AA module - write normalised EPIs
-% [aap,resp]=aamod_norm_write(aap,task,i,j)
+% [aap,resp]=aamod_norm_write(aap,task,subj,sess)
 % Rhodri Cusack MRC CBU Cambridge Jan 2006-Aug 2007
 % Resamples EPIs using *_seg_sn.mat file [if present] or *_sn.mat file
 % Changed domain to once per session for improved performance when parallel
 
-function [aap,resp]=aamod_norm_write(aap,task,i,j)
+function [aap,resp]=aamod_norm_write(aap,task,subj,sess)
 
 resp='';
 
@@ -13,10 +13,10 @@ switch task
     case 'doit'
         
         % get the subdirectories in the main directory
-        subj_dir = aas_getsubjpath(aap,i); 
+        subj_dir = aas_getsubjpath(aap,subj); 
         
         % get sn mat file from normalisation
-        subj.matname = aas_getfiles_bystream(aap,i,'normalisation_seg_sn');
+        subj.matname = aas_getfiles_bystream(aap,subj,'normalisation_seg_sn');
         
         streams=aap.tasklist.currenttask.inputstreams;
         
@@ -26,17 +26,17 @@ switch task
         % Is session specified in task header (used for meanepi, which only
         % occurs in session 1
         if (isfield(aap.tasklist.currenttask.settings,'session'))
-            j=aap.tasklist.currenttask.settings.session;
+            sess=aap.tasklist.currenttask.settings.session;
         end;
         
         for streamind=1:length(streams)
             subj.imgs = [];
             
             % Image to reslice
-            if (exist('j','var'))
-                P = aas_getfiles_bystream(aap,i,j,streams{streamind});
+            if (exist('sess','var'))
+                P = aas_getfiles_bystream(aap,subj,sess,streams{streamind});
             else
-                P = aas_getfiles_bystream(aap,i,streams{streamind});
+                P = aas_getfiles_bystream(aap,subj,streams{streamind});
             end;
             subj.imgs = strvcat(subj.imgs, P);
             % delete previous because otherwise nifti write routine doesn't
@@ -57,10 +57,10 @@ switch task
                 [pth nme ext]=fileparts(subj.imgs(fileind,:));
                 wimgs=strvcat(wimgs,fullfile(pth,['w' nme ext]));
             end;
-            if (exist('j','var'))
-                aap=aas_desc_outputs(aap,i,j,streams{streamind},wimgs);
+            if (exist('sess','var'))
+                aap=aas_desc_outputs(aap,subj,sess,streams{streamind},wimgs);
             else
-                aap=aas_desc_outputs(aap,i,streams{streamind},wimgs);
+                aap=aas_desc_outputs(aap,subj,streams{streamind},wimgs);
             end;
         end;
         

@@ -177,8 +177,13 @@ switch task
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         
+        % This will only work for 1-7 segmentations
+            OVERcolours = {[1 0 0], [0 1 0], [0 0 1], ...
+                [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
+        
         %% Draw native template
         spm_check_registration(Simg)
+        
         % Add segmentations...
         for t = 1:(size(outSeg,1))
             spm_orthviews('addcolouredimage',1,outSeg(t,:), OVERcolours{t})

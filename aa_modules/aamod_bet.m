@@ -1,5 +1,5 @@
 % AA module
-% Runs BET (FSL Brain Extration Toolbox) on structural
+% Runs BET (FSL Brain Extration Toolbox) on structural (usually)
 % [For best functionality, it is recommended you run this after
 % realignment and before writing the normalised EPI image
 % If you do it before estimating the normalisation, make sure you normalise
@@ -14,13 +14,27 @@ switch task
         
     case 'doit'
         
+        % Find out what stream we should BET
+        inputstream = aap.tasklist.currenttask.inputstreams.stream;
+        % And the names of the output streams
+        outputstream = aap.tasklist.currenttask.outputstreams.stream;
+        % And which are the streams which we output...
+        outputstream = outputstream(~[strcmp(inputstream,outputstream)]);
+        
         % Let us use the native space...
-        Simg = aas_getfiles_bystream(aap,subj,'structural');
+        clear sess
+        try
+            Simg = aas_getfiles_bystream(aap,subj,inputstream{:});
+        catch
+            sess = 1;
+            % Is sess necessary? (e.g. meanepi, which only occurs in sess 1)
+            Simg = aas_getfiles_bystream(aap,subj,sess,inputstream{:});
+        end
         
         % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
             Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
-            fprintf('WARNING: Several structurals found, considering: \n')
+            fprintf('WARNING: Several %s found, considering: \n', inputstream)
             for t = 1:length(aap.tasklist.currenttask.settings.structural)
                 fprintf('\t%s\n', Simg(t,:))
             end
@@ -146,13 +160,23 @@ switch task
         
         %% DESCRIBE OUTPUTS!
         if aap.tasklist.currenttask.settings.maskBrain
-            aap=aas_desc_outputs(aap,subj,'structural',outStruct);
+            if ~exist('sess', 'var')
+                aap=aas_desc_outputs(aap,subj,inputstream{:},outStruct);
+            else
+                aap=aas_desc_outputs(aap,subj,sess,inputstream{:},outStruct);
+            end
         else
-            aap=aas_desc_outputs(aap,subj,'structural',Simg); 
+            if ~exist('sess', 'var')
+                aap=aas_desc_outputs(aap,subj,inputstream{:},Simg);
+            else
+                aap=aas_desc_outputs(aap,subj,sess,inputstream{:},Simg);
+            end
         end
-        aap=aas_desc_outputs(aap,subj,'BETmask',outMask);
+        maskStream = outputstream(~isempty(strfind(outputstream,'BETmask')));
+        aap=aas_desc_outputs(aap,subj, maskStream{:}, outMask);
         if aap.tasklist.currenttask.settings.masks
-            aap=aas_desc_outputs(aap,subj,'BETmesh',outMesh);
+            meshStream = outputstream(~isempty(strfind(outputstream,'BETmesh')));
+            aap=aas_desc_outputs(aap,subj, meshStream{:}, outMesh);
         end
         
         %% DIAGNOSTIC IMAGE
