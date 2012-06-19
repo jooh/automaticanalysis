@@ -21,8 +21,10 @@
             <!-- Type of high pass filter: detrend, spm, butterworth -->
             <HFtype>spm</HFtype>
             
-            <!-- Temporal parameter for high-pass filter -->
-            <HParam desc='High pass filter cutoff, in seconds - as for SPM'>128</HParam>
+            <HParam desc='High pass filter cutoff, in seconds - as for SPM'
+            >128</HParam>
+            <chunks desc='Chunk data into n^3 pieces (default = 1)'
+            >1</chunks>
             
         </currenttask>
     </tasklist>

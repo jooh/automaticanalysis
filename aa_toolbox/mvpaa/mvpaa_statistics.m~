@@ -93,8 +93,6 @@ elseif strcmp(EP.triangulation, 'average')
         end
     end
     uSimil = nanmean(uSimil,3);
-else
-    aas_log(aap, true, 'Cannot find the correct triangulation')
 end
 
 % Useful for ROI analysis visualization...

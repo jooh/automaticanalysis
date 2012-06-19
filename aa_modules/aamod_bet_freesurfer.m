@@ -1,7 +1,7 @@
 % AA module
-% Runs BET (FSL Brain Extration Toolbox) on structural
+% Runs BET (FSL Brain Sextration Toolbox) on structural
 % [For best functionality, it is recommended you run this after
-% realignment and before writing the normalised EPI image
+% realigSfnnt and before writing the normalised EPI image
 % If you do it before estimating the normalisation, make sure you normalise
 % to a scull-stripped template, if at all possible!]
 
@@ -23,40 +23,74 @@ switch task
             fprintf('\tWARNING: Several structurals found, considering: %s\n', Simg)
         end
         
-        [pth nme ext]=fileparts(Simg);
+        [Spth Sfn Sext]=fileparts(Simg);
         
         % Structural image (after BETting, if we mask...)
-        outStruct=fullfile(pth,['bet_' nme ext]);
+        outStruct=fullfile(Spth,['bet_' Sfn Sext]);
+        
+        % Set the Freesurfer path (and to command)
+        setenv('FREESURFER_HOME', aap.directory_conventions.freesurferdir)
+        
+        FSpath = [fullfile(getenv('FREESURFER_HOME'), 'bin', 'mri_watershed') ' '];
+        
+        FSoptions = aap.tasklist.currenttask.settings.extraoptions;
+        
+        FScommand = [FSpath FSoptions ' ' Simg ' ' outStruct];
         
         % Run MRI_Watershed
-        fprintf('1st BET pass (recursive) to find optimal centre of gravity and radius\n')
-            
-        %% @@@@@
+        fprintf('MRI Watershed\n')
+        cd(fileparts(outStruct));
+        [s w] = aas_shell(FScommand);
+        if aap.tasklist.currenttask.settings.verbose
+            disp(w);
+        end
         
+        if aap.tasklist.currenttask.settings.gcut
+            % Gcut
+            FSpath = [fullfile(getenv('FREESURFER_HOME'), 'bin', 'mri_gcut') ' '];
+            FScommand = [FSpath ' ' Simg ' ' fullfile(Spth, 'gcut.nii')];
+            
+            % Run MRI_Gcut
+            fprintf('MRI Gcut\n')
+            cd(fileparts(outStruct));
+            [s w] = aas_shell(FScommand);
+            if aap.tasklist.currenttask.settings.verbose
+                disp(w);
+            end
+        end
         
         %% Make the BET BRAIN MASK
-        % As made by BET [and slightly different from inskull_mask]
         V = spm_vol(outStruct);
         M = spm_read_vols(V);
-        
         % Mask out non-brain
         M = M > 0;
         
+        if aap.tasklist.currenttask.settings.gcut
+            gV = spm_vol(fullfile(Spth, 'gcut.nii'));
+            gM = spm_read_vols(V);
+            % Mask out non-brain
+            gM = gM > 0;
+            M = and(M, gM);
+            delete(fullfile(Spth, 'gcut.nii'));
+        end
+        
         % Then write out actual BET mask
-        V.fname = fullfile(pth, ['bet_' nme '_brain_mask' ext]);
+        V.fname = fullfile(Spth, ['bet_' Sfn '_brain_mask' Sext]);
         spm_write_vol(V,M);
         % And add the mask to the list...
         outMask = strvcat(V.fname, outMask);
         
-        %% MASK the brain
-        fprintf('Masking the brain with Brain Mask \n')
-        V = spm_vol(Simg);
-        Y = spm_read_vols(V);
-        % Mask brain
-        Y = Y.*M;
-        % Write brain
-        V.fname = outStruct;
-        spm_write_vol(V, Y);
+        if aap.tasklist.currenttask.settings.gcut
+            % MASK the brain
+            fprintf('Masking the brain with combined Brain Mask \n')
+            V = spm_vol(Simg);
+            Y = spm_read_vols(V);
+            % Mask brain
+            Y = Y.*M;
+            % Write brain
+            V.fname = outStruct;
+            spm_write_vol(V, Y);
+        end
         
         %% DESCRIBE OUTPUTS!
         
@@ -77,7 +111,7 @@ switch task
         %% Draw structural image...
         spm_check_registration(Simg)
         
-        % Colour the brain extracted bit pink
+        % Colour the brain Sextracted bit pink
         spm_orthviews('addcolouredimage',1,outStruct, [0.9 0.4 0.4])
         
         spm_orthviews('reposition', [0 0 0])
@@ -93,7 +127,7 @@ switch task
             Ydims = {'X', 'Y', 'Z'};
             for d = 1:length(Ydims)
                 aas_image_avi( Simg, ...
-                    fullfile(pth, ['bet_' nme '_brain_mask' ext]), ...
+                    fullfile(Spth, ['bet_' Sfn '_brain_mask' Sext]), ...
                     fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
                     d, ... % Axis
                     [800 600], ...

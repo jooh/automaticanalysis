@@ -1,5 +1,6 @@
 % Create a movie
 % aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations, outlineType)
+% If movieFN is empty, then the video will be shown, not saved...
 function aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations, outlineType)
 
 if ischar(imageFN)
@@ -33,11 +34,13 @@ if nargin < 7 || isempty(outlineType)
 end
 
 % Create movie file by defining aviObject
-if exist(movieFN,'file')
-    delete(movieFN);
+if ~isempty(movieFN)
+    if exist(movieFN,'file')
+        delete(movieFN);
+    end
+    
+    aviObject = avifile(movieFN,'compression','none');
 end
-
-aviObject = avifile(movieFN,'compression','none');
 
 % Get the figure!
 figure(2)
@@ -158,13 +161,16 @@ for d = 1:size(Y{1},axisDim)
     pause(0.01)
     drawnow
     
-    % Capture frame and store in aviObject
-    F = getframe(2,windowSize);
-    aviObject = addframe(aviObject,F);
+    if ~isempty(movieFN)
+        % Capture frame and store in aviObject
+        F = getframe(2,windowSize);
+        aviObject = addframe(aviObject,F);
+    end
 end
 % Save video
-aviObject = close(aviObject);
-
+if ~isempty(movieFN)
+    aviObject = close(aviObject);
+end
 try
     % Return figure 1 to not be on top!
     fJframe.fFigureClient.getWindow.setAlwaysOnTop(false)

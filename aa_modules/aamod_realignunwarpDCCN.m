@@ -75,10 +75,11 @@ switch task
             
             % Get the realignment parameters...
             fn=dir(fullfile(pth,'rp_*.txt'));
-            outpars = fullfile(pth,fn(1).name);                                   
+            outpars = fullfile(pth,fn(1).name); 
+            % Add it to the movement pars...
+            movPars = [movPars outpars];
             fn=dir(fullfile(pth,'*uw.mat'));
             outpars = strvcat(outpars, fullfile(pth,fn(1).name));
-            movPars = [movPars outpars];
             aap = aas_desc_outputs(aap,subj,sess,'realignment_parameter',outpars);
             
             if sess==1

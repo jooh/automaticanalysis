@@ -54,7 +54,7 @@ switch task
         fprintf('\n\tProcessing data (%d scans)', size(EPIimg,1))
         
         taskComplete = 0;
-        chunkDim = 1;
+        chunkDim = aap.tasklist.currenttask.settings.chunks;
         
         while taskComplete == 0
             fprintf('\nTrying with %d chunks', chunkDim)
@@ -88,8 +88,6 @@ switch task
                                 Y = spm_read_vols(V);
                                 EPIdata(e,:,:,:) = Y(Xind,Yind,Zind);
                             end
-                            
-                            
                             
                             if strcmp(aap.tasklist.currenttask.settings.HFtype, 'spm')
                                 % Create the frequencies to be removed and apply them...
@@ -140,7 +138,7 @@ switch task
                     aas_log(aap, true, 'The script broke between chunks, you should probably delete the subject folder for this module and try again...')
                 end
                 
-                if chunkDim > 3
+                if chunkDim > 4
                     aas_log(aap, true, 'Error is probably not due to MEMORY')
                 end
                 

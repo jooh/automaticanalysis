@@ -25,8 +25,15 @@
             <!-- This specifies which structural we want to use, typically the first, but can be changed -->
             <structural>1</structural>
             
-            <!-- Diagnostic videos? -->
+            <!-- This specifies which MRI watershed options we want to use -->
+            <extraoptions>-atlas</extraoptions>
+            
+            <!-- Do we run gcut to clean up the skull stripping? -->
+            <gcut>1</gcut>
+            
+            <!-- Diagnostic videos? Verbosity? -->
             <diagnostic>0</diagnostic>
+            <verbose>0</verbose>
             
         </currenttask>
     </tasklist>

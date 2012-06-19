@@ -16,8 +16,8 @@
             
             <outputstreams>
                 <stream>meanepi</stream>                
-                <stream>BETmask</stream>
-                <stream>BETmesh</stream>
+                <stream>epiBETmask</stream>
+                <stream>epiBETmesh</stream>
             </outputstreams>
             
             <!-- BET F parameter - from 0 to 1 (least to most agressive skull stripping -->

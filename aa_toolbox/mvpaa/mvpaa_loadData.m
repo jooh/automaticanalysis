@@ -48,16 +48,16 @@ for s = 1:length(SPM.Sess)
         % If each block contains a different number of conditions...
         if sum(blockNum{s} == blocks(b)) ~= ...
                 sum(blockNum{s} == blocks(b-1))
-            error('You have a different number of conditions per block')
+            aas_log(aap,true,'You have a different number of conditions per block')
         end
     end
     blockNum{s} = length(blocks);
     if s > 1
         if blockNum{s} ~= blockNum{s-1}
             if aap.tasklist.currenttask.settings.mergeSessions
-                warning('Unequal number of blocks across the two sessions')
+                aas_log(aap,false,'Unequal number of blocks across the two sessions')
             else
-                error('Unequal number of blocks across the two sessions')
+                aas_log(aap,true,'Unequal number of blocks across the two sessions')
             end
         end
     end
@@ -65,7 +65,7 @@ for s = 1:length(SPM.Sess)
     %% DEAL WITH NUISANCE REGRESSORS
     if s > 1
         if sum(nuisanceNum{s}) ~= sum(nuisanceNum{s-1});
-            error('Unequal number of nuisance regressors across the two sessions')
+            aas_log(aap,true,'Unequal number of nuisance regressors across the two sessions')
         end
     end
     
@@ -75,16 +75,16 @@ for s = 1:length(SPM.Sess)
     
     if isempty(factorNum{s})
         if  aap.tasklist.currenttask.settings.mergeSessions
-            warning('You have no trials in session %d...', s)
+            aas_log(aap, false, sprintf('You have no trials in session %d...', s))
             factorNum{s} = 0;
         else
-            error('You have no trials in session %d...', s)
+            aas_log(aap,true,'You have no trials in session %d...', s)
         end
     else
         % If we have conditions in this session, check constancy of blocks
         if all(factorNum{s} ~= factorNum{s}(1))
             % If number of conditions is not constant...
-            error('There is something wrong with your regressors...')
+            aas_log(aap,true,'There is something wrong with your regressors...')
         end
         
         % Now factorNum becomes the number of real different cells
@@ -94,7 +94,7 @@ for s = 1:length(SPM.Sess)
         if s > 1
             % Also allows to ignore sessions with no RSA data...
             if factorNum{s} ~= factorNum{s-1} && (factorNum{s-1}~=0 && factorNum{s}~=0)
-                error('Unequal number of factors across the two sessions')
+                aas_log(aap,true,'Unequal number of factors across the two sessions')
             end
         end
     end
@@ -138,12 +138,13 @@ aap.tasklist.currenttask.settings.conditionNames = tempCond;
 %% PREPARATION BEFORE LOADING DATA
 
 % Define data structure
-data = cell(length(aap.tasklist.currenttask.settings.conditions), ...
+data = cell(aap.tasklist.currenttask.settings.conditions, ...
     aap.tasklist.currenttask.settings.blocks, ...
     aap.tasklist.currenttask.settings.sessions);
 
-fprintf('\nThis experiment contains \n\t%d conditions\n\t%d blocks\n\t%d sessions\n\n', ...
+fprintf('\nThis experiment contains \n\t%d conditions\n\t%d blocks\n\t%d sessions', ...
     size(data,1), size(data,2), size(data,3))
+fprintf('\n(%d Nuisance variables)\n\n', sum(nuisanceNum{1}))
 
 % Do we grey/white/CSF matter mask the data?
 % Get segmentation masks we wish to use, if any

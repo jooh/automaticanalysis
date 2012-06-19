@@ -20,6 +20,9 @@
                 <stream>tSNR</stream>
             </outputstreams>
             
+            <chunks desc='Chunk data into n^3 pieces (default = 1)'
+            >1</chunks>
+            
             <diagnostic>0</diagnostic>
             
         </currenttask>

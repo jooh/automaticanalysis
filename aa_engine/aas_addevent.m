@@ -45,17 +45,6 @@ else
     moduleindex = 1;
 end
 
-% if (length(modulename>6))
-%     moduleindex=str2num(modulename(end-4:end));
-%     if (~strcmp(['_' sprintf('%05d',moduleindex)],modulename(length(modulename)-5:end)))
-%         moduleindex=1;
-%     else
-%         modulename=modulename(1:length(modulename)-6);
-%     end
-% else
-%     moduleindex=1;
-% end
-
 if (~exist('parametric','var'))
     parametric=[];
 end

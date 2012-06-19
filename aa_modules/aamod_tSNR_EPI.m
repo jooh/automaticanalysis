@@ -55,7 +55,7 @@ switch task
         fprintf('\n\tProcessing data (%d scans)', size(EPIimg,1))
         
         taskComplete = 0;
-        chunkDim = 1;
+        chunkDim = aap.tasklist.currenttask.settings.chunks;
         
         while taskComplete == 0
             fprintf('\nTrying with %d chunks', chunkDim)
@@ -112,7 +112,7 @@ switch task
             catch aa_error
                 %disp(tSNR_error)
                 
-                if chunkDim > 3
+                if chunkDim > 4
                     error('Error is probably not due to MEMORY')
                 end
                 

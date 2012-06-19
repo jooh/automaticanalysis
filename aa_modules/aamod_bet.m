@@ -34,7 +34,7 @@ switch task
         % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
             Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
-            fprintf('WARNING: Several %s found, considering: \n', inputstream)
+            fprintf('WARNING: Several %s found, considering: \n', inputstream{:})
             for t = 1:length(aap.tasklist.currenttask.settings.structural)
                 fprintf('\t%s\n', Simg(t,:))
             end
@@ -172,10 +172,10 @@ switch task
                 aap=aas_desc_outputs(aap,subj,sess,inputstream{:},Simg);
             end
         end
-        maskStream = outputstream(~isempty(strfind(outputstream,'BETmask')));
+        maskStream = outputstream(~cellfun('isempty', strfind(outputstream,'BETmask')));
         aap=aas_desc_outputs(aap,subj, maskStream{:}, outMask);
         if aap.tasklist.currenttask.settings.masks
-            meshStream = outputstream(~isempty(strfind(outputstream,'BETmesh')));
+            meshStream = outputstream(~cellfun('isempty', strfind(outputstream,'BETmesh')));
             aap=aas_desc_outputs(aap,subj, meshStream{:}, outMesh);
         end
         

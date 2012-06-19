@@ -41,10 +41,10 @@
             <balanceCons>1</balanceCons>
             <!--Convert correlation data into Z scores? (0 - no; 1 - yes) -->
             <norm2z>0</norm2z>
-            <!--Triangulate the correlation data? (0 - no; 1 - yes) @@@ DOCUMENT OTHER OPTIONS!
+            <!--Triangulate the correlation data? For options, see mvpaa_statistics
         This specifies which block-subblock comparisons are considered, and
         whether they are averaged or not. More detail in... mvpaa_statisticsM-->
-            <triangulation>1</triangulation>
+            <triangulation>withinSessions</triangulation>
             <!--Pretend that there is only one session by merging them? (0 - no [DEFAULT], 1 - yes)-->
             <mergeSessions>0</mergeSessions>
             
