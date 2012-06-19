@@ -3,7 +3,7 @@
 	<tasklist>
 		<currenttask domain='subject' desc='Bias correct a structural image using SPM8 segmentation routine'>
 
-            <permanenceofoutput>2</permanenceofoutput>
+            <permanenceofoutput>-2</permanenceofoutput>
             
 	        <samp desc='Sampling distance (mm)'>3</samp>
             <tpm desc='Full path to tissue probability map file'></tpm> <!-- if blank defaults to Seg/TPM.nii -->

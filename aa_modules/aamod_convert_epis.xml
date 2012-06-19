@@ -8,7 +8,7 @@
                 <memoryBase>0.40</memoryBase>
             </qsub>
             
-            <permanenceofoutput>1</permanenceofoutput>
+            <permanenceofoutput>-1</permanenceofoutput>
             
             <echoweightmethod>
                 t2star

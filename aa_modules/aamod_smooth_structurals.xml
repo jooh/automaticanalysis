@@ -2,14 +2,19 @@
 <aap>
     <tasklist>
         <currenttask domain='subject' desc='SPM smooth structurals' modality='MRI'>
+            
             <permanenceofoutput>2</permanenceofoutput>
+            
             <inputstreams>
                 <stream>structural</stream>
             </inputstreams>
+            
             <outputstreams>
                 <stream>structural</stream>
             </outputstreams>
+            
             <FWHM>12</FWHM>
-            </currenttask>
+            
+        </currenttask>
     </tasklist>
 </aap>

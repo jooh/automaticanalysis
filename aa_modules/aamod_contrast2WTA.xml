@@ -3,12 +3,15 @@
     <tasklist>
         <currenttask domain='subject' desc='Winner Takes All of contrasts found in SPM structure' modality='MRI'>
             
+            <permanenceofoutput>3</permanenceofoutput>
+            
             <inputstreams>
                 <stream>firstlevel_spm</stream>
                 <stream>firstlevel_cons</stream>
                 <stream>firstlevel_spmts</stream>
                 <stream>rois</stream>
             </inputstreams>
+            
             <outputstreams>
                 <stream>WTA</stream>
             </outputstreams>

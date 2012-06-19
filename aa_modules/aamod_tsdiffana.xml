@@ -9,11 +9,14 @@
             </qsub>
             
             <permanenceofoutput>3</permanenceofoutput>
+            
             <inputstreams>
                 <stream>epi</stream>
             </inputstreams>
+            
             <outputstreams>
             </outputstreams>
+            
         </currenttask>
     </tasklist>
 </aap>

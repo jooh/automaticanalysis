@@ -8,7 +8,7 @@
                 <memoryBase>0.3</memoryBase>
             </qsub>
             
-            <permanenceofoutput>1</permanenceofoutput>
+            <permanenceofoutput>-1</permanenceofoutput>
             
             <outputstreams>
                 <stream>autoidentifyseries</stream>
