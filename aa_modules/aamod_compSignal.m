@@ -42,7 +42,7 @@ resp='';
 
 switch task
     case 'domain'
-        resp='session'; 
+        resp='session';
         
     case 'description'
         resp='Get signal from the CSF, WM, GM and OOB compartments';
@@ -98,6 +98,15 @@ switch task
                 mSkull = spm_read_vols(spm_vol(BETimg(m,:)));
             end
         end
+        % If there is no outskin mask, then OOH will be "not brain"
+        if ~exist('mOOH', 'var')
+            mOOH = mGM + mWM + mCSF;
+            mOOH = mOOH > 0;
+            % Mask becomes negative...
+            mOOH = ~mOOH;
+            fprintf('\nRemoving OOH voxels near Cerebro-Spinal Fluid')
+            mOOH = rmNearVox(mOOH, mCSF, aap.tasklist.currenttask.settings.C2Odist);
+        end
         
         % Record the number of voxels in each compartment
         nG = sum(mGM(:)>0);
@@ -105,19 +114,26 @@ switch task
         nC = sum(mCSF(:)>0);
         nO = sum(mOOH(:)>0);
         
-        fprintf('\nRemoving White Matter voxels near Gray Matter')
-        mWM = rmNearVox(mWM, mGM, aap.tasklist.currenttask.settings.W2Gdist);
+        if ~isempty(aap.tasklist.currenttask.settings.W2Gdist)
+            fprintf('\nRemoving White Matter voxels near Gray Matter')
+            mWM = rmNearVox(mWM, mGM, aap.tasklist.currenttask.settings.W2Gdist);
+        end
         
-        % MASKS ALREADY STRICT ENOUGH TYPICALLY (TAKES OUT TOO MUCH CSF)
-        %fprintf('\nRemoving CerebroSpinalFluid voxels near Gray Matter')
-        %mCSF = rmNearVox(mCSF, mGM, aap.tasklist.currenttask.settings.C2Gdist);
+        if ~isempty(aap.tasklist.currenttask.settings.C2Gdist)
+            fprintf('\nRemoving Cerebro-Spinal Fluid voxels near Gray Matter')
+            mCSF = rmNearVox(mCSF, mGM, aap.tasklist.currenttask.settings.C2Gdist);
+        end
         
-        fprintf('\nRemoving CerebroSpinalFluid voxels near Skull')
-        mCSF = rmNearVox(mCSF, mSkull, aap.tasklist.currenttask.settings.C2Sdist);
+        if ~isempty(aap.tasklist.currenttask.settings.C2Sdist) && exist('mSkull', 'var')
+            fprintf('\nRemoving Cerebro-Spinal Fluid voxels near Skull')
+            mCSF = rmNearVox(mCSF, mSkull, aap.tasklist.currenttask.settings.C2Sdist);
+        end
         
-        fprintf('\nRemoving CerebroSpinalFluid voxels near OOH')
-        mCSF = rmNearVox(mCSF, mOOH, aap.tasklist.currenttask.settings.C2Odist);
-       
+        if ~isempty(aap.tasklist.currenttask.settings.C2Odist)
+            fprintf('\nRemoving Cerebro-Spinal Fluid voxels near OOH')
+            mCSF = rmNearVox(mCSF, mOOH, aap.tasklist.currenttask.settings.C2Odist);
+        end
+        
         %% Print the number of voxels in each compartment
         fprintf('\nGrey Matter mask comprises %d (%d) voxels', sum(mGM(:)>0), nG)
         fprintf('\nWhite Matter mask comprises %d (%d) voxels', sum(mWM(:)>0), nW)
@@ -133,11 +149,14 @@ switch task
             compTC(e,3) = mean(Y(mCSF>0));
             compTC(e,4) = mean(Y(mOOH>0));
         end
+        if any(isnan(compTC(:)))
+            aas_log(aap,true, 'Compartment signal contains NaNs')
+        end
         
         Rnames = {'GM', 'WM', 'CSF', 'OOH'};
         % Show an image of correlated timecourses...
         corrTCs(compTC, Rnames);
-
+        
         %% DIAGNOSTIC IMAGE
         % Save graphical output to common diagnostics directory
         if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
@@ -146,40 +165,45 @@ switch task
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         set(gcf,'PaperPositionMode','auto')
         print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-                [mfilename '__' mriname '.jpeg']));
-            
-            %% Diagnostic VIDEO of masks
+            [mfilename '__' mriname '.jpeg']));
+        
+        %% Diagnostic VIDEO of masks
         if aap.tasklist.currenttask.settings.diagnostic && ...
                 sess == aap.acq_details.selected_sessions(end)
             
-            movieFilename = fullfile(aap.acq_details.root, 'diagnostics', ...
-                [mfilename '__' mriname '.avi']);
-            % Create movie file by defining aviObject
-            try delete(movieFilename); catch; end
-            aviObject = avifile(movieFilename,'compression','none');
-            
-            mA = mGM + 2*mOOH + 3*mWM + 4*mCSF + 5*mSkull;
-            try close(2); catch; end
-            figure(2)
-            set(2, 'Position', [0 0 1000 800])
-            windowSize = get(2,'Position');
-            
-            for x = 1:size(mA,1)
-                h = subplot(1,1,1);
-                imagesc(rot90(squeeze(mA(x,:,:))))
-                axis equal off
-                caxis([0 5])
-                colorbar( ...
-                    'Ytick', 0:5, ...
-                    'Yticklabel', {'N/A', 'GM', 'OOB', 'WM', 'CSF', 'Skull'})
-                zoomSubplot(h, 1.2)
-                
-                pause(0.01)                
-                % Capture frame and store in aviObject
-                aviObject = addframe(aviObject,getframe(2,windowSize));
+            % Write the masks...
+            V = spm_vol(BETimg(1,:));
+            outSeg = '';
+            % GM, WM, CSF, OOH, [Skull]
+            V.fname = fullfile(fileparts(BETimg(1,:)), 'GM.nii');
+            outSeg = strvcat(outSeg, V.fname);
+            spm_write_vol(V, mGM);
+            V.fname = fullfile(fileparts(BETimg(1,:)), 'WM.nii');
+            outSeg = strvcat(outSeg, V.fname);
+            spm_write_vol(V, mWM);
+            V.fname = fullfile(fileparts(BETimg(1,:)), 'CSF.nii');
+            outSeg = strvcat(outSeg, V.fname);
+            spm_write_vol(V, mCSF);
+            V.fname = fullfile(fileparts(BETimg(1,:)), 'OOH.nii');
+            outSeg = strvcat(outSeg, V.fname);
+            spm_write_vol(V, mOOH);
+            if exist('mSkull', 'var')
+                V.fname = fullfile(fileparts(BETimg(1,:)), 'Skull.nii');
+                outSeg = strvcat(outSeg, V.fname);
+                spm_write_vol(V, mSkull);
             end
-
-            aviObject = close(aviObject);
+            
+            Ydims = {'X', 'Y', 'Z'};
+            
+            for d = 1:length(Ydims)
+                aas_image_avi( BETimg(1,:), ...
+                    outSeg, ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                    d, ... % Axis
+                    [800 600], ...
+                    2, ... % Rotations
+                    'fill'); % No outline
+            end
             try close(2); catch; end
         end
         

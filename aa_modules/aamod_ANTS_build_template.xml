@@ -4,8 +4,8 @@
         <currenttask domain='study' desc='ANTS template from structurals' modality='MRI'>
             
             <qsub>
-                <timeBase>10</timeBase>
-                <memoryBase>2</memoryBase>
+                <timeBase>40</timeBase>
+                <memoryBase>12</memoryBase>
             </qsub>
             
             <permanenceofoutput>3</permanenceofoutput>
@@ -19,8 +19,8 @@
             </outputstreams>
             
             <structural>1</structural>
-            <!-- Do we paralellise the building of the template? -->
-            <parallel>0</parallel>
+            <!-- Extra options to include (e.g. parallelisation) -->
+            <extraoptions>-c 2 -j 4 -r</extraoptions>
             
             <diagnostic>0</diagnostic>
             

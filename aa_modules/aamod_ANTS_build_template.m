@@ -49,7 +49,9 @@ switch task
         % Dimension number (always 3 for structural)
         Ndim = ['-d ' num2str(3) ' '];
         
-        ANTS_command = [ ANTSpath Ndim outfiles '-c 0 *'];
+        options = aap.tasklist.currenttask.settings.extraoptions;
+        
+        ANTS_command = [ ANTSpath Ndim outfiles options ' *'];
         
         cd(Tpth)
         

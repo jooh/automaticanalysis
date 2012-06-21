@@ -19,17 +19,22 @@
                 <stream>BETmask</stream>
             </outputstreams>
             
-            <!-- Do we apply the brain masking on the structural...? 0 - NO; 1 - YES -->
-            <maskBrain>1</maskBrain>
+            <maskBrain desc='Do we apply the brain masking on the structural...? 0 - NO; 1 - YES'
+            >1</maskBrain>
             
-            <!-- This specifies which structural we want to use, typically the first, but can be changed -->
-            <structural>1</structural>
+            <structural desc='This specifies which structural we want to use, typically the first, but can be changed'
+            >1</structural>
             
-            <!-- This specifies which MRI watershed options we want to use -->
-            <extraoptions>-atlas</extraoptions>
+            <extraoptions desc='This specifies which MRI watershed options we want to use'
+            >-atlas</extraoptions>
             
-            <!-- Do we run gcut to clean up the skull stripping? -->
-            <gcut>1</gcut>
+            <gcut desc='Do we run gcut to clean up the skull stripping?'
+            >1</gcut>
+            
+            <jaccart desc='How much overlap should we have between Hybrid Watershed and Graph Cut to combine'
+            >0.7</jaccart>
+            <dominant desc='Which technique is dominant if Jaccart fails? 0 - HW; 1 - GC'
+            >0</dominant>
             
             <!-- Diagnostic videos? Verbosity? -->
             <diagnostic>0</diagnostic>

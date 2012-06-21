@@ -1,6 +1,12 @@
 % Create a movie
 % aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations, outlineType)
 % If movieFN is empty, then the video will be shown, not saved...
+% Options for outline type:
+% 'canny', 'sobel', 'prewitt', 'roberts', 'log', 'zerocross' = Outlines the volumes gently
+% 'none' = No outline, but fills with small points, so you can see the
+% background (good for checking segmentations...)
+% 'fill' = No outline, but fills with large squares, so you cannot easily
+% see background colour...
 function aas_image_avi(imageFN, outlineFN, movieFN, axisDim, frameSize, rotations, outlineType)
 
 if ischar(imageFN)
@@ -73,7 +79,7 @@ if ~isempty(outlineFN)
     
     for o = 1:length(outlineFN)
         oY{o} = spm_read_vols(spm_vol(outlineFN{o}));
-        if ~strcmp(outlineType, 'none')
+        if ~strcmp(outlineType, 'none') && ~strcmp(outlineType, 'fill')
             % Get a good threshold
             thresh{o} = zeros(size(Y{1},axisDim),2);
             for d = 1:size(Y{1},axisDim)
@@ -94,7 +100,7 @@ if ~isempty(outlineFN)
     end
 end
 % Ensure that we don't get overlap between our masks...
-if strcmp(outlineType, 'none')
+if strcmp(outlineType, 'none') || strcmp(outlineType, 'fill')
     for o = 1:length(outlineFN)
         oY{o}(oY{o}<max_oY) = 0;
     end
@@ -125,7 +131,7 @@ for d = 1:size(Y{1},axisDim)
                 elseif axisDim == 3
                     outlineSlice{o} = squeeze(oY{o}(:,:,d));
                 end
-                if ~strcmp(outlineType, 'none')
+                if ~strcmp(outlineType, 'none') && ~strcmp(outlineType, 'fill')
                     outlineSlice{o} = edge(outlineSlice{o}, 'canny', thresh{o});
                 end
             end
@@ -145,10 +151,12 @@ for d = 1:size(Y{1},axisDim)
             hold on
             for o = 1:length(outlineFN)
                 [x y] = find(flipdim(outlineSlice{o},2));
-                if ~strcmp(outlineType, 'none')
-                    scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, 'd')
-                else
+                if strcmp(outlineType, 'none')
                     scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, '.')
+                elseif strcmp(outlineType, 'fill')
+                    scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, 's')
+                else
+                    scatter(x,y,round(min(frameSize./size(outlineSlice{o}))),colorsB{o}, 'd')
                 end
             end
             hold off

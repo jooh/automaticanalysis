@@ -49,15 +49,24 @@ if (~exist('parametric','var'))
     parametric=[];
 end
 
-% sort the onsets, and apply same reordering to dur & parametric
-% [AVG] - replacd junk by ons, since we *DO* want to sort the onsets
+% Check that the onsets and durations have same length (or that length of
+% duration is 1)...
+if (length(ons) ~= length(dur)) && length(dur) ~= 1
+    aas_log(aap, true, 'Your onset and duration are not of the same length')
+end
+
+% Sort the onsets, and apply same reordering to dur & parametric
 [ons ind]=sort(ons);
 if (length(dur)>1)
     dur=dur(ind);
 end;
 if (~isempty(parametric))
-    % [AVG] reorder parametric modulator even if there's more than one!
+    % Reorder parametric modulator even if there's more than one!
     for p = 1:length(parametric)
+        % First check the parametric modulator is as long as onsets
+        if (length(ons) ~= length(parametric(p).P))
+            aas_log(aap, true, 'Your onset and parametric modulator are not of the same length')
+        end
         parametric(p).P = parametric(p).P(ind);
     end
 end
