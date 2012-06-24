@@ -17,23 +17,23 @@ function [aap, resp] = aamod_biascorrect_segment8(aap, task, subjind)
 resp = '';
 
 switch task
-	case 'domain'
-		resp = 'subject';
-	case 'description'
-		resp = 'SPM8 segment8 to bias correct structural image';
-	case 'doit'
-
-	    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    case 'domain'
+        resp = 'subject';
+    case 'description'
+        resp = 'SPM8 segment8 to bias correct structural image';
+    case 'doit'
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % options
-
+        
         cfg.biasfwhm = aap.tasklist.currenttask.settings.biasfwhm; % 60
-		cfg.biasreg = aap.tasklist.currenttask.settings.biasreg;   % .001
-		cfg.affreg = aap.tasklist.currenttask.settings.affreg;     % 'mni';
+        cfg.biasreg = aap.tasklist.currenttask.settings.biasreg;   % .001
+        cfg.affreg = aap.tasklist.currenttask.settings.affreg;     % 'mni';
         cfg.reg = aap.tasklist.currenttask.settings.reg;           % .001;
         cfg.vox = aap.tasklist.currenttask.settings.vox;           % voxel size things get resampled to
         cfg.mrf = aap.tasklist.currenttask.settings.mrf;           % markov random field cleanup
         cfg.samp = aap.tasklist.currenttask.settings.samp;         % sampling distance
-
+        
         cfg.lkp = [1,1,2,2,3,3,4,4,4,5,5,5,5,6,6];
         cfg.writebiascorrected = [0 1];                            % [bias_field bias_corrected]
         cfg.ngaus = aap.tasklist.currenttask.settings.ngaus;       % [2 2 2 3 4 2];
@@ -42,30 +42,30 @@ switch task
         cfg.warpreg = 4;
         cfg.bb = {ones(2,3)*NaN};
         cfg.writedeffields = [0 0];                                % [1 1] would write them out
-
-
+        
+        
         % If no full path to tissue probability map (TPM) specified, try to use the standard SPM one
-	    if isempty(aap.tasklist.currenttask.settings.tpm)
-			cfg.tpm = fullfile(spm('dir'), 'toolbox', 'Seg', 'TPM.nii');
-		else
-			cfg.tpm = aap.tasklist.currenttask.settings.tpm;
-		end
-
+        if isempty(aap.tasklist.currenttask.settings.tpm)
+            cfg.tpm = fullfile(spm('dir'), 'toolbox', 'Seg', 'TPM.nii');
+        else
+            cfg.tpm = aap.tasklist.currenttask.settings.tpm;
+        end
+        
         if ~exist(cfg.tpm, 'file')
             aas_log(aap, true, sprintf('Specified TPM %s not found.', cfg.tpm));
         end
-
+        
         aas_log(aap, false, sprintf('Segmenting using TPMs from %s.', cfg.tpm));
-
-
+        
+        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % first make sure spm_preproc8 is in the path, as a toolbox it
         % might not be
-
+        
         if ~strcmp(spm('ver'),'SPM8')
             aas_log(aap, 1, sprintf('%s requires SPM8.', mfilename));
         end
-
+        
         if ~exist('spm_preproc_run', 'file')
             try
                 % try adding a likely location
@@ -73,12 +73,12 @@ switch task
             catch
             end
         end
-
+        
         if ~exist('spm_preproc_run', 'file')
             aas_log(aap, true, 'spm_preproc8 is not in your Matlab path but needs to be.');
         end
-
-
+        
+        
         % make sure optimNn is in the path, usually with DARTEL
         if ~exist('optimNn', 'file')
             try
@@ -89,70 +89,75 @@ switch task
         if ~exist('optimNn', 'file')
             aas_log(aap, true, 'optimNn is not in your Matlab path but needs to be.');
         end
-
-
+        
+        
         % get the structural image
-        img = aas_getfiles_bystream(aap, subjind, 'structural');
-
-
-        if isempty(img) || strcmp(img,'/')
+        Simg = aas_getfiles_bystream(aap, subjind, 'structural');
+        
+        
+        if isempty(Simg) || strcmp(Simg,'/')
             aas_log(aap, true, 'Did not find a structural image.');
         end
-
-        % if more than one found, use the first one and hope this is right
-        img = strtok(img(1,:));
-
-        aas_log(aap, false, sprintf('Found structural image: %s\n', img));
-
-
-		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-		% do the segmentation (and bias correction)
-
-	    tpm_nam = cfg.tpm;
-        ngaus   = cfg.ngaus;
-        nval    = {[1 0],[1 0],[1 0],[1 0],[1 0],[0 0]};
-        for k=1:length(ngaus)
-            tissue(k).tpm = [tpm_nam ',' num2str(k)]; % assign the tpm map
-            tissue(k).ngaus = ngaus(k);  % and the number of gaussians
-            tissue(k).native = cfg.native;
-            tissue(k).warped = cfg.warped;
+        
+        mimgfn = '';
+        seg8fn = '';
+        for d = aap.tasklist.currenttask.settings.structural
+            clear job
+            
+            % if more than one found, use the first one and hope this is right
+            img = strtok(Simg(d,:));
+            
+            aas_log(aap, false, sprintf('Found structural image: %s\n', img));
+            
+            
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % do the segmentation (and bias correction)
+            
+            tpm_nam = cfg.tpm;
+            ngaus   = cfg.ngaus;
+            nval    = {[1 0],[1 0],[1 0],[1 0],[1 0],[0 0]};
+            for k=1:length(ngaus)
+                tissue(k).tpm = [tpm_nam ',' num2str(k)]; % assign the tpm map
+                tissue(k).ngaus = ngaus(k);  % and the number of gaussians
+                tissue(k).native = cfg.native;
+                tissue(k).warped = cfg.warped;
+            end
+            
+            job.channel(1).vols{1} = img;
+            job.channel(1).biasreg = cfg.biasreg;
+            job.channel(1).biasfwhm = cfg.biasfwhm;
+            job.channel(1).write = cfg.writebiascorrected;
+            job.channel(1).tpm = cfg.tpm;
+            job.channel(1).ngaus = cfg.ngaus;
+            job.channel(1).native = cfg.native;
+            job.channel(1).warped = cfg.warped;
+            
+            job.tissue = tissue;
+            
+            job.warp.affreg = cfg.affreg;
+            job.warp.reg = cfg.warpreg;
+            job.warp.samp = cfg.samp;
+            job.warp.write = cfg.writedeffields;
+            job.warp.bb = cfg.bb;
+            job.warp.vox = cfg.vox;
+            job.warp.mrf = cfg.mrf;
+            
+            if job.warp.samp < 2
+                fprintf('Note that the sampling distance is small, which means this might take quite a while (2-12+ hours depending on cluster load etc.)!\n');
+            end
+            
+            spm_preproc_run(job);
+            
+            % get the filename for the bias-corrected image (which has 'm' prepended)
+            [pth, nm, ext] = fileparts(img);
+            mimgfn = strvcat(mimgfn, fullfile(pth, sprintf('m%s%s', nm, ext)));
+            
+            % get file name for *seg8.mat file
+            seg8fn = strvcat(seg8fn, fullfile(pth, sprintf('%s_seg8.mat', nm)));
         end
-
-        job.channel(1).vols{1} = img;
-        job.channel(1).biasreg = cfg.biasreg;
-        job.channel(1).biasfwhm = cfg.biasfwhm;
-        job.channel(1).write = cfg.writebiascorrected;
-        job.channel(1).tpm = cfg.tpm;
-        job.channel(1).ngaus = cfg.ngaus;
-        job.channel(1).native = cfg.native;
-        job.channel(1).warped = cfg.warped;
-
-        job.tissue = tissue;
-
-        job.warp.affreg = cfg.affreg;
-        job.warp.reg = cfg.warpreg;
-        job.warp.samp = cfg.samp;
-        job.warp.write = cfg.writedeffields;
-        job.warp.bb = cfg.bb;
-        job.warp.vox = cfg.vox;
-        job.warp.mrf = cfg.mrf;
-
-        if job.warp.samp < 2
-            fprintf('Note that the sampling distance is small, which means this might take quite a while (2-12+ hours depending on cluster load etc.)!\n');
-        end
-
-        spm_preproc_run(job);
-
+        
         %% describe outputs
-
-        % get the filename for the bias-corrected image (which has 'm' prepended)
-        [pth, nm, ext] = fileparts(img);
-        mimgfn = fullfile(pth, sprintf('m%s%s', nm, ext));
-
         % the bias-corrected structural image replaces the input image in the stream
         aap = aas_desc_outputs(aap, subjind, 'structural', mimgfn);
-
-        % get file name for *seg8.mat file
-        seg8fn = fullfile(pth, sprintf('%s_seg8.mat', nm));
         aap = aas_desc_outputs(aap, subjind, 'seg8', seg8fn);
 end

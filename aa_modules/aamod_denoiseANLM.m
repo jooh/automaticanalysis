@@ -38,7 +38,7 @@ switch task
         outstruct = '';
         outresid = '';
         
-        for d = aap.tasklist.currenttask.settings.structurals
+        for d = aap.tasklist.currenttask.settings.structural
             fprintf('Denoise structural image %s!\n', Sfn(d,:))
             if ~isempty(DHimg)
                 fprintf('\t structural type %s!\n', dcmhdr{d}.SeriesDescription)
@@ -110,7 +110,7 @@ switch task
         %% DESCRIBE OUTPUTS!
         
         if ~isempty(DHimg)
-            dcmhdr = {dcmhdr{aap.tasklist.currenttask.settings.structurals}};
+            dcmhdr = {dcmhdr{aap.tasklist.currenttask.settings.structural}};
             save(DHimg, 'dcmhdr')
             
             aap=aas_desc_outputs(aap,subj,'structural_dicom_header', DHimg);

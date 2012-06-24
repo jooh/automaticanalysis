@@ -66,6 +66,16 @@ switch task
         unix(['gunzip ANTStemplate.nii.gz'])
         aap = aas_desc_outputs(aap,'ANTStemplate', fullfile(Tpth, ['ANTStemplate' Sext]));
         
+        % Delete other things
+        delete(fullfile(Tpth,'*nii.gz'))
+        delete(fullfile(Tpth,'*txt'))
+        delete(fullfile(Tpth,'subj*'))
+        D = dir(Tpth);
+        for d = 3:length(D)
+            if isdir(fullfile(Tpth, D(d).name))
+                rmdir(fullfile(Tpth, D(d).name), 's')
+            end
+        end
     case 'checkrequirements'
         aas_log(aap,0,'No need to trim or skull strip structural\n' );
 end

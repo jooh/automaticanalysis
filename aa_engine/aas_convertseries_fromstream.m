@@ -168,7 +168,20 @@ for subdirind=1:length(subdirs)
                 end
             end
         end
-        conv=spm_dicom_convert(DICOMHEADERS_selected,'all','flat','nii');
+        % [AVG] to cope with modern 7T Siemens scanners, which seem to mess
+        % up the ICE dimensions...
+        if (isfield(DICOMHEADERS_selected{1}, 'Manufacturer') && ...
+                ~isempty(strfind(DICOMHEADERS_selected{1}.Manufacturer,'SIEMENS'))) || ...
+            (isfield(DICOMHEADERS_selected{1}, 'ManufacturersModelName') && ...
+                ~isempty(strfind(DICOMHEADERS_selected{1}.ManufacturersModelName,'7T'))) || ...
+                (isfield(DICOMHEADERS_selected{1}, 'TransmittingCoil') && ...
+                ~isempty(strfind(DICOMHEADERS_selected{1}.TransmittingCoil,'7T')))
+            
+            aas_log(aap, false, 'Using alternate spm_dicom_convert_7Tsiemens script...')
+            conv=spm_dicom_convert_7Tsiemens(DICOMHEADERS_selected,'all','flat','nii');
+        else
+            conv=spm_dicom_convert(DICOMHEADERS_selected,'all','flat','nii');
+        end
         out=[out(:);conv.files(:)];
     end
     out_allechoes{subdirind}=unique(out);

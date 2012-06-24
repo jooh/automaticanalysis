@@ -3,7 +3,7 @@
 % Also makes 'structurals' directory
 % Rhodri Cusack MRC CBU Cambridge Aug 2004
 
-function [aap,resp]=aamod_copystructural(aap,task,i)
+function [aap,resp]=aamod_copystructural(aap,task,subj)
 
 resp='';
 
@@ -12,27 +12,27 @@ switch task
         resp='Structural dicom to nifti and copying';
         
     case 'summary'
-        if (length(aap.acq_details.subjects(i).structural)==0)
-            resp=sprintf('No structural for subject %s\n',aap.acq_details.subjects(i).mriname);
+        if (length(aap.acq_details.subjects(subj).structural)==0)
+            resp=sprintf('No structural for subject %s\n',aap.acq_details.subjects(subj).mriname);
         else
-            resp=sprintf('Converted structural for subject %s \n', aas_getsubjname(aap,i));
+            resp=sprintf('Converted structural for subject %s \n', aas_getsubjname(aap,subj));
         end;
         
     case 'report'
     case 'doit'
         
-    [aap convertedfns dcmhdr]=aas_convertseries_fromstream(aap,i,'dicom_structural');
+    [aap convertedfns dcmhdr]=aas_convertseries_fromstream(aap,subj,'dicom_structural');
         
     % Save EXAMPLE dicom header (not all as previous code)
-    subjpath=aas_getsubjpath(aap,i);
+    subjpath=aas_getsubjpath(aap,subj);
 
      % Save outputs?
     
-    aap=aas_desc_outputs(aap,i,'structural',convertedfns);
+    aap=aas_desc_outputs(aap,subj,'structural',convertedfns);
             
     dcmhdrfn=fullfile(subjpath,'structural_dicom_header.mat');
     save(dcmhdrfn,'dcmhdr');
-    aap=aas_desc_outputs(aap,i,'structural_dicom_header',dcmhdrfn);
+    aap=aas_desc_outputs(aap,subj,'structural_dicom_header',dcmhdrfn);
 
  
     case 'checkrequirements'

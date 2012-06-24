@@ -25,7 +25,7 @@ switch task
         if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
             betEPIimg = aas_getfiles_bystream(aap,subj,'epiBETmask');
             if isempty(betEPIimg)
-                aas_log(aap, true, 'Problem finding mean functional image');
+                aas_log(aap, true, 'Problem finding EPI mask');
             end
             % Get mask...
             for m = 1:size(betEPIimg,1)
@@ -35,6 +35,13 @@ switch task
                 end
             end
             [betEPIpth, betEPIfn, betEPIext] = fileparts(betEPIimg);
+        else
+            % If we don't have a brain mask, then what we can do is to use
+            % the space of the EPI image, and make a mask from this...
+            betEPIimg = fullfile(mEPIpth, ['mask_' mEPIfn mEPIext]);
+            V = spm_vol(mEPIimg);
+            Y = ones(V.dim);
+            spm_write_vol(V,Y);
         end
         %% Get structural
         % [AVG] Modified the way we get the structural, to be more aa4-like
