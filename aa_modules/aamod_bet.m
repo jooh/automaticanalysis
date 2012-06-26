@@ -23,13 +23,7 @@ switch task
         
         % Let us use the native space...
         clear sess
-        try
-            Simg = aas_getfiles_bystream(aap,subj,inputstream{:});
-        catch
-            sess = 1;
-            % Is sess necessary? (e.g. meanepi, which only occurs in sess 1)
-            Simg = aas_getfiles_bystream(aap,subj,sess,inputstream{:});
-        end
+        Simg = aas_getfiles_bystream(aap,subj,inputstream{:});
         
         % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
@@ -160,17 +154,9 @@ switch task
         
         %% DESCRIBE OUTPUTS!
         if aap.tasklist.currenttask.settings.maskBrain
-            if ~exist('sess', 'var')
-                aap=aas_desc_outputs(aap,subj,inputstream{:},outStruct);
-            else
-                aap=aas_desc_outputs(aap,subj,sess,inputstream{:},outStruct);
-            end
+            aap=aas_desc_outputs(aap,subj,inputstream{:},outStruct);
         else
-            if ~exist('sess', 'var')
-                aap=aas_desc_outputs(aap,subj,inputstream{:},Simg);
-            else
-                aap=aas_desc_outputs(aap,subj,sess,inputstream{:},Simg);
-            end
+            aap=aas_desc_outputs(aap,subj,inputstream{:},Simg);
         end
         maskStream = outputstream(~cellfun('isempty', strfind(outputstream,'BETmask')));
         aap=aas_desc_outputs(aap,subj, maskStream{:}, outMask);

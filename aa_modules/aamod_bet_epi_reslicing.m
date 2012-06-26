@@ -16,7 +16,7 @@ switch task
     case 'doit'
         
         % RESLICE THE MASKS & MESHES
-        mEPIimg = aas_getfiles_bystream(aap,subj,1,'meanepi');
+        mEPIimg = aas_getfiles_bystream(aap,subj,'meanepi');
         
         % With the mean EPI, we just use the first one (there really should be only one)
         if size(mEPIimg,1) > 1
@@ -108,6 +108,6 @@ switch task
         end
         
         %% DESCRIBE OUTPUTS!
-        aap=aas_desc_outputs(aap,subj,1,'meanepi',mEPIimg);
+        aap=aas_desc_outputs(aap,subj,'meanepi',mEPIimg);
         aap=aas_desc_outputs(aap,subj,'epiBETmask',outMaskEPI);
 end

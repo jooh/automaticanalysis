@@ -23,12 +23,6 @@ switch task
         % find out what streams we should normalise
         streams=streams.stream(~[strcmp('normalisation_seg_sn',streams.stream)]);
         
-        % Is session specified in task header (used for meanepi, which only
-        % occurs in session 1
-        if (isfield(aap.tasklist.currenttask.settings,'session'))
-            sess=aap.tasklist.currenttask.settings.session;
-        end;
-        
         for streamind=1:length(streams)
             subj.imgs = [];
             

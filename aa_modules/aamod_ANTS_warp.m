@@ -2,7 +2,7 @@
 % Use the Anatomical Transformation Toolbox to normalise the structural to
 % a template image
 
-function [aap,resp]=aamod_ANTS_EPIwarp(aap,task,subj,sess)
+function [aap,resp]=aamod_ANTS_warp(aap,task,subj,sess)
 
 resp='';
 
@@ -36,12 +36,6 @@ switch task
         % find out what streams we should normalise
         streams=streams.stream(~[strcmp('ANTs',streams.stream)]);
         
-        % Is session specified in task header (used for meanepi, which only
-        % occurs in session 1)
-        if (isfield(aap.tasklist.currenttask.settings,'session'))
-            sess=aap.tasklist.currenttask.settings.session;
-        end
-        
         for streamind=1:length(streams)
             
             % Images to warp
@@ -49,7 +43,7 @@ switch task
                 P = aas_getfiles_bystream(aap,subj,sess,streams{streamind});
             else
                 P = aas_getfiles_bystream(aap,subj,streams{streamind});
-            end;
+            end
             
             wimgs=[];
             

@@ -10,7 +10,7 @@ switch task
     case 'doit'
         
         %% mean EPI image
-        mEPIimg = aas_getfiles_bystream(aap,subj,1,'meanepi');
+        mEPIimg = aas_getfiles_bystream(aap,subj,'meanepi');
         
         if isempty(mEPIimg)
             aas_log(aap, true, 'Problem finding mean functional image.');
