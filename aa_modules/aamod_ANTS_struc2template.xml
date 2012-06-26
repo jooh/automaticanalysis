@@ -3,6 +3,11 @@
     <tasklist>
         <currenttask domain='subject' desc='Use ANTS to coregister structural to template' modality='MRI'>
             
+            <qsub>
+                <timeBase>1</timeBase>
+                <memoryBase>1</memoryBase>
+            </qsub>
+            
             <permanenceofoutput>3</permanenceofoutput>
             
             <inputstreams>
