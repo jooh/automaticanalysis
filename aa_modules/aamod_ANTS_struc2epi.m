@@ -80,14 +80,12 @@ switch task
         
         mEPIimg = fullfile(mEPIpth, ['r' mEPIfn mEPIext]);
         
-        if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
-            spm_reslice(strvcat(Simg, betEPIimg), resFlags);
-            
-            betEPIimg = fullfile(betEPIpth, ['r' betEPIfn betEPIext]);
-            
-            % Ensure the resliced mask is indeed binary...
-            img2mask(betEPIimg);
-        end
+        spm_reslice(strvcat(Simg, betEPIimg), resFlags);
+        
+        betEPIimg = fullfile(betEPIpth, ['r' betEPIfn betEPIext]);
+        
+        % Ensure the resliced mask is indeed binary...
+        img2mask(betEPIimg);
         
         %% Use ANTS to normalise them!
         
@@ -147,11 +145,7 @@ switch task
             extraoptions = '';
         end
         
-        if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
-            EPImask = [' -x ' betEPIimg];
-        else
-            EPImask = '';
-        end
+        EPImask = [' -x ' betEPIimg];
         
         ANTS_command = [ ANTSpath Ndim outfiles maxiterations SyN metrics extraoptions EPImask];
         
@@ -212,11 +206,11 @@ switch task
             Ydims = {'X', 'Y', 'Z'};
             for d = 1:length(Ydims)
                 aas_image_avi( mEPIimg, ...
-                {Simg wSimg}, ...
-                fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
-                d, ... % Axis
-                [800 600], ...
-                2); % Rotations
+                    {Simg wSimg}, ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                    d, ... % Axis
+                    [800 600], ...
+                    2); % Rotations
             end
             try close(2); catch; end
             delete(fullfile(mEPIpth, ['r' mEPIfn mEPIext]))
