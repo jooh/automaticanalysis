@@ -108,7 +108,7 @@ switch task
                 end
                 
                 metrics = [ metrics ...
-                    '-m ' tmpM '[' sTimg ',' Simg ',' tmpW ',' tmpP '] '];
+                    '-m ' tmpM '[' sTimg ',' Simg ',' tmpW ',' tmpP ' '];
             else
                 break
             end

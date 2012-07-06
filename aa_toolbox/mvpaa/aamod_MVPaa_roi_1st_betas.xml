@@ -25,6 +25,10 @@
         
             <!--Is the MVPA performed in native space? (0 - no, 1 - yes)-->
             <native>1</native>
+            <!-- Which mask do we use? -->
+            <maskNum>1</maskNum>
+            <!-- Inclusive? (0 - no, 1 - yes) -->
+            <maskInclusive>1</maskInclusive>
             <!-- Minimum number of valid voxels present in ROI (otherwise error)-->
             <minVoxels>30</minVoxels>
             <!--Similarity measure type: 'Pearson', 'Spearman', 'Euclid', 'Mahalanobis' -->

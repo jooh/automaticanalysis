@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>
     <tasklist>
-        <currenttask domain='study' desc='ANTS template from structurals' modality='MRI'>
+        <currenttask domain='study' mfile_alias='aamod_ANTS_build_template_mEPI' desc='ANTS template from structurals' modality='MRI'>
             
             <qsub>
                 <timeBase>40</timeBase>
@@ -11,7 +11,7 @@
             <permanenceofoutput>3</permanenceofoutput>
             
             <inputstreams>
-                <stream>structural</stream>  
+                <stream>meanepi</stream>  
             </inputstreams>
             
             <outputstreams>

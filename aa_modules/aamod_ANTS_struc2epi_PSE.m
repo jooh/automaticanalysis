@@ -8,59 +8,62 @@ resp='';
 
 switch task
     case 'doit'
+        %% Get structural
+        Simg = aas_getfiles_bystream(aap,subj,'structural');
+        Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural,:));
+        
+        if size(Simg,1) > 1
+            aas_log(aap, false, 'Found more than 1 structural images, using structural %d', ...
+                aap.tasklist.currenttask.settings.structural);
+        end
+        % Get structural directory for this subject
+        [Spth, Sfn, Sext] = fileparts(Simg);
+        % Warped structural...
+        wSimg = fullfile(Spth,['w' Sfn Sext]);
+        
+        %% structural BET
+        betSimg = aas_getfiles_bystream(aap,subj,'BETmask');
+        % Get mask...
+        for m = 1:size(betSimg,1)
+            if ~isempty(strfind(betSimg(m,:), aap.tasklist.currenttask.settings.maskBrain))
+                betSimg = deblank(betSimg(m,:));
+                break
+            end
+        end
+        mask2outline(betSimg);
         
         %% mean EPI image
         mEPIimg = aas_getfiles_bystream(aap,subj,'meanepi');
         
-        if isempty(mEPIimg)
-            aas_log(aap, true, 'Problem finding mean functional image.');
-        elseif size(mEPIimg,1) > 1
+        if size(mEPIimg,1) > 1
             aas_log(aap, false, 'Found more than 1 mean functional images, using first');
         end
         mEPIimg = deblank(mEPIimg(1,:));
         [mEPIpth, mEPIfn, mEPIext] = fileparts(mEPIimg);
         
-        
         %% mean EPI BET
-        if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
-            betEPIimg = aas_getfiles_bystream(aap,subj,'epiBETmask');
-            if isempty(betEPIimg)
-                aas_log(aap, true, 'Problem finding EPI mask');
+        betEPIimg = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        % Get mask...
+        for m = 1:size(betEPIimg,1)
+            if ~isempty(strfind(betEPIimg(m,:), aap.tasklist.currenttask.settings.maskBrain))
+                betEPIimg = deblank(betEPIimg(m,:));
+                break
             end
-            % Get mask...
-            for m = 1:size(betEPIimg,1)
-                if ~isempty(strfind(betEPIimg(m,:), aap.tasklist.currenttask.settings.maskBrain))
-                    betEPIimg = deblank(betEPIimg(m,:));
-                    break
-                end
-            end
-            [betEPIpth, betEPIfn, betEPIext] = fileparts(betEPIimg);
-        else
-            % If we don't have a brain mask, then what we can do is to use
-            % the space of the EPI image, and make a mask from this...
-            betEPIimg = fullfile(mEPIpth, ['mask_' mEPIfn mEPIext]);
-            V = spm_vol(mEPIimg);
-            Y = ones(V.dim);
-            V.fname = betEPIimg;
-            spm_write_vol(V,Y);
         end
-        %% Get structural
-        % [AVG] Modified the way we get the structural, to be more aa4-like
-        Simg = aas_getfiles_bystream(aap,subj,'structural');
-        Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural,:));
+        [betEPIpth, betEPIfn, betEPIext] = fileparts(betEPIimg);
+        mask2outline(betEPIimg);
         
-        if isempty(Simg)
-            aas_log(aap, true, 'Problem finding structural image.');
-        elseif size(Simg,1) > 1
-            aas_log(aap, false, 'Found more than 1 structural images, using structural %d', ...
-                aap.tasklist.currenttask.settings.structural);
-        end
+        %% Make mask for where we want to do the normalisation...
+        % If we don't have a brain mask, then what we can do is to use
+        % the space of the EPI image, and make a mask from this...
+        MASKimg = fullfile(mEPIpth, ['mask_' mEPIfn mEPIext]);
+        V = spm_vol(mEPIimg);
+        Y = ones(V.dim);
+        V.fname = MASKimg;
+        spm_write_vol(V,Y);
+        [MASKpth, MASKfn, MASKext] = fileparts(MASKimg);
         
-        % Get structural directory for this subject
-        [Spth, Sfn, Sext] = fileparts(Simg);
-        wSimg = fullfile(Spth,['w' Sfn Sext]);
-        
-        %% Reslice EPI to structural space
+        %% Reslice mEPI and mask to structural space
         % to keep the structural image in its own space, and avoid slicing
         % off non-EPI acquired data)
         
@@ -77,16 +80,24 @@ switch task
             'mean', 0);           % write mean image
         
         % Reslice
-        spm_reslice(strvcat(Simg, mEPIimg), resFlags);
+        spm_reslice(strvcat(Simg, mEPIimg, betEPIimg, MASKimg), resFlags);
         
         mEPIimg = fullfile(mEPIpth, ['r' mEPIfn mEPIext]);
-        
-        spm_reslice(strvcat(Simg, betEPIimg), resFlags);
-        
         betEPIimg = fullfile(betEPIpth, ['r' betEPIfn betEPIext]);
+        MASKimg = fullfile(MASKpth, ['r' MASKfn MASKext]);
         
-        % Ensure the resliced mask is indeed binary...
+        % Ensure the resliced masks are indeed binary...
+        img2mask(MASKimg);
         img2mask(betEPIimg);
+        img2mask(betSimg)
+        
+        % DEBUG... @@@
+        M = spm_read_vols(spm_vol(MASKimg));
+        V = spm_vol(betSimg);
+        Y = spm_read_vols(V);
+        Y = Y.*M;
+        spm_write_vol(V,Y);
+        
         
         %% Use ANTS to normalise them!
         
@@ -128,6 +139,9 @@ switch task
                 tmpM = aap.tasklist.currenttask.settings.(['metric' num2str(m)]);
                 tmpW = num2str(aap.tasklist.currenttask.settings.(['weight' num2str(m)]));
                 tmpP = aap.tasklist.currenttask.settings.(['parameters' num2str(m)]);
+                if isnumeric(tmpP)
+                    tmpP = num2str(tmpP);
+                end
                 
                 metrics = [ metrics ...
                     '-m ' tmpM '[' mEPIimg ',' Simg ',' tmpW ',' tmpP ' '];
@@ -136,6 +150,17 @@ switch task
             end
         end
         
+        % Add a PSE metric...
+        tmpM = num2str(aap.tasklist.currenttask.settings.metricPSE);
+        tmpW = num2str(aap.tasklist.currenttask.settings.weightPSE);
+        tmpP = num2str(aap.tasklist.currenttask.settings.parametersPSE);
+        
+        %{
+        metrics = [ metrics ...
+            '-m ' tmpM '[' mEPIimg ',' Simg ',' betEPIimg ',' betSimg ',' ...
+            tmpW ',' tmpP ' '];
+        %}
+        
         % Any extra options?...
         if ~isempty(aap.tasklist.currenttask.settings.transformation)
             extraoptions = aap.tasklist.currenttask.settings.extraoptions;
@@ -143,7 +168,7 @@ switch task
             extraoptions = '';
         end
         
-        EPImask = [' -x ' betEPIimg];
+        EPImask = [' -x ' MASKimg];
         
         ANTS_command = [ ANTSpath Ndim outfiles maxiterations transformation metrics extraoptions EPImask];
         
@@ -153,6 +178,7 @@ switch task
         fprintf('Running ANTS using command:\n')
         fprintf([ANTS_command '\n'])
         [s w] = aas_shell(ANTS_command);
+        disp(w)
         
         warpANTS_command = [ warpANTSpath Ndim ... % dimension number
             Simg ' ' fullfile(Spth, ['w' Sfn Sext]) ... % moving image & output

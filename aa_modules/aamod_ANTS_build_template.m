@@ -1,13 +1,8 @@
-% AA module - extended coregistration of EPI to structural
-% Coregistration of structural to mean EPI output by realignment in 3 steps
-% 1) Coregister Structural to T1 template
-% 2) Coregister mean EPI to EPI template
-% 3) Coregister mean EPI to Structural
-% 4) Apply transformation matrix of mean EPI to all EPIs
+% AA module - build template from a set of structural scans, using ANTS
 
 function [aap,resp]=aamod_ANTS_build_template(aap,task)
 
-resp='';
+resp = '';
 
 switch task
     case 'doit'
@@ -21,16 +16,20 @@ switch task
             mkdir(Tpth)
         end
         
+        % Expects only one input stream...
+        streams=aap.tasklist.currenttask.inputstreams;
+        
         for subj = 1:length(aap.acq_details.subjects)
-            Simg = aas_getfiles_bystream(aap,subj,'structural');
+            Simg = aas_getfiles_bystream(aap,subj,streams{:});
+            
+            if size(Simg,1) > 1
+                aas_log(aap, false, 'Found more than 1 image, using %d', ...
+                    aap.tasklist.currenttask.settings.structural);
+            end
             
             % Fileparts to get extension of file...
             [~, ~, Sext] = fileparts(Simg);
             
-            if size(Simg,1) > 1
-                aas_log(aap, false, 'Found more than 1 structural images, using structural %d', ...
-                    aap.tasklist.currenttask.settings.structural);
-            end
             % Copy images to right location
             copyfile(Simg, fullfile(Tpth, sprintf('subj%04d%s', subj, Sext)));
         end
@@ -47,7 +46,7 @@ switch task
         outfiles = '-o ANTS ';
         
         % Dimension number (always 3 for structural)
-        Ndim = ['-d ' num2str(3) ' '];
+        Ndim = '-d ';
         
         options = aap.tasklist.currenttask.settings.extraoptions;
         
@@ -63,19 +62,18 @@ switch task
         disp(w)
         
         %% Describe the outputs
-        unix(['gunzip ANTStemplate.nii.gz'])
+        unix(['gunzip ' fullfile(Tpth, ['ANTStemplate.nii.gz'])])
         aap = aas_desc_outputs(aap,'ANTStemplate', fullfile(Tpth, ['ANTStemplate' Sext]));
         
         % Delete other things
         delete(fullfile(Tpth,'*nii.gz'))
         delete(fullfile(Tpth,'*txt'))
         delete(fullfile(Tpth,'subj*'))
+        delete(fullfile(Tpth,'rigid*'))
         D = dir(Tpth);
         for d = 3:length(D)
             if isdir(fullfile(Tpth, D(d).name))
                 rmdir(fullfile(Tpth, D(d).name), 's')
             end
         end
-    case 'checkrequirements'
-        aas_log(aap,0,'No need to trim or skull strip structural\n' );
 end

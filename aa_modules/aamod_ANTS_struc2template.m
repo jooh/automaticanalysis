@@ -68,12 +68,9 @@ switch task
                 tmpM = aap.tasklist.currenttask.settings.(['metric' num2str(m)]);
                 tmpW = num2str(aap.tasklist.currenttask.settings.(['weight' num2str(m)]));
                 tmpP = aap.tasklist.currenttask.settings.(['parameters' num2str(m)]);
-                if isnumeric(tmpP)
-                    tmpP = num2str(tmpP);
-                end
                 
                 metrics = [ metrics ...
-                    '-m ' tmpM '[' sTimg ',' Simg ',' tmpW ',' tmpP '] '];
+                    '-m ' tmpM '[' sTimg ',' Simg ',' tmpW ',' tmpP ' '];
             else
                 break
             end

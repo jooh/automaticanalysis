@@ -13,12 +13,14 @@ switch task
     case 'doit'
         
         EPIimg = aas_getfiles_bystream(aap,subj,sess,'epi');
-        ROIimg = aas_getfiles_bystream(aap,subj,'rois');
+        if any(strcmp('rois',aap.tasklist.currenttask.inputstreams.stream))
+            ROIimg = aas_getfiles_bystream(aap,subj,'rois');
+        else
+           ROIimg = ''; 
+        end
         
         %% Get started with the processing
         % ROIvol{r}based measures
-        EPIsnROI= cell(size(ROIimg,1),1);
-        EPIsnHist = cell(size(ROIimg,1),1);
         mROI = cell(size(ROIimg,1),1);
         sROI = cell(size(ROIimg,1),1);
         SNmROI= cell(size(ROIimg,1),1);
@@ -33,9 +35,7 @@ switch task
         fprintf('\nWorking on session %s', aap.acq_details.sessions(sess).name)
         
         fprintf('\n\tLoading ROIs')
-        ROIlist = {};
         for r = 1:size(ROIimg,1)
-            ROIlist = [ROIlist ROIimg(r,:)];
             [~, ROIname{r}] = fileparts(ROIimg(r,:));
             
             % Now load each of the ROIs we wish to examine (usually using the grey matter)
@@ -132,14 +132,11 @@ switch task
             ['tSNR_' aap.acq_details.sessions(sess).name '.nii']);
         spm_write_vol(sV, EPIsnr);
         
-        if ~isempty(ROIlist)
+        if ~isempty(ROIimg)
             fprintf('\n\tFinalising ROI data')
             
             for r = 1:size(ROIimg,1)
-                % Now get the voxels specific to each ROI
-                EPIsnROI{r} = EPIsnr(ROIvol{r}>0);
-                EPIsnROI{r} = EPIsnROI{r}(EPIsnROI{r}>0); % We don't want to include zero values...
-                % Also get a whole ROI signal and noise estimate
+                % Get a whole ROI signal and noise estimate
                 SNmROI{r} = mean(mROI{r}) ./ std(mROI{r});
             end
             
@@ -152,68 +149,25 @@ switch task
             
             %% tSNR results figure!
             fprintf('\nDisplaying the results of the tSNR analysis')
-            colorsB = {'r' 'g' 'b' 'c' 'm' 'y' 'w'};
             
-            % We need to make a string for eval, that will print the legend...
-            legStr = 'legend(';
-            for r = 1:size(ROIimg,1)
-                legStr = [legStr ...
-                    'sprintf(''%s; mn=%.2f; SD=%.2f; med=%.0f; ROI=%.2f (%.0fv)'', ' ...
-                    'ROIname{' num2str(r) '}, '  ...
-                    'mean(EPIsnROI{' num2str(r) '}), ' ...
-                    'std(EPIsnROI{' num2str(r) '}), ' ...
-                    'median(EPIsnROI{' num2str(r) '}), ' ...
-                    'SNmROI{' num2str(r) '}, ' ...
-                    'length(EPIsnROI{' num2str(r) '})),'];
+            legendExtra = cell(1,length(ROIname));
+            for r = 1:length(ROIname)
+                legendExtra{r} = sprintf(' ROI=%.2f', SNmROI{r});
             end
-            legStr = [legStr(1:end-1) ');'];
             
-            try close(2); catch; end
-            
-            figure(2)
-            set(2, 'Position', [0 0 1200 700])
-            maxI = 0;
-            windI = 0;
-            maxV = 0;
-            hold on
-            
-            for r = 1:size(ROIimg,1)
-                % What range do the SNR values take?
-                maxI = max(max(EPIsnROI{r}), maxI);
-                % What window do we wish to present?
-                windI = max(median(EPIsnROI{r}) + std(EPIsnROI{r}) * 3, windI);
-            end
-            vals = 0:windI/100:ceil(maxI);
-            for r = 1:size(ROIimg,1)
-                % Now make a histogram and "normalise" it
-                EPIsnHist{r} = hist(EPIsnROI{r}, vals);
-                EPIsnHist{r} = EPIsnHist{r}./sum(EPIsnHist{r});
-                % And decide what is the greatest prop value
-                maxV = max(max(EPIsnHist{r}), maxV);
-                
-                % Make bars semi-transparent for overlaying
-                B = bar(vals, EPIsnHist{r}, 1, colorsB{r});
-                ch = get(B,'child');
-                set(ch, 'faceA', 0.3, 'edgeA', 0.2);
-            end
-            vals = 0:windI/100:ceil(windI);
-            % Set the axis to a good value!
-            axis([vals(1), vals(end), 0, maxV*1.05])
-            xlabel('SNR')
-            ylabel('Proportion of voxels')
-            set(gca,'XTick', 0:ceil(maxI./50):maxI)
+            roi2hist(sV.fname, ROIimg, [], legendExtra)
+                                    
             title(sprintf('\nSNR for session %s, using %.0f scans', ...
                 regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
                 size(EPIimg,1)))
-            eval(legStr);
             
             set(gcf,'PaperPositionMode','auto')
             print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_tSNR.jpeg']));
             
-            %% Time-course results figure!
-            
+            %% Time-course results figure!            
             fprintf('\nDisplaying the results of the timecourse analysis')
+            colorsB = aas_colours;
             
             try close(2); catch; end
             figure(2)
@@ -228,10 +182,10 @@ switch task
                 % We need to make a string for eval, that will print the legend...
                 legStr = [legStr 'sprintf(''%s (%.0fv)'', ' ...
                     'ROIname{' num2str(r) '}, ' ...
-                    'length(EPIsnROI{' num2str(r) '})),'];
+                    'sum(ROIvol{' num2str(r) '}(:))),'];
                 
                 % Plot main results (errorbars displayed differently now...)
-                plot(mROI{r}, ['.' colorsB{r}])
+                plot(mROI{r}, '.', 'Color',  colorsB{r})
             end
             legStr = [legStr(1:end-1) ');'];
             eval(legStr);
@@ -258,7 +212,7 @@ switch task
             if aap.tasklist.currenttask.settings.diagnostic && sess == aap.acq_details.selected_sessions(1)
                 
                 aas_image_avi(sV.fname, ...
-                    ROIlist, ...
+                    ROIimg, ...
                     fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '.avi']), ...
                     2, ... % Axis
                     [800 600], ...

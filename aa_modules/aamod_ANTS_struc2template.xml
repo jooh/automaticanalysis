@@ -47,7 +47,7 @@
             <!-- Weight of the metric -->
             <weight1>1</weight1>
             <!-- Parameters for that metric -->
-            <parameters1>4</parameters1>            
+            <parameters1>4]</parameters1>            
             <!-- NOTE: More metrics & weights and parameters can be added up to 9 -->
                         
             <!-- Diagnostic videos? -->

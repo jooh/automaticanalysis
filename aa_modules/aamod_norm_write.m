@@ -16,15 +16,15 @@ switch task
         subj_dir = aas_getsubjpath(aap,subj); 
         
         % get sn mat file from normalisation
-        subj.matname = aas_getfiles_bystream(aap,subj,'normalisation_seg_sn');
+        matname = aas_getfiles_bystream(aap,subj,'normalisation_seg_sn');
         
         streams=aap.tasklist.currenttask.inputstreams;
         
         % find out what streams we should normalise
-        streams=streams.stream(~[strcmp('normalisation_seg_sn',streams.stream)]);
+        streams=streams.stream(~strcmp('normalisation_seg_sn',streams.stream));
         
         for streamind=1:length(streams)
-            subj.imgs = [];
+            imgs = [];
             
             % Image to reslice
             if (exist('sess','var'))
@@ -32,7 +32,7 @@ switch task
             else
                 P = aas_getfiles_bystream(aap,subj,streams{streamind});
             end;
-            subj.imgs = strvcat(subj.imgs, P);
+            imgs = strvcat(imgs, P);
             % delete previous because otherwise nifti write routine doesn't
             % save disc space when you reslice to a coarser voxel
             for c=1:size(P,1)
@@ -41,14 +41,14 @@ switch task
             end;
             
             % now write normalised
-            if (length(subj.imgs)>0)
-                spm_write_sn(subj.imgs,subj.matname,aap.spm.defaults.normalise.write);
+            if (length(imgs)>0)
+                spm_write_sn(imgs,matname,aap.spm.defaults.normalise.write);
             end;
             wimgs=[];
             
             % describe outputs
-            for fileind=1:size(subj.imgs,1)
-                [pth nme ext]=fileparts(subj.imgs(fileind,:));
+            for fileind=1:size(imgs,1)
+                [pth nme ext]=fileparts(imgs(fileind,:));
                 wimgs=strvcat(wimgs,fullfile(pth,['w' nme ext]));
             end;
             if (exist('sess','var'))

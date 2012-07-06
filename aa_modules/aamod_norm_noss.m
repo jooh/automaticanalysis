@@ -288,10 +288,25 @@ switch task
                 try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
                 set(gcf,'PaperPositionMode','auto')
                 print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname ' W.jpeg']));
+                    [mfilename '__' mriname '_W.jpeg']));
             catch
                 fprintf('\n\tFailed display backup diagnostic image!');
             end
+        end
+        
+        % Another diagnostic image, looking at how well the segmentation worked...
+        if aap.tasklist.currenttask.settings.usesegmentnotnormalise
+            Pthresh = 0.95;
+            
+            ROIdata = roi2hist(fullfile(mSpth,['m' mSfn mSext]), ...
+                outSeg(1:2:end,:), Pthresh);
+            
+            [h, pv, ci, stats] = ttest2(ROIdata{2}, ROIdata{1});
+            
+            title(sprintf('GM vs WM... T-val: %0.2f (df = %d)', stats.tstat, stats.df))
+    
+            print('-djpeg','-r200',fullfile(aap.acq_details.root, 'diagnostics', ...
+                    [mfilename '__' mriname '_Hist.jpeg']));
         end
         
     case 'checkrequirements'

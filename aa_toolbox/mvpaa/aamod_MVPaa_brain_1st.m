@@ -61,7 +61,7 @@ switch task
             [indROI voxels] = mvpaa_buildROI([x y z], ...
                 [Bx By Bz], brainSize);
     
-            Betas = mvpaa_extraction(aap, data, indROI, voxels);
+            Betas = mvpaa_extraction(aap, data, indROI);
             
             if isempty(Betas)                
                 continue

@@ -11,16 +11,19 @@
             <permanenceofoutput>3</permanenceofoutput>
             
             <inputstreams>
-                <stream>structural</stream>  
+                <stream>structural</stream>
+                <stream>segmentation</stream> 
             </inputstreams>
             
             <outputstreams>
                 <stream>ANTStemplate</stream>
             </outputstreams>
             
-            <structural>1</structural>
-            <!-- Extra options to include (e.g. parallelisation) -->
-            <extraoptions>-c 2 -j 4 -r 1</extraoptions>
+            <structural_images>1</structural_images>
+            <segmentation_images>1</segmentation_images>
+            
+            <!-- Extra options to include (e.g. parallelisation + rigid registration) -->
+            <extraoptions>-c 2 -j 4 -r 1 -s MI -t GR -g 1</extraoptions>
             
             <diagnostic>0</diagnostic>
             

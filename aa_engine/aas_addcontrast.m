@@ -48,19 +48,6 @@ else
     moduleindex = 1;
 end
 
-% % Get number from end of module name if present in format _%05d (e.g, _00001)
-% if (length(modulename>6))
-%     moduleindex=str2num(modulename(length(modulename)-4:end));
-%     if (~strcmp(['_' sprintf('%05d',moduleindex)],modulename(length(modulename)-5:end)))
-%         moduleindex=1;
-%     else
-%         modulename=modulename(1:length(modulename)-6);
-%     end;
-% else
-%     moduleindex=1;
-% end;
-
-
 if (~exist('conname','var'))
     conname=[];
 end;

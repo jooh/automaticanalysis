@@ -91,7 +91,7 @@ if ~isempty(outlineFN)
                     outlineSlice{o} = squeeze(oY{o}(:,:,d));
                 end
                 
-                [outlineSlice{o} thresh{o}(d,:)] = edge(outlineSlice{o}, 'canny');
+                [outlineSlice{o} thresh{o}(d,:)] = edge(outlineSlice{o}, outlineType);
             end
             thresh{o} = mean(thresh{o});
         else
@@ -132,7 +132,7 @@ for d = 1:size(Y{1},axisDim)
                     outlineSlice{o} = squeeze(oY{o}(:,:,d));
                 end
                 if ~strcmp(outlineType, 'none') && ~strcmp(outlineType, 'fill')
-                    outlineSlice{o} = edge(outlineSlice{o}, 'canny', thresh{o});
+                    outlineSlice{o} = edge(outlineSlice{o}, outlineType, thresh{o});
                 end
             end
         end
@@ -146,7 +146,7 @@ for d = 1:size(Y{1},axisDim)
         end
         
         % Draw slices
-        imagescnan(imageSlice, 'NanColor', [1 0 0])
+        imagescnan(imageSlice, 'NanColor', [1 1 1])
         if ~isempty(outlineFN)
             hold on
             for o = 1:length(outlineFN)

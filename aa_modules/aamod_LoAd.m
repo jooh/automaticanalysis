@@ -178,8 +178,8 @@ switch task
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         
         % This will only work for 1-7 segmentations
-            OVERcolours = {[1 0 0], [0 1 0], [0 0 1], ...
-                [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
+        OVERcolours = {[1 0 0], [0 1 0], [0 0 1], ...
+            [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
         
         %% Draw native template
         spm_check_registration(Simg)
@@ -210,6 +210,19 @@ switch task
             end
             try close(2); catch; end
         end
+        
+        % Another diagnostic image, looking at how well the segmentation  worked...
+        Pthresh = 0.95;
+        
+        ROIdata = roi2hist(Simg, ...
+            outSeg, Pthresh);
+        
+        [h, pv, ci, stats] = ttest2(ROIdata{1}, ROIdata{2});
+        
+        title(sprintf('GM vs WM... T-val: %0.2f (df = %d)', stats.tstat, stats.df))
+        
+        print('-djpeg','-r200',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '_Hist.jpeg']));
         
         % Now put our BETmask in the BETmask stream, but without deleting
         % the original BET mask...
