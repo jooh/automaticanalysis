@@ -105,4 +105,21 @@ switch task
                 rmdir(fullfile(Tpth, D(d).name), 's')
             end
         end
+        
+        % Diagnostic image?
+        % Save graphical output to common diagnostics directory
+        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
+            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
+        end
+        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        
+        %% Draw templates
+        
+        spm_check_registration(outTemp)
+        
+        spm_orthviews('reposition', [0 0 0])
+        
+        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
+        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
 end

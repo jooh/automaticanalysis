@@ -143,9 +143,17 @@ switch task
             spm_unlink(fullfile('.', 'mask.img')); % avoid overwrite dialog
             SPM = spm_spm(SPM);
             
+            %% Define contrasts
+            eval(sprintf('cd %s',rfxrootdir));
             
-            % Output streams
-            % Describe outputs
+            SPM = rmfield(SPM,'xCon'); %just in case 
+
+            SPM.xCon(1) = spm_FcUtil('Set',sprintf('%s',conname),'T','c',[1],SPM.xX.xKXs);
+            SPM.xCon(2) = spm_FcUtil('Set',sprintf('- %s',conname),'T','c',[-1],SPM.xX.xKXs);
+
+            spm_contrasts(SPM);
+            
+            %% Describe outputs
             %  secondlevel_spm
             aap=aas_desc_outputs(aap,'secondlevel_spm',fullfile(rfxdir,'SPM.mat'));
             

@@ -19,7 +19,9 @@ switch task
         load(aas_getfiles_bystream(aap,p,'MVPaa'));
         
         % get sn mat file from normalisation
-        normMAT = aas_getfiles_bystream(aap,p,'normalisation_seg_sn');
+        if aap.tasklist.currenttask.settings.normalise == 1
+            normMAT = aas_getfiles_bystream(aap,p,'normalisation_seg_sn');
+        end
         
         % Load SPM used for this analysis...
         load(aas_getfiles_bystream(aap, p, 'firstlevel_spm'));

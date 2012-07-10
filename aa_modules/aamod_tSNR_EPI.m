@@ -223,5 +223,5 @@ switch task
         
         %% DESCRIBE OUTPUTS
         
-        aap=aas_desc_outputs(aap,subj,'tSNR',sV.fname);
+        aap=aas_desc_outputs(aap,subj,sess,'tSNR',sV.fname);
 end

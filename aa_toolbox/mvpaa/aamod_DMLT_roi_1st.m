@@ -2,7 +2,7 @@
 %
 % Modified for aa4 by Alejandro Vicente-Grabovetsky Feb-2011
 
-function [aap,resp] = aamod_MVPaa_roi_1st(aap,task,p)
+function [aap,resp] = aamod_DMLT_roi_1st(aap,task,p)
 
 resp='';
 
@@ -18,9 +18,6 @@ switch task
         % Required...
         aap.tasklist.currenttask.settings.mergeSessions = 1;
         
-        % Get the contrasts for this subject...
-        DMLT = mvpaa_loadDMLT(aap,p);
-                
         %% ANALYSIS
         
         % Load the data into a single big structure...
@@ -38,8 +35,14 @@ switch task
         ROInum = size(ROIimg,1);
                 
         ROIname = {};
+        
+        DMLout = cell(1,ROInum);
+        
         % Loop the routine over all ROIs
         for r = 1:ROInum
+            % Get the contrasts for this subject...
+            DMLT = mvpaa_loadDMLT(aap,p);
+            
             [Rpth Rfn Rext] = fileparts(deblank(ROIimg(r,:)));
             ROIname = [ROIname Rfn];
             
@@ -80,68 +83,16 @@ switch task
                 % The crucial line that calls the DMLT object train method
                 DMLT(c).object = DMLT(c).object.train(Betas,con);
                 
-                % when DMLTobj is a crossvalidator object:
-                accuracy    = DMLT(c).object.statistic('accuracy');
-                pval        = DMLT(c).object.statistic('binomial');
-                keyboard
-                % when DMLTobj is a permutation object
-                pval        = DMLT(c).object.statistic;
+                % Ideally, the DMLT method you use should already include
+                % crossvalidation, etc...
             end
-            %{
-            % Get the residuals
-            Resid = mvpaa_shrinkage(aap, Betas);
-            
-            % Compute similarities of the the data
-            Simil = mvpaa_correlation(aap, Resid);
-            
-            [Stats(r,:,:), meanSimil(r, :,:)] = mvpaa_statistics(aap, Simil);
-            %}
-            
-            %% SOME DIAGNOSTICS...
-            if aap.tasklist.currenttask.settings.diagnostic
-                if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-                    mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-                end
-                
-                try close(2); catch;end
-                figure(2)
-                set(2, 'Position', [0 0 1200 500], 'Name', Rfn)
-                
-                subplot(1,3,1)
-                imagesc( ...
-                    reshape(Resid, ...
-                    [size(Resid,1) size(Resid,2)*size(Resid,3)*size(Resid,4)]))
-                axis equal
-                axis off
-                title('Residuals')
-                
-                subplot(1,3,2)
-                imagesc( ...
-                    reshape(permute( ...
-                    Simil, [3, 1, 4, 2]), ...
-                    [size(Simil,3)*size(Simil,1), size(Simil,4)*size(Simil,2)]));
-                caxis([-1 1])
-                axis equal
-                axis off
-                title('Similarity matrix...')
-                
-                subplot(1,3,3)
-                imagesc(squeeze(meanSimil(r, :,:)));
-                caxis([-1 1])
-                axis equal
-                axis off
-                title('...collapsed across sessions and blocks')
-                
-                print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-                [mfilename '__' mriname '_' num2str(r) '.jpeg']));
-            end     
-            try close(2); catch;end
+            DMLout{r} = DMLT;
         end
         aap.tasklist.currenttask.settings.ROIname = ROIname;
         
         %% DESCRIBE OUTPUTS
         EP = aap.tasklist.currenttask.settings;
         save(fullfile(aas_getsubjpath(aap,p), [mriname '.mat']), ...
-            'meanSimil', 'Stats', 'EP')
+            'DMLout', 'EP')
         aap=aas_desc_outputs(aap,p,'MVPaa', fullfile(aas_getsubjpath(aap,p), [mriname '.mat']));
 end

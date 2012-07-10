@@ -164,8 +164,9 @@ classdef aaq_qsub<aaq
                 'diary', 'always');
             warning on
             % State what the assigned number of hours and GB is...
-            fprintf('Job %s, assigned %0.4f hours. and %0.9f GB\n\n', ...
-                job.stagename, timReq./(60*60), memReq./(1024^3))
+            dateNtime = datestr(now);
+            fprintf('Job %s, assigned %0.4f hours. and %0.9f GB at %s\n\n', ...
+                job.stagename, timReq./(60*60), memReq./(1024^3), dateNtime)
             
             % And monitor for files with the job output
             fles.name=[jobid '_output.mat'];
