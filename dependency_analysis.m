@@ -30,7 +30,7 @@ while ~isempty(strtok(fldrDir, ':'))
         if ~strcmp(D(d).name, [mfilename '.m'])
             ind = ind + 1;
             
-            [~, Dependencies(ind).name, ...
+            [junk, Dependencies(ind).name, ...
                 Denendencies(ind).ext] = fileparts(D(d).name);
             Dependencies(ind).path = fldrCurr;
         end
