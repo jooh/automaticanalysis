@@ -36,7 +36,7 @@ switch task
         
         fprintf('\n\tLoading ROIs')
         for r = 1:size(ROIimg,1)
-            [~, ROIname{r}] = fileparts(ROIimg(r,:));
+            [junk, ROIname{r}] = fileparts(ROIimg(r,:));
             
             % Now load each of the ROIs we wish to examine (usually using the grey matter)
             rV = spm_vol(ROIimg(r,:));
@@ -128,7 +128,7 @@ switch task
         
         % Save the SNR image!
         sV = V;
-        sV.fname = fullfile(aas_getsubjpath(aap,subj), ...
+        sV.fname = fullfile(aas_getsesspath(aap,subj,sess), ...
             ['tSNR_' aap.acq_details.sessions(sess).name '.nii']);
         spm_write_vol(sV, EPIsnr);
         

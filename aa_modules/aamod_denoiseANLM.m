@@ -95,7 +95,7 @@ switch task
             
             %% Diagnostic VIDEO
             if aap.tasklist.currenttask.settings.diagnostic
-                [~, ROIname{r}] = fileparts(ROIimg(r,:));
+                [junk, ROIname{r}] = fileparts(ROIimg(r,:));
                 
                 aas_image_avi({V.fname dV.fname}, ...
                     [], ...

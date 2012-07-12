@@ -28,7 +28,7 @@ switch task
             end
             
             % Fileparts to get extension of file...
-            [~, ~, Sext] = fileparts(Simg);
+            [junk, junk, Sext] = fileparts(Simg);
             
             % Copy images to right location
             copyfile(Simg, fullfile(Tpth, sprintf('subj%04d%s', subj, Sext)));

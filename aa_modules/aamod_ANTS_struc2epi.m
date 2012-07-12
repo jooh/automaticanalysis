@@ -77,11 +77,9 @@ switch task
             'mean', 0);           % write mean image
         
         % Reslice
-        spm_reslice(strvcat(Simg, mEPIimg), resFlags);
+        spm_reslice(strvcat(Simg, mEPIimg, betEPIimg), resFlags);
         
         mEPIimg = fullfile(mEPIpth, ['r' mEPIfn mEPIext]);
-        
-        spm_reslice(strvcat(Simg, betEPIimg), resFlags);
         
         betEPIimg = fullfile(betEPIpth, ['r' betEPIfn betEPIext]);
         

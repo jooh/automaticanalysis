@@ -21,7 +21,7 @@ ROIvol = cell(1:size(ROIimg,1));
 ROIdata = cell(1:size(ROIimg,1));
 
 for r = 1:length(ROIimg)    
-    [~, ROIname{r}] = fileparts(ROIimg{r});
+    [junk, ROIname{r}] = fileparts(ROIimg{r});
     
     % Now load each of the ROIs we wish to examine (usually using the grey matter)
     rV = spm_vol(ROIimg{r});

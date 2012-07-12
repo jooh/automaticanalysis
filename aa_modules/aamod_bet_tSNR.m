@@ -56,6 +56,10 @@ switch task
         elseif strcmp(aap.tasklist.currenttask.settings.transform, 'ANTS')
             % For ANTS we want to do an inverse transform then scale it
             % from 0 to 1
+            
+            % Smooth 
+            tSNR = smooth3(tSNR, 'gaussian', 21);
+            tSNR = tSNR .* M;
             % First invert!
             tSNR = -tSNR;
             % Then find out maximum and minimum
@@ -64,12 +68,14 @@ switch task
             tSNRmin = min(tSNRvals);
             tSNR(tSNR<0) = (tSNRvals - tSNRmin) ./ (tSNRmax - tSNRmin);
             
-            % Write the image...
-            spm_write_vols(V,tSNR);
+            % We want to weight things away from small values...
+            %tSNR = tSNR; % .^ 3
             
-            keyboard % @@@@@@
-            rescale4coreg(SNRimg)
-            % @@@ 95 % porcentile? square distribution?
+            %tSNR = tSNR > 0.5;
+            
+            % Write the image...
+            V.dt(1) = 64; %64 @@@ DEBUG : 2@@@
+            spm_write_vol(V,tSNR);
         else
             aas_log(aap, true, ['No such transform exists in' mfilename ' module'])
         end
@@ -81,7 +87,7 @@ switch task
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         
         % Show image of tSNR
-        spm_check_registration(tSNRimg)
+        spm_check_registration(SNRimg)
         
         spm_orthviews('reposition', [0 0 0])
         

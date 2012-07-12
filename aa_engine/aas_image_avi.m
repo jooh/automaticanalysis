@@ -18,7 +18,7 @@ elseif ischar(outlineFN)
     outlineFN = strvcat2cell(outlineFN);
 end
 if nargin < 3
-    [~, movieFN] = fileparts(imageFN{1});
+    [junk, movieFN] = fileparts(imageFN{1});
     
     % Make a movie file
     movieFN = fullfile(getHome, ...

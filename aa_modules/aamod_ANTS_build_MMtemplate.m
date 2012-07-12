@@ -47,7 +47,7 @@ switch task
                     end
                     
                     % Fileparts to get extension of file...
-                    [~, ~, Sext] = fileparts(deblank(Simg(ts,:)));
+                    [junk, junk, Sext] = fileparts(deblank(Simg(ts,:)));
                     
                     fn = fullfile(Tpth, sprintf('subj%04d_%d_%d%s', subj, st, ts, Sext));
                     
