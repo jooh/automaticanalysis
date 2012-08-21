@@ -7,11 +7,6 @@ function [aap,resp]=aamod_bet_tSNR(aap,task,subj)
 resp='';
 
 switch task
-    case 'summary'
-        subjpath=aas_getsubjpath(subj);
-        resp=sprintf('Align %s\n',subjpath);
-        
-    case 'report'
         
     case 'doit'
         
@@ -69,13 +64,14 @@ switch task
             tSNR(tSNR<0) = (tSNRvals - tSNRmin) ./ (tSNRmax - tSNRmin);
             
             % We want to weight things away from small values...
-            %tSNR = tSNR; % .^ 3
-            
-            %tSNR = tSNR > 0.5;
+            tSNR = tSNR .^ 2;
             
             % Write the image...
-            V.dt(1) = 64; %64 @@@ DEBUG : 2@@@
+            V.dt(1) = 64;
             spm_write_vol(V,tSNR);
+            
+            % Make it into a mask...
+            img2mask(V.fname);
         else
             aas_log(aap, true, ['No such transform exists in' mfilename ' module'])
         end

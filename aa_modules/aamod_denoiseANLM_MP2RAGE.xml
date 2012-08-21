@@ -4,7 +4,7 @@
         <currenttask domain='subject' mfile_alias='aamod_denoiseANLM' desc='Denoises the structural(s) provided' modality='MRI'>
             
             <qsub>
-                <timeBase>3</timeBase>
+                <timeBase>3.9</timeBase>
                 <memoryBase>1</memoryBase>
             </qsub>
             

@@ -278,6 +278,34 @@ switch task
                     + length(aap.tasklist.currenttask.settings.compRegs);
             end
             
+            %% Spikes and moves, if these exist...
+            % open file with spikes and moves
+            streams = aap.tasklist.currenttask.inputstreams;
+            SPstreams = streams.stream(~strcmp('listspikes', streams.stream));
+            
+            if ~isempty(SPstreams)
+                
+                SPfn = aas_getimages_bystream(aap,subj,sess,SPstreams{:});
+                
+                % Contains spike scan numbers
+                load(fullfile(evdir,SPfn));
+
+                % Combine spikes and moves...
+                regrscans=union(spikes(:,1),moves(:,1));
+
+                regr = zeros( SPM.nscan(sess), length(regrscans));
+                regrnames = {};
+
+                for s=1:length(regrscans),
+                    regr(regrscans(s),s) = 1;    % scan regrscan(s) is at one for scan s
+                    regrnames{s} = sprintf('SpikeMov%d', s);
+                end
+                SPM.Sess(sess).C.C = regr;
+                SPM.Sess(sess).C.name = regrnames;
+                cols_nuisance=[cols_nuisance [currcol:(currcol+length(regrnames)-1)]];
+                currcol = currcol + length(regrnames);
+            end
+            
             %% SETTINGS & GET FILES
             
             files = aas_getfiles_bystream(aap,subj,sess,'epi');

@@ -4,7 +4,7 @@
         <currenttask domain='subject' desc='Denoises the structural(s) provided' modality='MRI'>
             
             <qsub>
-                <timeBase>3</timeBase>
+                <timeBase>2.9</timeBase>
                 <memoryBase>2</memoryBase>
             </qsub>
             

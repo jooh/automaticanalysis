@@ -33,11 +33,9 @@ switch task
         % Check local structural directory exists
         
         Simg = aas_getfiles_bystream(aap,subj,'structural');
-        if isempty(Simg)
-            aas_log(aap, true, 'Problem finding structural image.');
-        elseif size(Simg,1) > 1
-            aas_log(aap, false, 'Found more than 1 structural images, using structural %d', ...
-                aap.tasklist.currenttask.settings.structural);
+        if size(Simg,1) > 1
+            aas_log(aap, false, sprintf('Found more than 1 structural images, using structural %d', ...
+                aap.tasklist.currenttask.settings.structural));
         end
         
         % Coregister T1 to template
@@ -61,12 +59,10 @@ switch task
         % Look for mean functional
         mEPIimg = aas_getfiles_bystream(aap,subj,'meanepi');
                 
-        if isempty(mEPIimg)
-            aas_log(aap, true, 'Problem finding mean functional image.');
-        elseif size(mEPIimg,1) > 1
+        if size(mEPIimg,1) > 1
             aas_log(aap, false, 'Found more than 1 mean functional images, using first.');
+            mEPIimg = deblank(mEPIimg(1,:));
         end
-        mEPIimg = deblank(mEPIimg(1,:));
         
         % Coregister mean functional to template
         x = spm_coreg(spm_vol(eTimg), spm_vol(mEPIimg), flags.estimate);

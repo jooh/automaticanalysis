@@ -266,8 +266,8 @@ switch task
                     % Make sure we don't include the modelled regressor in
                     % the noise regressor
                     if r ~= n
-                        Tons = [Tons; model{sess}.event(r).ons];
-                        Tdur = [Tdur; model{sess}.event(r).dur];
+                        Tons = [Tons; model{sess}.event(r).ons(:)];
+                        Tdur = [Tdur; model{sess}.event(r).dur(:)];
                     end
                 end
                 

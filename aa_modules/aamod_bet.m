@@ -176,8 +176,7 @@ switch task
         spm_check_registration(Simg)
         
         % This will only work for 1-7 masks
-        OVERcolours = {[1 0 0], [0 1 0], [0 0 1], ...
-            [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
+        OVERcolours = aas_colours;
         
         indx = 0;
         
@@ -191,6 +190,11 @@ switch task
                     spm_orthviews('addcolouredimage',1,outMesh(r,:), OVERcolours{indx})
                 end
             end
+        else
+            % Display outline of mask...
+            copyfile(outMask(1,:), fullfile(Spth, 'betOutline.nii'));
+            mask2outline(fullfile(Spth, 'betOutline.nii'));
+            spm_orthviews('addcolouredimage',1, fullfile(Spth, 'betOutline.nii'), OVERcolours{1})
         end
         
         spm_orthviews('reposition', [0 0 0])

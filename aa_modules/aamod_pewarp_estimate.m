@@ -38,8 +38,9 @@ switch task
         
         Simg = aas_getfiles_bystream(aap,subj,'structural');
         if size(Simg,1) > 1
-            aas_log(aap, false, 'Found more than 1 structural images, using first.');
-            Simg = deblank(Simg(1,:));
+            aas_log(aap, false, sprintf('Found more than 1 structural images, using structural %d', ...
+                aap.tasklist.currenttask.settings.structural));
+            Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural,:));
         end
         
         % Look for mean functional

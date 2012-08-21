@@ -11,14 +11,11 @@
             <permanenceofoutput>-2</permanenceofoutput>
             
             <inputstreams>
-                <stream>structural</stream>
+                <stream>meanepi</stream>
             </inputstreams>
             
             <outputstreams>
-                <stream>structural</stream>
                 <stream>segmentation</stream>
-                <stream>normalisation_seg_sn</stream>
-                <stream>normalisation_seg_inv_sn</stream>
             </outputstreams>
             
             <usesegmentnotnormalise>1</usesegmentnotnormalise>

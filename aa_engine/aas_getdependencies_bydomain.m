@@ -30,19 +30,14 @@ for targetind=length(targetdomaintree):-1:commonind
 end;
 
 % And down the tree, sucking everything along the way
+% [AVG] changed this, since this made everything break...
+%
 tree=aap.directory_conventions.parallel_dependencies;
-for targetind=1:length(targetdomaintree)
+for targetind=1:length(targetdomaintree)-1
     tree=tree.(targetdomaintree{targetind});
 end;
 
-% 
+%
 deps=[deps aas_dependencytree_findbranches(aap,tree,deps,indices)];
 
 end
-
-
-
-
-
-
-

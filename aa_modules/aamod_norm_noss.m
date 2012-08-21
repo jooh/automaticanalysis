@@ -30,8 +30,10 @@ switch task
         
         clear imgs;
         
-        %% Get structural
-        Simg = aas_getfiles_bystream(aap,subj,'structural');
+        %% Get input structural image
+        streams=aap.tasklist.currenttask.inputstreams.stream{:};
+        
+        Simg = aas_getfiles_bystream(aap,subj,streams);
         % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
             Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
@@ -172,26 +174,28 @@ switch task
                 defs.estimate);
         end
         
-        aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
-        % SPM2 normalization doesn't generate the inverse transformation
-        try
-            aap=aas_desc_outputs(aap,subj,'normalisation_seg_inv_sn',invSNmat);
-        catch
-        end
-        
-        spm_write_sn(Simg,SNmat,defs.write);
-        
-        % [AVG] we need to add all the outputs, including warped structural
-        % [AVG] It is probably best to also save the last bias-corrected image
-        
-        % [CW] But we don't have a bias corrected image if we didn't use
-        % segmentation.
-        if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
-            aap=aas_desc_outputs(aap,subj,'structural', strvcat( ...
-                fullfile(mSpth,['m' mSfn mSext]), ...
-                fullfile(Spth,['w' Sfn Sext])));
-        else
-            aap=aas_desc_outputs(aap,subj,'structural', fullfile(Spth,['w' Sfn Sext]));
+        if ~all(cellfun('isempty', strfind(aap.tasklist.currenttask.outputstreams.stream, 'normalisation')))
+            
+            aap=aas_desc_outputs(aap,subj,'normalisation_seg_sn',SNmat);
+            % SPM2 normalization doesn't generate the inverse transformation
+            try
+                aap=aas_desc_outputs(aap,subj,'normalisation_seg_inv_sn',invSNmat);
+            catch
+            end
+            
+            spm_write_sn(Simg,SNmat,defs.write);
+            
+            % [AVG] we need to add all the outputs, including warped structural
+            % [AVG] It is probably best to also save the last bias-corrected image
+            % [CW] But we don't have a bias corrected image if we didn't use
+            % segmentation.
+            if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
+                aap=aas_desc_outputs(aap,subj,streams, strvcat( ...
+                    fullfile(mSpth,['m' mSfn mSext]), ...
+                    fullfile(Spth,['w' Sfn Sext])));
+            else
+                aap=aas_desc_outputs(aap,subj,streams, fullfile(Spth,['w' Sfn Sext]));
+            end
         end
         
         %{
