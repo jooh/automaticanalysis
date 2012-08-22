@@ -301,12 +301,17 @@ switch task
                 % Contains spike scan numbers
                 PR = load(PRfn);
 
+                
+                for s=1:length(regrscans),
+                    regr(regrscans(s),s) = 1;    % scan regrscan(s) is at one for scan s
+                    regrnames{s} = sprintf('SpikeMov%d', s);
+                end
                 SPM.Sess(sessnuminspm).C.C = [SPM.Sess(sessnuminspm).C.C ...
-                    PR.R];
+                    regr];
                 SPM.Sess(sessnuminspm).C.name = [SPM.Sess(sessnuminspm).C.name ...
                     PR.names];
-                cols_nuisance=[cols_nuisance [currcol:(currcol+length(PR.names)-1)]];
-                currcol = currcol + length(PR.names);
+                cols_nuisance=[cols_nuisance [currcol:(currcol+length(regrnames)-1)]];
+                currcol = currcol + length(regrnames);
             end
             
             %% Spikes and moves, if these exist...

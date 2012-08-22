@@ -51,17 +51,17 @@ switch task
                 tmlimit = aap.tasklist.currenttask.settings.tmlimit;
             end
             badimages=[false; (tm > tmlimit)];
-            spikes=[find(badimages),tm(badimages(2:end)),slicediff(badimages(2:end))];
+            TSspikes=[find(badimages),tm(badimages(2:end)),slicediff(badimages(2:end))];
             
             %% Now find big movements
-            moves = [];
+            Mspikes = [];
             
             % shift to sync with scan number
             rpdiff = [zeros(1,6); diff(rp{sess})];
             absrpdiff = abs(rpdiff);
             
-            badmoves=(any(absrpdiff(:,1:3) > xyzlimit,2)) | (any(absrpdiff(:,4:6) > rotlimit_radians,2));
-            moves=[find(badmoves),rpdiff(badmoves,:)];
+            badMspikes=(any(absrpdiff(:,1:3) > xyzlimit,2)) | (any(absrpdiff(:,4:6) > rotlimit_radians,2));
+            Mspikes=[find(badMspikes),rpdiff(badMspikes,:)];
             
             %% DIAGNOSTIC
             
@@ -69,18 +69,18 @@ switch task
             subplot(nsess,2,sess * 2 - 1)
             hold on
             plot(tm, 'b')
-            plot(spikes(:,1), repmat(tmlimit, [1 size(spikes,1)]), 'r*')
+            plot(TSspikes(:,1), repmat(tmlimit, [1 size(TSspikes,1)]), 'r*')
             
             subplot(nsess,2,sess * 2)
             hold on
             plot(rpdiff, 'b')
-            plot(moves(:,1), repmat(0, [1 size(moves,1)]), 'r*')
+            plot(Mspikes(:,1), repmat(0, [1 size(Mspikes,1)]), 'r*')
             
             %% Save things
-            fprintf('Sess %d \t Spikes: %d; Moves: %d\n', sess, size(spikes,1), size(moves,1))
+            fprintf('Sess %d \t Spikes: %d; Moves: %d\n', sess, size(TSspikes,1), size(Mspikes,1))
             
-            SPfn = fullfile(aas_getsesspath(aap,subj,sess),sprintf('spikesandmoves.mat'));
-            save(SPfn, 'spikes', 'moves');
+            SPfn = fullfile(aas_getsesspath(aap,subj,sess),sprintf('spikesandMspikes.mat'));
+            save(SPfn, 'TSspikes', 'Mspikes');
             
             % Save the time differences
             aap = aas_desc_outputs(aap,subj,sess, 'listspikes', SPfn);
