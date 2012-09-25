@@ -34,12 +34,12 @@ switch task
         % retrieve stuff from DICOM header
         if aap.tasklist.currenttask.settings.autodetectSO == 1
             % Get the headers from the file, so that we don't have to guess...
-            DICOMHEADERS=load(fullfile(dirn,'dicom_headers'));
+            DICOMHEADERS=load(aas_getimages_bystream(aap,subj,sess,'epi_dicom_header'));
             V = spm_vol(deblank(imgs(1,:)));
             aap = aas_getSliceOrder(aap, V, DICOMHEADERS.DICOMHEADERS{1});
         end
         if (length(aap.tasklist.currenttask.settings.TRs)==0)
-            DICOMHEADERS=load(fullfile(dirn,'dicom_headers'));
+            DICOMHEADERS=load(aas_getimages_bystream(aap,subj,sess,'epi_dicom_header'));
             aap.tasklist.currenttask.settings.TRs=DICOMHEADERS.DICOMHEADERS{1}.RepetitionTime/1000;
         end
         if (length(aap.tasklist.currenttask.settings.slicetime)==0)

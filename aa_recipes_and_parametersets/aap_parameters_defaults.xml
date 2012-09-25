@@ -41,6 +41,7 @@
         <freesurferdir desc='Path to freesurfer toolbox' ui='dir'>/cn_apps/freesurfer</freesurferdir>
         <niftyregdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/niftyreg</niftyregdir>
         <niftysegdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/niftyseg</niftysegdir>
+        <DMLTdir desc='Path to Donders Machine Learning Toolbox toolbox' ui='dir'>/cn_apps/DMLT</DMLTdir>
         <allowremotecache desc='Allow local caching of files from remote server' ui='optionlist'>1</allowremotecache>
         <parallel_dependencies desc='Describes relationships of different domains of processing' ui='custom'>
             <study desc='The whole study (root)' ui='custom'>

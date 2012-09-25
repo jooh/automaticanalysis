@@ -120,7 +120,7 @@ switch task
                 axis off
                 title('...collapsed across sessions and blocks')
                 
-                print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+                print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_' num2str(r) '.jpeg']));
             end     
             try close(2); catch;end

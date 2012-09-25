@@ -81,9 +81,7 @@ switch task
             end
             
             for c = 1:length(DMLT)
-                % Get the DMLT object...
                 DMLTtemp = DMLT(c);
-                
                 Y = reshape( ...
                     repmat(DMLTtemp.vector(:), [1 aap.tasklist.currenttask.settings.blocks]), ...
                     [1, length(DMLTtemp.vector(:))*aap.tasklist.currenttask.settings.blocks])';
@@ -93,11 +91,6 @@ switch task
                 % Remove NaNs
                 X = X(~isnan(Y), :);
                 Y = Y(~isnan(Y), :);
-                
-                % If we input it as a string to make it work in aa qsub...
-                if ~isstruct(DMLTtemp.object)
-                    DMLTtemp.object = eval(DMLTtemp.object);
-                end
                 
                 % The crucial line that calls the DMLT object train method
                 DMLTtemp.object = DMLTtemp.object.train(X,Y);
@@ -120,8 +113,7 @@ switch task
                         W = W + DMLTtemp.object.model{w}.importance;
                     elseif isfield(DMLTtemp.object.model{w}, 'divergence')
                         W = W + DMLTtemp.object.model{w}.divergence;
-                    elseif isfield(DMLTtemp.object.model{w}, 'template')
-                        W = W + mean(DMLTobject.model{1}.template);
+                    elseif isfield(DMLTtemp.ob
                     else
                         aas_log(aap, true, 'Cannot find feature weights...')
                     end

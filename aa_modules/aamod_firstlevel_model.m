@@ -63,7 +63,7 @@ switch task
         else
             % Get TR from DICOM header checking they're the same for all sessions
             for sess=aap.acq_details.selected_sessions
-                DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_header'));
+                DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_dicom_header'));
                 try
                     TR=DICOMHEADERS.DICOMHEADERS{1}.volumeTR;
                 catch
@@ -291,7 +291,6 @@ switch task
             
             
             %% Physiological Regressors?
-            
             PRstreams = streams.stream(strcmp('physreg', streams.stream));
             
             if ~isempty(PRstreams)
@@ -300,13 +299,17 @@ switch task
                 
                 % Contains spike scan numbers
                 PR = load(PRfn);
-
+                
                 SPM.Sess(sessnuminspm).C.C = [SPM.Sess(sessnuminspm).C.C ...
                     PR.R];
                 SPM.Sess(sessnuminspm).C.name = [SPM.Sess(sessnuminspm).C.name ...
                     PR.names];
                 cols_nuisance=[cols_nuisance [currcol:(currcol+length(PR.names)-1)]];
                 currcol = currcol + length(PR.names);
+                
+                if isempty(PR.R)
+                    aas_log(aap,false, sprintf('Could not find Physiological Regressors for session %d\n', sess))
+                end
             end
             
             %% Spikes and moves, if these exist...
@@ -319,13 +322,13 @@ switch task
                 
                 % Contains spike scan numbers
                 SP = load(SPfn);
-
+                
                 % Combine spikes and moves...
                 regrscans = union(SP.TSspikes(:,1), SP.Mspikes(:,1));
-
+                
                 regr = zeros( size(files,1), length(regrscans));
                 regrnames = {};
-
+                
                 for s=1:length(regrscans),
                     regr(regrscans(s),s) = 1;    % scan regrscan(s) is at one for scan s
                     regrnames{s} = sprintf('SpikeMov%d', s);

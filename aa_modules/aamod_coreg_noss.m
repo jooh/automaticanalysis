@@ -57,7 +57,7 @@ switch task
 
         % Save graphical output - this will now be done by report task
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;            
-        print('-djpeg','-r75',fullfile(aas_getsubjpath(aap,subj),'diagnostic_aamod_coreg'));
+        print('-djpeg','-r150',fullfile(aas_getsubjpath(aap,subj),'diagnostic_aamod_coreg'));
         
     case 'checkrequirements'
         aas_log(aap,0,'No need to trim or skull strip structural\n' );

@@ -64,7 +64,7 @@ switch task
             tSNR(tSNR<0) = (tSNRvals - tSNRmin) ./ (tSNRmax - tSNRmin);
             
             % We want to weight things away from small values...
-            tSNR = tSNR .^ 2;
+            tSNR = tSNR .^ 3;
             
             % Write the image...
             V.dt(1) = 64;
@@ -89,7 +89,7 @@ switch task
         
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
         set(gcf,'PaperPositionMode','auto')
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
         %% Diagnostic VIDEO of masks

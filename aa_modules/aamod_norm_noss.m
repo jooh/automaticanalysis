@@ -94,7 +94,11 @@ switch task
             % Now adjust parameters according to starting offset parameters as requested in task settings
             StartingParameters=[0 0 0   0 0 0   1 1 1   0 0 0];
             ParameterFields={'x','y','z', 'pitch','roll','yaw', 'xscale','yscale','zscale', 'xaffign','yaffign','zaffign'};
-            fnames=fieldnames(aap.tasklist.currenttask.settings.affinestartingestimate);
+            if ~isempty(aap.tasklist.currenttask.settings.affinestartingestimate)
+                fnames=fieldnames(aap.tasklist.currenttask.settings.affinestartingestimate);
+            else
+                fnames = [];
+            end
             for fieldind=1:length(fnames)
                 % Which element in StartingParameters does this refer to?
                 whichitem=find([strcmp(fnames{fieldind},ParameterFields)]);
@@ -127,9 +131,8 @@ switch task
             [sn,isn] = spm_prep2sn(out);
             
             % [AVG] DEBUG:
-            % We could print out the Affines in an orderly way, so that
+            % Let us print out the Affines in an orderly way, so that
             % the experimenter can see what is being printed out...
-            %{
             fprintf('\nInitial structural Affine\n')
             disp(oldMAT)
             fprintf('Initial Affine transform\n')
@@ -138,10 +141,9 @@ switch task
             disp(out.Affine)
             fprintf('Spatial Normalisation Affine\n')
             disp(sn.Affine)
-            %}
             
             fprintf('Writing out the segmented images\n')
-            % write out GM , WM, CSF native + unmod normalised
+            % write out GM, WM, CSF native + unmod normalised
             writeopts.biascor = 1;
             writeopts.GM  = [0 1 1];
             writeopts.WM  = [0 1 1];
@@ -249,8 +251,7 @@ switch task
         
         try
             % This will only work for 1-7 segmentations
-            OVERcolours = {[1 0 0], [0 1 0], [0 0 1], ...
-                [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
+            OVERcolours = aas_colours;
             
             %% Draw native template
             spm_check_registration(fullfile(mSpth,['m' mSfn mSext]))
@@ -262,7 +263,7 @@ switch task
             spm_orthviews('reposition', [0 0 0])
             
             try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_N.jpeg']));
             
             %% Draw warped template
@@ -274,24 +275,26 @@ switch task
             spm_orthviews('reposition', [0 0 0])
             
             try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_W.jpeg']));
         catch
             fprintf('\n\tFailed display diagnostic image - Displaying template & segmentation 1');
             try
                 %% Draw native template
-                spm_check_registration(char({fullfile(Spth,sprintf('c1%s',['m' Sfn Sext])); fullfile(Spth,['mm' Sfn Sext])}))
+                spm_check_registration(char({fullfile(Spth,sprintf('c1%s',['m' Sfn Sext])); ...
+                    fullfile(Spth,['mm' Sfn Sext])}))
                 
                 try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-                print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+                print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                     [mfilename '__' mriname '_N.jpeg']));
                 
                 %% Draw warped template
-                spm_check_registration(char({fullfile(Spth,sprintf('wc1%s',['m' Sfn Sext])); aap.directory_conventions.T1template}))
+                spm_check_registration(char({fullfile(Spth,sprintf('wc1%s',['m' Sfn Sext])); ...
+                    aap.directory_conventions.T1template}))
                 
                 try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
                 set(gcf,'PaperPositionMode','auto')
-                print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+                print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                     [mfilename '__' mriname '_W.jpeg']));
             catch
                 fprintf('\n\tFailed display backup diagnostic image!');

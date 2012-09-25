@@ -1,6 +1,6 @@
 % MVPA_LOADCONTRASTS load contrasts for current subject
 
-function DMLT = mvpaa_loadContrasts(aap,p)
+function DMLT = mvpaa_loadDMLT(aap,p)
 
 % Name of subject...
 subjname = aap.acq_details.subjects(p).mriname;
@@ -27,3 +27,6 @@ if (isempty(modelnum))
 end
 
 DMLT = aap.tasklist.currenttask.settings.model(modelnum).DMLT;
+
+fprintf('Found %d contrasts in DMLT structure:\n', length(DMLT));
+disp(DMLT(1));

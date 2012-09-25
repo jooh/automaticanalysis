@@ -164,7 +164,7 @@ switch task
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         set(gcf,'PaperPositionMode','auto')
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
         %% Diagnostic VIDEO of masks

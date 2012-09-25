@@ -138,7 +138,7 @@ switch task
             
             figure(2)
             set(gcf,'PaperPositionMode','auto')
-            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_timecourse.jpeg']));
         end
         

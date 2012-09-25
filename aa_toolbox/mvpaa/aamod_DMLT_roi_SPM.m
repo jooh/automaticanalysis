@@ -6,7 +6,7 @@
 % Based on aa by Rhodri Cusack MRC CBU Mar 2006-Aug 2007
 % Modified by Alejandro Vicente-Grabovetsky Dec-2008
 
-function [aap,resp] = aamod_MVPaa_brain_SPM(aap,task,p)
+function [aap,resp] = aamod_DMLT_roi_SPM(aap,task,p)
 
 resp='';
 
@@ -15,8 +15,8 @@ switch task
         
         fprintf('Working with data from participant %s. \n',aap.acq_details.subjects(p).mriname)
         
-        Stats = []; EP = [];
-        load(aas_getfiles_bystream(aap,p,'MVPaa'));
+        DMLT = []; EP = []; DMLout = [];
+        load(aas_getfiles_bystream(aap,p,'DMLT'));
         
         % get sn mat file from normalisation
         if aap.tasklist.currenttask.settings.normalise == 1
@@ -35,42 +35,31 @@ switch task
                 break
             end
         end
+        V = spm_vol(Mimg);
         
         % FWHM in millimetres
         FWHMmm = aap.tasklist.currenttask.settings.FWHM;
         
-        V = spm_vol(Mimg);
-                
-        %% GET MASK
-        mask = spm_read_vols(V);
-        
-        % Write out mask image...
-        V.fname = fullfile(aas_getsubjpath(aap,p), 'mask.img');
-        V.dt(1) = 2;
-        spm_write_vol(V, mask);
-        
         %% WRITE .img
-        Stats = reshape(Stats, [V.dim(1), V.dim(2), V.dim(3), length(EP.contrasts), length(EP.tests)]);
-        
-        Flist = V.fname;
-        V.dt(1) = 16; % Save in a format that accepts NaNs and negative values...
-        
+        % Let's do things for each ROI and each contrast...
         fprintf('Saving images... \n')
-        for c = 1:length(EP.contrasts)
-            % Mean, median or beta
-            V.fname = fullfile(aas_getsubjpath(aap,p), sprintf('con_%04d.img', c));
-            Flist = strvcat(Flist, V.fname);
-            spm_write_vol(V, squeeze(Stats(:,:,:,c,1)));
-            
-            % T-value
-            V.fname = fullfile(aas_getsubjpath(aap,p), sprintf('spmT_%04d.img', c));
-            Flist = strvcat(Flist, V.fname);
-            spm_write_vol(V, squeeze(Stats(:,:,:,c,2)));
+        Flist = '';
+        for r = 1:size(DMLout, 1)
+            for c = 1:size(DMLout, 2)
+                indx = (r - 1) * size(DMLout, 2) + c;
+                
+                % Absolute weights of subject...
+                V.fname = fullfile(aas_getsubjpath(aap,p), sprintf('con_%04d.img', indx));
+                Flist = strvcat(Flist, V.fname);
+                
+                Y = DMLout{r,c}.weights;
+                Y(Y==0) = -eps; % Let's not have 0 anywhere...
+                spm_write_vol(V, Y);
+            end
         end
         
         %% NORMALISE
         if aap.tasklist.currenttask.settings.normalise == 1
-            
             fprintf('Normalising images... \n')
             
             normPars = aap.spm.defaults.normalise.write;
@@ -82,7 +71,6 @@ switch task
         
         %% SMOOTH IMAGES
         if FWHMmm > 0
-            
             fprintf('Smoothing images... \n')
             for f = 2:size(Flist,1);
                 Q = Flist(f,:);
@@ -155,14 +143,18 @@ switch task
         % Filehandle of resels per voxel image (i.e. none!)
         SPM.xVol.VRpv = [];
         
-        for c = 1:length(EP.contrasts)
-            % SPM.xCon (.name)
-            SPM.xCon(c).name = EP.contrasts(c).name;
-            SPM.xCon(c).STAT = 'T';
-            SPM.xCon(c).c = ones(size(SPM.xX.X,2),1);
-            SPM.xCon(c).eidf = 1;
-            SPM.xCon(c).Vcon = spm_vol(fullfile(aas_getsubjpath(aap,p), sprintf('con_%04d.img', c)));
-            SPM.xCon(c).Vspm = spm_vol(fullfile(aas_getsubjpath(aap,p), sprintf('spmT_%04d.img', c)));
+        for r = 1:size(DMLout, 1)
+            for c = 1:size(DMLout, 2)
+                indx = (r - 1) * size(DMLout, 2) + c;
+                
+                % SPM.xCon (.name)
+                SPM.xCon(indx).name = DMLT(c).name;
+                SPM.xCon(indx).STAT = 'T';
+                SPM.xCon(indx).c = ones(size(SPM.xX.X,2),1);
+                SPM.xCon(indx).eidf = 1;
+                SPM.xCon(indx).Vcon = spm_vol(fullfile(aas_getsubjpath(aap,p), sprintf('con_%04d.img', indx)));
+                SPM.xCon(indx).Vspm = '';
+            end
         end
         
         % Save SPM
@@ -171,12 +163,6 @@ switch task
         %% DESCRIBE OUTPUTS
         aap=aas_desc_outputs(aap,p,'firstlevel_spm', fullfile(aas_getsubjpath(aap,p), 'SPM.mat'));
         
-        % Remove spmT images
-        for f = size(Flist,1):-1:1
-            if ~isempty(strfind(Flist(f,:), 'spmT_')) || ~isempty(strfind(Flist(f,:), 'mask'))
-                Flist(f,:) = [];
-            end
-        end
         % Add headers to list of files...
         for f = 1:size(Flist,1)
             [Froot, Ffn, Fext] = fileparts(Flist(f,:));

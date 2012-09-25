@@ -91,7 +91,7 @@ switch task
             mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
     case 'checkrequirements'
         

@@ -79,7 +79,7 @@ switch task
         
         % Save graphical output
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r75',fullfile(aas_getsubjpath(aap,i),'diagnostic_aamod_realignunwarp'));
+        print('-djpeg','-r150',fullfile(aas_getsubjpath(aap,i),'diagnostic_aamod_realignunwarp'));
                 
 case 'checkrequirements'
     

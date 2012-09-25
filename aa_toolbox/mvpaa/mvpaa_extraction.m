@@ -1,7 +1,7 @@
 % MVPAA Extraction
 % Extracts ROI data from aap.tasklist.currenttask.settingsIs
 
-function Betas = mvpaa_extraction(aap, data, indROI, voxels)
+function Betas = mvpaa_extraction(aap, data, indROI)
 
 voxels = sum(~isnan(data{1,1,1}(indROI)));
 

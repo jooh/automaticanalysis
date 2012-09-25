@@ -19,8 +19,8 @@
                 <stream>realignment_parameter</stream>
                 <stream>meanepi</stream>
                 <stream>epi</stream>
-            </outputstreams>  
-            
+            </outputstreams>
+                        
             <!--Realignment parameters-->
             <eoptions>
                 <quality>0.9</quality> <!-- quality; DEFAULT: 0.9000 -->

@@ -154,7 +154,7 @@ switch task
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
         set(gcf,'PaperPositionMode','auto')
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
         %% Diagnostic VIDEO

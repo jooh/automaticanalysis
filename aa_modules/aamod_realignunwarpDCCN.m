@@ -34,6 +34,11 @@ switch task
             fprintf('\nGetting EPI images for session %s', aap.acq_details.sessions(sess).name)
             % Get EPIs
             EPIimg = aas_getimages_bystream(aap,subj,sess,'epi');
+            if sess == aap.acq_details.selected_sessions(1)
+                % Get first image for the diagnostics...
+                diagnosticN = EPIimg(1,:);
+            end
+            
             jobs{1}.spatial{1}.realignunwarp.data(sess).scans = cellstr(EPIimg);
             
             % Try get VDMs
@@ -66,12 +71,12 @@ switch task
         %% Describe outputs
         movPars = {};
         for sess = aap.acq_details.selected_sessions
-            rimgs=[];
+            uwEPIimg = [];
             for k=1:length(jobs{1}.spatial{1}.realignunwarp.data(sess).scans);
-                [pth nme ext]=fileparts(jobs{1}.spatial{1}.realignunwarp.data(sess).scans{k});
-                rimgs=strvcat(rimgs,fullfile(pth,['u' nme ext]));
+                [pth nme ext] = fileparts(jobs{1}.spatial{1}.realignunwarp.data(sess).scans{k});
+                uwEPIimg = strvcat(uwEPIimg,fullfile(pth,['u' nme ext]));
             end
-            aap = aas_desc_outputs(aap,subj,sess,'epi',rimgs);
+            aap = aas_desc_outputs(aap,subj,sess,'epi',uwEPIimg);
             
             % Get the realignment parameters...
             fn=dir(fullfile(pth,'rp_*.txt'));
@@ -82,10 +87,13 @@ switch task
             outpars = strvcat(outpars, fullfile(pth,fn(1).name));
             aap = aas_desc_outputs(aap,subj,sess,'realignment_parameter',outpars);
             
-            if sess==1
+            if sess == aap.acq_details.selected_sessions(1)
                 % mean only for first session
                 fn=dir(fullfile(pth,'mean*.nii'));
                 aap = aas_desc_outputs(aap,subj,'meanepi',fullfile(pth,fn(1).name));
+                
+                % Get first image for the diagnostics...
+                diagnosticU = uwEPIimg(1,:);
             end
         end
         
@@ -95,12 +103,20 @@ switch task
         end
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         figure(1);
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
         aas_realign_graph(movPars)
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '_MP.jpeg']));
+        
+        % Let's compare the Native and Unwarped EPI images...
+        spm_check_registration(char({diagnosticN; ...
+            diagnosticU}))
+        
+        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '_EPI.jpeg']));
         
     case 'checkrequirements'
         

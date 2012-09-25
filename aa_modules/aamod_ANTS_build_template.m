@@ -20,11 +20,12 @@ switch task
         streams=aap.tasklist.currenttask.inputstreams;
         
         for subj = 1:length(aap.acq_details.subjects)
-            Simg = aas_getfiles_bystream(aap,subj,streams{:});
+            Simg = aas_getfiles_bystream(aap,subj,streams.stream{:});
             
             if size(Simg,1) > 1
-                aas_log(aap, false, 'Found more than 1 image, using %d', ...
-                    aap.tasklist.currenttask.settings.structural);
+                Simg = Simg(aap.tasklist.currenttask.settings.structural,:);
+                aas_log(aap, false, sprintf('Found more than 1 image, using %s', ...
+                    Simg));
             end
             
             % Fileparts to get extension of file...
@@ -46,7 +47,7 @@ switch task
         outfiles = '-o ANTS ';
         
         % Dimension number (always 3 for structural)
-        Ndim = '-d ';
+        Ndim = '-d 3 ';
         
         options = aap.tasklist.currenttask.settings.extraoptions;
         
@@ -62,8 +63,8 @@ switch task
         disp(w)
         
         %% Describe the outputs
-        unix(['gunzip ' fullfile(Tpth, ['ANTStemplate.nii.gz'])])
-        outTemp = fullfile(Tpth, ['ANTStemplate.nii']);
+        unix(['gunzip ' fullfile(Tpth, 'ANTStemplate.nii.gz')])
+        outTemp = fullfile(Tpth, 'ANTStemplate.nii');
         aap = aas_desc_outputs(aap,'ANTStemplate', outTemp);
         
         % Delete other things
@@ -92,6 +93,6 @@ switch task
         spm_orthviews('reposition', [0 0 0])
         
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
 end

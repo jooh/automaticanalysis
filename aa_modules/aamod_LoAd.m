@@ -63,7 +63,7 @@ switch task
                 BETmask]; % mask
             
             [s w] = aas_shell(LoAd_command);
-            %disp(w)
+            disp(w)
             
             %% Use seg_maths to extract the relevant
             outSeg = '';
@@ -178,8 +178,7 @@ switch task
         mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         
         % This will only work for 1-7 segmentations
-        OVERcolours = {[1 0 0], [0 1 0], [0 0 1], ...
-            [1 1 0], [1 0 1], [0 1 1], [1 1 1]};
+        OVERcolours = aas_colours;
         
         %% Draw native template
         spm_check_registration(Simg)
@@ -192,7 +191,7 @@ switch task
         spm_orthviews('reposition', [0 0 0])
         
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
         %% Diagnostic VIDEO

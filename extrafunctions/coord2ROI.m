@@ -20,15 +20,12 @@ if nargin < 4
     template = fullfile(spm('dir'), 'templates/T1.nii');
 end
 
-% Put coordinate vector in right orientation...
-coord = coord(:);
+if ~iscell(coord)
+    coord = {coord};
+end
 
 % Get the template...
 V = spm_vol(template);
-
-% Transform coordinate system into voxels...
-coord = V.mat \ [coord; 1];
-coord = coord(1:3);
 
 % Get the number of mm per voxel...
 mmVox = vox2mm(V);
@@ -37,27 +34,39 @@ mmVox = vox2mm(V);
 radius = [radius radius radius];
 radius = radius ./ mmVox;
 
-% Create a meshgrid showing which voxels are here...
-[Y X Z] = meshgrid(1:V.dim(2), 1:V.dim(1), 1:V.dim(3));
+sM = 0;
 
-% Subtract from meshgrids our coordinates...
-X = X - coord(1);
-Y = Y - coord(2);
-Z = Z - coord(3);
-
-% ...and divide by our radius
-X = X ./ radius(1);
-Y = Y ./ radius(2);
-Z = Z ./ radius(3);
-
-% Get absolute distance
-M = sqrt(X.^2 + Y.^2 + Z.^2);
-
-% ...and mask
-M = M <= 1;
+for c = 1:length(coord)
+    % Put coordinate vector in right orientation...
+    coord{c} = coord{c}(:);
+    
+    % Transform coordinate system into voxels...
+    coord{c} = V.mat \ [coord{c}; 1];
+    coord{c} = coord{c}(1:3);
+    
+    % Create a meshgrid showing which voxels are here...
+    [Y X Z] = meshgrid(1:V.dim(2), 1:V.dim(1), 1:V.dim(3));
+    
+    % Subtract from meshgrids our coordinates...
+    X = X - coord{c}(1);
+    Y = Y - coord{c}(2);
+    Z = Z - coord{c}(3);
+    
+    % ...and divide by our radius
+    X = X ./ radius(1);
+    Y = Y ./ radius(2);
+    Z = Z ./ radius(3);
+    
+    % Get absolute distance
+    M = sqrt(X.^2 + Y.^2 + Z.^2);
+    
+    % ...and mask
+    sM = sM + (M <= 1);    
+end
+sM = sM > 0;
 
 % Write the mask
 V.dt = [2 0];
 V.fname = ROIname;
 
-spm_write_vol(V,M);
+spm_write_vol(V, sM);

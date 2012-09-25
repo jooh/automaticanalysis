@@ -35,6 +35,9 @@ else
         outs={};
         % Get all the input and output stream files
         aap=aas_setcurrenttask(aap,modind);
+        
+        fprintf('Working on task %s\n', aap.tasklist.currenttask.name)
+        
         for streamname=aap.tasklist.currenttask.inputstreams.stream
             streamfn=sprintf('stream_%s_inputto_%s.txt',streamname{1},aap.tasklist.currenttask.name);
             inps=[inps findstreamfiles(aap,streamfn)];

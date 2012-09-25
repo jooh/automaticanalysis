@@ -461,14 +461,14 @@ switch task
             aap=aas_desc_outputs(aap,subj,sess,'epi_nulled',finalepis_nulled(aap.acq_details.numdummies+1:end));
         end
         
-        aap=aas_desc_outputs(aap,subj,sess,'epi_header',dcmhdrfn);
+        aap=aas_desc_outputs(aap,subj,sess,'epi_dicom_header',dcmhdrfn);
         
         
         % And describe outputs
         aap=aas_desc_outputs(aap,subj,sess,'dummyscans',dummylist);
         dcmhdrfn=fullfile(sesspath,'dicom_headers.mat');
         save(dcmhdrfn,'DICOMHEADERS');
-        aap=aas_desc_outputs(aap,subj,sess,'epi_header',dcmhdrfn);
+        aap=aas_desc_outputs(aap,subj,sess,'epi_dicom_header',dcmhdrfn);
         
     case 'checkrequirements'
         

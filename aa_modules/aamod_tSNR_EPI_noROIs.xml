@@ -12,7 +12,6 @@
             
             <inputstreams>
                 <stream>epi</stream>
-                <stream>epi_header</stream>
             </inputstreams>
             
             <outputstreams>

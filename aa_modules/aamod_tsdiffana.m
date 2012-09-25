@@ -20,14 +20,7 @@ switch task
         aap=aas_report_addimage(aap,fullfile(aas_getsesspath(aap,subj,sess),'diagnostic_aamod_tsdiffana.jpg'));
         aap.report.html=strcat(aap.report.html,'</td></tr></table>');
     case 'doit'
-        subjpath=aas_getsubjpath(aap,subj);
-        sesspath=aas_getsesspath(aap,subj,sess);
         
-        aas_makedir(aap,sesspath);
-        
-        % imgs=spm_get('files',sesspath,[aap.directory_conventions.subject_filenames{subj} '*nii']); % changed img to nii [djm160206]
-        
-        % added in place of previous line [djm 160206]...
         % get the subdirectories in the main directory
         Spth = aas_getsesspath(aap,subj,sess);
         % get files in this directory
@@ -37,7 +30,7 @@ switch task
         
         % Now produce graphical check
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r75',fullfile(sesspath,'diagnostic_aamod_tsdiffana'));
+        print('-djpeg','-r150',fullfile(Spth,'diagnostic_aamod_tsdiffana'));
         
         % Save the time differences
         aap = aas_desc_outputs(aap,subj,sess, 'tsdiffana', fullfile(Spth, 'timediff.mat'));

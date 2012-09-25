@@ -5,8 +5,8 @@
             
             
             <qsub>
-                <timeBase>0.02</timeBase>
-                <memoryBase>1</memoryBase>
+                <timeBase>0.2</timeBase>
+                <memoryBase>2</memoryBase>
             </qsub>
             
             <permanenceofoutput>2</permanenceofoutput>
@@ -22,9 +22,7 @@
             </inputstreams>
             
             <outputstreams>
-                <stream>decodeWeight</stream>
-                <stream>decodeSig</stream>
-                <stream>decodeMat</stream>
+                <stream>DMLT</stream>
             </outputstreams>
             
             <!--SETTINGS-->
@@ -35,7 +33,7 @@
             <!-- Inclusive? (0 - no, 1 - yes) -->
             <maskInclusive>1</maskInclusive>
             <!-- Minimum number of valid voxels present in ROI (otherwise error)-->
-            <minVoxels>30</minVoxels>            
+            <minVoxels>30</minVoxels>
             
             <diagnostic>1</diagnostic>
             

@@ -162,7 +162,7 @@ switch task
                 size(EPIimg,1)))
             
             set(gcf,'PaperPositionMode','auto')
-            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_tSNR.jpeg']));
             
             %% Time-course results figure!            
@@ -205,7 +205,7 @@ switch task
                 size(EPIimg,1)))
             
             set(gcf,'PaperPositionMode','auto')
-            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_timecourse.jpeg']));
             
             %% Diagnostic VIDEO

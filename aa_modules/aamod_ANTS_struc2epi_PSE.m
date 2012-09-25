@@ -2,7 +2,7 @@
 % Use the Anatomical Transformation Toolbox to normalise the structural to
 % a template image
 
-function [aap,resp]=aamod_ANTS_struc2epi(aap,task,subj)
+function [aap,resp]=aamod_ANTS_struc2epi_PSE(aap,task,subj)
 
 resp='';
 
@@ -225,7 +225,7 @@ switch task
         spm_orthviews('reposition', [0 0 0])
         
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
         %% Diagnostic VIDEO
