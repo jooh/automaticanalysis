@@ -42,11 +42,14 @@ switch task
                     % on some shells w will have 2 lines (one feedbacking
                     % the new dir after cd, another with the ls result) -
                     % in this case we want the second output from strtok
-                    if ~isempty(b)
+                    b = strtok(b);
+                    if ~isempty(b);
                         a = b;
+                    else
+                        a = strtok(a);
                     end
-                    aap.acq_details.subjects(i).mriname=deblank(strtok(a));
-                end;
+                    aap.acq_details.subjects(i).mriname=deblank(a);
+                end
             case 's3'
                 global aaworker
                 % Separately match subject and visit parts
