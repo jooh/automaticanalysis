@@ -84,6 +84,7 @@ You must specify one or more contrasts here using one of the following formats
                 <subject></subject>
                 <automatic_movesandmeans></automatic_movesandmeans>
                 <con>
+                    <name/>
                     <format/>
                     <vector/>
                     <session/>
