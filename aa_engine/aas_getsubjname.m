@@ -1,3 +1,4 @@
+% [nme]=aas_getsubjname(aap,i)
 function [nme]=aas_getsubjname(aap,i)
 
 nme='';
