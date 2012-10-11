@@ -55,6 +55,11 @@ switch task
         contrasts=aap.tasklist.currenttask.settings.contrasts(contrasts_set);
         
         for conind=1:length(contrasts.con)
+            % support eval'ed strings to define contrasts (e.g. ones, eye)
+            if ischar(contrasts.con(conind).vector)
+                contrasts.con(conind).vector = eval(...
+                    contrasts.con(conind).vector);
+            end
             
             switch(contrasts.con(conind).format)
                 case {'singlesession','sameforallsessions'}
