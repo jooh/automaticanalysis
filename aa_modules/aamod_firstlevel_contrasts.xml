@@ -82,6 +82,7 @@ You must specify one or more contrasts here using one of the following formats
 -->
             <contrasts>
                 <subject></subject>
+                <eachagainstbaseline>0</eachagainstbaseline>
                 <automatic_movesandmeans></automatic_movesandmeans>
                 <con>
                     <name/>

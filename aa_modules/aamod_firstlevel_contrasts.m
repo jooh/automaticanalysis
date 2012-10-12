@@ -53,6 +53,20 @@ switch task
         end
         
         contrasts=aap.tasklist.currenttask.settings.contrasts(contrasts_set);
+        % add contrasts for each task regressor v baseline?
+        if contrasts.eachagainstbaseline
+            basev = zeros(1,length(SPM.Sess(1).col));
+            for c = 1:length(basev)
+                newv = basev;
+                newv(c) = 1;
+                contrasts.con(end+1)= struct('name',sprintf(...
+                    '%s-o-baseline',SPM.xX.name{SPM.xX.iC(c)}),...
+                    'format','sameforallsessions',...
+                    'vector',newv,...
+                    'session',[],...
+                    'type','T');
+            end
+        end
         
         for conind=1:length(contrasts.con)
             % support eval'ed strings to define contrasts (e.g. ones, eye)
