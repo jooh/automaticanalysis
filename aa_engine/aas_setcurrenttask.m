@@ -51,7 +51,24 @@ if (ischar(selected_sessions))
         selected_sessions=[];
         while(length(rem)>0)
             [sessionnme rem]=strtok(rem,' ');
-            sessionind=find(strcmp({aap.acq_details.sessions.name},sessionnme));
+            asts = strfind(sessionnme,'*');
+            if ~any(asts)
+                % exact match
+                sessionind=find(strcmp({aap.acq_details.sessions.name},...
+                    sessionnme));
+            else
+                % partial wildcard search
+                % with better reg expressions this constraint would be
+                % unnecessary
+                assert(length(asts==1) && ...
+                    (asts==1 || asts==length(sessionnme)),...
+                    'partial wildcard must be at start or end of name')
+                % strip ast
+                sessionnme(asts) = [];
+                % and search in the session strings for matches
+                sessionind = find(cellfun(@isempty,strfind(...
+                    {aap.acq_details.sessions.name},sessionnme))==0);
+            end
             if (isempty(sessionind))
                 aas_log(aap,true,sprintf('Unknown session %s specified in selected_sessions field of a branch in the tasklist, sessions were %s',sessionnme,sprintf('%s ',aap.acq_details.sessions.name)));
             end;
