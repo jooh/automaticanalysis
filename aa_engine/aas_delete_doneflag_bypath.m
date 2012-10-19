@@ -10,7 +10,7 @@ switch(aap.directory_conventions.remotefilesystem)
         
     otherwise
         if (exist(doneflag,'file'))
-            cmd=['rm ' doneflag];
+            cmd=['rm -f ' doneflag];
             [s w]=aas_shell(cmd);
             if (s~=0)
                 aas_log(aap,1,w);
