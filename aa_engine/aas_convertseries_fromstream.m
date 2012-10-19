@@ -89,40 +89,36 @@ for subdirind=1:length(subdirs)
         while (k<=size(dicomdata_subdir,1))
             
             tmp = spm_dicom_headers(deblank(dicomdata_subdir(k,:)));
-            
-            try
-                % [AVG] Let us use get the TR and save it to the DICOMHEADERS
-                if k == 1
-                    infoD = dicominfo(deblank(dicomdata_subdir(k,:)));
-                    
-                    if strcmp(infoD.MRAcquisitionType, '3D')
-                        % In 3D sequence we can find a Private field
-                        % Works for Siemens scanners (not tested elsewhere)
-                        fi = 'Private_0029_1020';
-                        % let's make sure this solution has a chance of
-                        % working
-                        assert(isfield(infoD,fi),...
-                            '3D sequence but TR cannot be recovered');
-                        str =  infoD.(fi);
-                        xstr = char(str');
-                        n = findstr(xstr, 'sWiPMemBlock.adFree[8]');
-                        if isempty(n)
-                            error('Could not find TR in the DICOM header!')
-                        end
-                        [junk, r] = strtok(xstr(n:n+100), '=');
-                        TR = str2double(strtok(strtok(r, '=')));
-                    else
-                        % If 2D sequence...
-                        TR = infoD.RepetitionTime;
-                    end
-                    fprintf('Sequence has a TR of %.1f ms\n', TR);
-                end
+            % [AVG] Let us use get the TR and save it to the DICOMHEADERS
+            if k == 1
+                infoD = dicominfo(deblank(dicomdata_subdir(k,:)));
                 
-                % [AVG] Add the TR to the DICOMHEADERS explicitly before
-                % saving (and in seconds!)
-                tmp{1}.volumeTR = TR/1000;
-            catch
+                if strcmp(infoD.MRAcquisitionType, '3D')
+                    % In 3D sequence we can find a Private field
+                    % Works for Siemens scanners (not tested elsewhere)
+                    fi = 'Private_0029_1020';
+                    % let's make sure this solution has a chance of
+                    % working
+                    assert(isfield(infoD,fi),...
+                        '3D sequence but TR cannot be recovered');
+                    str =  infoD.(fi);
+                    xstr = char(str');
+                    n = findstr(xstr, 'sWiPMemBlock.adFree[8]');
+                    if isempty(n)
+                        error('Could not find TR in the DICOM header!')
+                    end
+                    [junk, r] = strtok(xstr(n:n+100), '=');
+                    TR = str2double(strtok(strtok(r, '=')));
+                else
+                    % If 2D sequence...
+                    TR = infoD.RepetitionTime;
+                end
+                fprintf('Sequence has a TR of %.1f ms\n', TR);
             end
+            
+            % [AVG] Add the TR to the DICOMHEADERS explicitly before
+            % saving (and in seconds!)
+            tmp{1}.volumeTR = TR/1000;
             
             DICOMHEADERS=[DICOMHEADERS tmp];
             
