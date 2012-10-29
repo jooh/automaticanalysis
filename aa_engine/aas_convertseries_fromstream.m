@@ -168,17 +168,11 @@ for subdirind=1:length(subdirs)
                 end
             end
         end
-        % [AVG] to cope with modern 7T Siemens scanners, which seem to mess
-        % up the ICE dimensions...
-        if (isfield(DICOMHEADERS_selected{1}, 'Manufacturer') && ...
-                ~isempty(strfind(DICOMHEADERS_selected{1}.Manufacturer,'SIEMENS'))) && ...
-            ((isfield(DICOMHEADERS_selected{1}, 'ManufacturersModelName') && ...
-                ~isempty(strfind(DICOMHEADERS_selected{1}.ManufacturersModelName,'7T'))) || ...
-                (isfield(DICOMHEADERS_selected{1}, 'TransmittingCoil') && ...
-                ~isempty(strfind(DICOMHEADERS_selected{1}.TransmittingCoil,'7T'))))
-            
-            aas_log(aap, false, 'Using alternate spm_dicom_convert_7Tsiemens script...')
-            conv=spm_dicom_convert_7Tsiemens(DICOMHEADERS_selected,'all','flat','nii');
+        % [AVG] to cope with modern cutting edge scanners, and other probs
+        % (e.g. 7T Siemens scanners, which seem to mess up the ICE dimensions...)
+         if ~isempty(aap.options.customDCMconvert)
+            aas_log(aap, false, sprintf('Using alternate %s script...', aap.options.customDCMconvert))
+            eval(sprintf('conv=%s(DICOMHEADERS_selected,''all'',''flat'',''nii'')', aap.options.customDCMconvert));
         else
             conv=spm_dicom_convert(DICOMHEADERS_selected,'all','flat','nii');
         end

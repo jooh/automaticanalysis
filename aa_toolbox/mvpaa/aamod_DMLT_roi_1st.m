@@ -2,7 +2,7 @@
 %
 % Modified for aa4 by Alejandro Vicente-Grabovetsky Feb-2011
 
-function [aap,resp] = aamod_DMLT_roi_1st(aap,task,p)
+function [aap,resp] = aamod_DMLT_roi_1st(aap,task,subj)
 
 resp='';
 
@@ -14,7 +14,7 @@ switch task
         % Add toolbox path...
         addpath(genpath(aap.directory_conventions.DMLTdir));
         
-        mriname = strtok(aap.acq_details.subjects(p).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);
         fprintf('Working with data from participant %s. \n', mriname)
         
         % Required...
@@ -23,14 +23,14 @@ switch task
         %% ANALYSIS
         
         % Load the data into a single big structure...
-        [aap data] = mvpaa_loadData(aap, p);
+        [aap data] = mvpaa_loadData(aap, subj);
         
         % Load the ROIs from which to extract the data
         try
-            ROIimg = aas_getfiles_bystream(aap,p,'rois');
+            ROIimg = aas_getfiles_bystream(aap,subj,'rois');
         catch
             % Whole brain?
-            ROIimg = aas_getfiles_bystream(aap,p,'segmasksStrict');
+            ROIimg = aas_getfiles_bystream(aap,subj,'segmasksStrict');
             ROIimg = ROIimg(1,:); % @@@@ [DEBUG] @@@@
         end
         
@@ -39,7 +39,7 @@ switch task
         ROIname = {};
         
         % Get the contrasts for this subject...
-        DMLT = mvpaa_loadDMLT(aap,p);
+        DMLT = mvpaa_loadDMLT(aap,subj);
         
         DMLout = cell(ROInum, length(DMLT));
         
@@ -95,7 +95,7 @@ switch task
                 Y = Y(~isnan(Y), :);
                 
                 % If we input it as a string to make it work in aa qsub...
-                if ~isstruct(DMLTtemp.object)
+                if ischar(DMLTtemp.object)
                     DMLTtemp.object = eval(DMLTtemp.object);
                 end
                 
@@ -138,7 +138,7 @@ switch task
         
         %% DESCRIBE OUTPUTS
         EP = aap.tasklist.currenttask.settings;
-        save(fullfile(aas_getsubjpath(aap,p), 'DMLT.mat'), ...
+        save(fullfile(aas_getsubjpath(aap,subj), 'DMLT.mat'), ...
             'DMLout', 'EP', 'DMLT')
-        aap=aas_desc_outputs(aap,p,'DMLT', fullfile(aas_getsubjpath(aap,p), 'DMLT.mat'));
+        aap=aas_desc_outputs(aap,subj,'DMLT', fullfile(aas_getsubjpath(aap,subj), 'DMLT.mat'));
 end

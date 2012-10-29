@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='Segment the brain using the freesurfer pipeline' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>5</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>2</permanenceofoutput>
+            
+            <inputstreams>
+                <stream>structural</stream>
+            </inputstreams>
+            
+            <outputstreams>
+                <stream>freesurfer</stream>
+            </outputstreams>
+            
+            <modules desc='This specifies the freesurfer modueles for recon-all'
+            ></modules>
+            
+            <extraoptions desc='This specifies the extra options for recon-all'
+            >-autorecon1</extraoptions>
+                        
+            <structural desc='Which structural do we use?'
+            >1</structural>
+            
+            <!-- Diagnostic videos? Verbosity? -->
+            <diagnostic desc='Do we display diagnostic videos?'
+            >0</diagnostic>
+            <verbose desc='Do we display Freesurfer output?'
+            >0</verbose>
+            
+        </currenttask>
+    </tasklist>
+</aap>

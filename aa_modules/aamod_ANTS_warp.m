@@ -56,13 +56,17 @@ switch task
                 [s w]=aas_shell(['rm ' fullfile(pth,['w' fn ext])],true); % quietly
                 
                 %% Use ANTS to normalise the stream!
+                if exist(fullfile(Spth,'antsAffine.txt'), 'file')
+                    affineTrans = [' ' fullfile(Spth, 'antsAffine.txt')]; % and affine, if this exists...
+                else
+                    affineTrans = '';
+                end
+                
                 warpANTS_command = [ warpANTSpath Ndim ... % dimension number
                     P(c,:) ' ' fullfile(pth, ['w' fn ext]) ... % moving image & output
-                    ' -R ' sTimg ' '... % reference image
+                    ' -R ' sTimg ... % reference image
+                    affineTrans ' '... % affine transform (if it exists)
                     fullfile(Spth, 'antsWarp.nii')]; % transform
-                if exist(fullfile(Spth,'antsAffine.txt'), 'file')
-                    warpANTS_command = [warpANTS_command ' ' fullfile(Spth, 'antsAffine.txt')]; % and affine, if this exists...
-                end
                 
                 [s w] = aas_shell(warpANTS_command);
             end

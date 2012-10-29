@@ -74,24 +74,16 @@ switch task
             spm_write_vol(rV, rY);
             
             try close(2); catch; end
-            % Then plot a diagnostic image...
-            % Save graphical output to common diagnostics directory
-            if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-                mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-            end
-            mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-            try
-                %% Draw noisy and denoised structural...
-                spm_check_registration(strvcat(V.fname, dV.fname))
-                
-                spm_orthviews('reposition', [0 0 0])
-                
-                try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-                set(gcf,'PaperPositionMode','auto')
-                print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname '_' num2str(d) '.jpeg']));
-            catch
-            end
+            
+            mriname = aas_prepare_diagnostic(aap,subj);
+            
+            %% Draw noisy and denoised structural...
+            spm_check_registration(strvcat(V.fname, dV.fname))
+            
+            spm_orthviews('reposition', [0 0 0])
+            
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+                [mfilename '__' mriname '_' num2str(d) '.jpeg']));
             
             %% Diagnostic VIDEO
             if aap.tasklist.currenttask.settings.diagnostic

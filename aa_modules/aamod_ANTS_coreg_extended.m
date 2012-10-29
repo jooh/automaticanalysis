@@ -208,20 +208,15 @@ switch task
             end
         end
         
-        %% Some diagnostic images
+        %% DIAGNOSTIC
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
         spm_check_registration(strvcat( ...
             sTimg, ... % Get template T1
             deblank(Simg(aap.tasklist.currenttask.settings.structural,:)),... % Get structural
             mEPIimg, ... % Get mean EPI across sessions
             EPIimg{sess}(1,:))) % Get first image of last session EPI
         
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');        
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        set(gcf,'PaperPositionMode','auto')        
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         

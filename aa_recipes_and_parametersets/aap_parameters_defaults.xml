@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>    
     <directory_conventions>
+        <SPMdir desc='Directory of SPM' ui='dir'>/cn_apps/spm8</SPMdir>
         <fieldmapsdirname desc='Subdirectory in subject dir for fieldmaps' ui='dir'>fieldmaps</fieldmapsdirname>
         <structdirname desc='Subdirectory in subject dir for MRI structurals' ui='dir'>structurals</structdirname>
         <tmapsdirname desc='Subdirectory in subject dir for real-time T maps' ui='dir'>realtime_tmaps</tmapsdirname>
@@ -39,6 +40,8 @@
         <ANTSdir desc='Path to Advanced Normalisation Tools (ANTS)' ui='dir'>/cn_apps/ANTs-1.9.x-Linux</ANTSdir>
         <fieldtripdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/fieldtrip</fieldtripdir>
         <freesurferdir desc='Path to freesurfer toolbox' ui='dir'>/cn_apps/freesurfer</freesurferdir>
+        <freesurferperl desc='Version of PERL library in freesurfer' ui='text'>5.8.5</freesurferperl>
+        <freesurfershell desc='Shell used to run FSL' ui='text'>none</freesurfershell>
         <niftyregdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/niftyreg</niftyregdir>
         <niftysegdir desc='Path to fieltrip toolbox' ui='dir'>/cn_apps/niftyseg</niftysegdir>
         <DMLTdir desc='Path to Donders Machine Learning Toolbox toolbox' ui='dir'>/cn_apps/DMLT</DMLTdir>
@@ -73,6 +76,7 @@
             <timeMult desc='Time multiplier for qsub' ui='double'>1</timeMult>
             <verbose desc='Verbose output for qsub?' ui='yesno'>0</verbose>
         </qsub>
+        <customDCMconvert desc='Do we use a custom DICOM converter?' ui='text'></customDCMconvert>
     </options>
     
     <gui_controls>

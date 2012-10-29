@@ -55,18 +55,14 @@ switch task
         aap=aas_desc_outputs(aap,subj, outputstream{:}, fullfile(Spth,['m' Sfn Sext]));
 
         %% Diagnostic image?
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');        
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
         % Draw image pre/post bias correction
         spm_check_registration(strvcat(Simg, ...
             fullfile(Spth,['m' Sfn Sext])))
         
         spm_orthviews('reposition', [0 0 0])
         
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         

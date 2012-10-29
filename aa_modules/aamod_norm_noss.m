@@ -224,30 +224,10 @@ switch task
         end
         %}
         
-        % Diagnostic image?
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        %% Save graphical output to common diagnostics directory
+        mriname = aas_prepare_diagnostic(aap,subj);
         
-        %% Diagnostic VIDEO
-        if aap.tasklist.currenttask.settings.diagnostic
-            Ydims = {'X', 'Y', 'Z'};
-            
-            for d = 1:length(Ydims)
-                if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
-                    aas_image_avi(fullfile(mSpth,['m' mSfn mSext]), ...
-                        outSeg([1:2:size(outSeg,1)],:), ...
-                        fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
-                        d, ... % Axis
-                        [800 600], ...
-                        2, ... % Rotations
-                        'none'); % No outline...
-                    try close(2); catch; end
-                end
-            end
-        end
+        
         
         try
             % This will only work for 1-7 segmentations
@@ -312,10 +292,27 @@ switch task
             
             title(sprintf('GM vs WM... T-val: %0.2f (df = %d)', stats.tstat, stats.df))
     
-            print('-djpeg','-r200',fullfile(aap.acq_details.root, 'diagnostics', ...
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                     [mfilename '__' mriname '_Hist.jpeg']));
         end
         
+        %% Diagnostic VIDEO
+        if aap.tasklist.currenttask.settings.diagnostic
+            Ydims = {'X', 'Y', 'Z'};
+            
+            for d = 1:length(Ydims)
+                if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
+                    aas_image_avi(fullfile(mSpth,['m' mSfn mSext]), ...
+                        outSeg([1:2:size(outSeg,1)],:), ...
+                        fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                        d, ... % Axis
+                        [800 600], ...
+                        2, ... % Rotations
+                        'none'); % No outline...
+                    try close(2); catch; end
+                end
+            end
+        end
     case 'checkrequirements'
         % Template image; here template image not skull stripped
         T1file = aap.directory_conventions.T1template;

@@ -141,11 +141,7 @@ switch task
             end
             
             %% DIAGNOSTIC IMAGE
-            % Save graphical output to common diagnostics directory
-            if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-                mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-            end
-            mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+            mriname = aas_prepare_diagnostic(aap,subj);
             
             %% tSNR results figure!
             fprintf('\nDisplaying the results of the tSNR analysis')
@@ -161,7 +157,6 @@ switch task
                 regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
                 size(EPIimg,1)))
             
-            set(gcf,'PaperPositionMode','auto')
             print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_tSNR.jpeg']));
             
@@ -204,7 +199,6 @@ switch task
                 regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
                 size(EPIimg,1)))
             
-            set(gcf,'PaperPositionMode','auto')
             print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_timecourse.jpeg']));
             

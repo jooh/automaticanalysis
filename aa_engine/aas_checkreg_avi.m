@@ -1,7 +1,7 @@
 % Create a movie of the image inside the spm check registration tool for
 % later viewing...
 
-function aas_checkreg_avi(aap, p, axisDim, suffix)
+function aas_checkreg_avi(aap, subj, axisDim, suffix)
 
 if nargin < 3
     axisDim = 2;
@@ -10,11 +10,7 @@ if nargin < 4
     suffix = '';
 end
 
-% Save graphical output to common diagnostics directory
-if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-    mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-end
-mriname = strtok(aap.acq_details.subjects(p).mriname, '/');
+mriname = aas_prepare_diagnostic(aap,subj);
 
 % Check if we need to make a movie...
 if aap.tasklist.currenttask.settings.diagnostic

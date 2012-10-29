@@ -148,18 +148,14 @@ switch task
         spm_write_vol(V,dY);
         
         %% Some diagnostic images
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
         spm_check_registration(strvcat( ...
             fullfile(pthS, ['r' fnS extS]), ... % Get resliced structural
             fullfile(pthM, ['d' fnM extM]), ... % Get mean EPI before
             fullfile(pthM, ['' fnM extM]), ... % Get mean EPI before
             fullfile(pthM, ['p' fnM extM]))); % Get mean EPI, after...
         
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         

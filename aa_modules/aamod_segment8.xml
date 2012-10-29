@@ -17,6 +17,7 @@
 			<writebiascorrected desc='write out bias field or corrected image?'>0 0</writebiascorrected>
 			<writedeffields desc='write out deformation fields?'>0 0</writedeffields>
 			
+            <structural>1</structural>
             <diagnostic>0</diagnostic>
             
             <inputstreams>

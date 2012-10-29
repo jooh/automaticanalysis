@@ -64,11 +64,25 @@ switch task
         spm_write_vol(V,Y);
         outSeg = strvcat(outSeg, V.fname);
         
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
+        % DIAGNOSTIC
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
+        % This will only work for 1-7 segmentations
+        OVERcolours = aas_colours;
+        
+        %% Draw native template
+        spm_check_registration(Simg)
+        
+        % Add segmentations...
+        for t = 1:(size(outSeg,1))
+            spm_orthviews('addcolouredimage',1,outSeg(t,:), OVERcolours{t})
         end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        
+        spm_orthviews('reposition', [0 0 0])
+        
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
+        
         %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
             

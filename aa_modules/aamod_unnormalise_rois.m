@@ -123,12 +123,7 @@ switch task
             outstream = strvcat(outstream, roi_fn);
         end
         
-        % Diagnostic image?
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);
         try
             %% Draw mean EPI...
             spm_check_registration(mEPIimg)

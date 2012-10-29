@@ -52,16 +52,44 @@ for k1=1:length(aap.tasklist.main.module)
                 else
                     aap.internal.inputstreamsources{k1}.stream(end+1)=stream;
                 end;
-                aas_log(aap,false,sprintf('Stage %s input %s comes from remote host %s stream %s',stagename,stream.name,stream.host,stream.sourcestagename));
+                % [AVG] to make the inputs/outpus more obvious!
+                %aas_log(aap,false,sprintf('Stage %s input %s comes from remote host %s stream %s',stagename,stream.name,stream.host,stream.sourcestagename));
+                cprintf('text', 'Stage')
+                cprintf([65, 105, 225]/255, stagename)
+                cprintf('text', 'input')
+                cprintf([46, 139, 87]/255, stream.name)
+                cprintf('text', 'comes from remote host')
+                cprintf('-text', stream.host);
+                cprintf('text', 'stream')
+                cprintf('Magenta', stream.sourcestagename)
             else
                 
                 [aap stagethatoutputs mindepth]=searchforoutput(aap,k1,inputstreamname,true,0,inf);
                 if isempty(stagethatoutputs)
-                    aas_log(aap,true,sprintf('Stage %s required input %s is not an output of any stage it is dependent on. You might need to add an aas_addinitialstream command or get the stream from a remote source.',stagename,inputstreamname));
+                    % [AVG] to make the inputs/outpus more obvious!
+                    %aas_log(aap,true,sprintf('Stage %s required input %s is not an output of any stage it is dependent on. You might need to add an aas_addinitialstream command or get the stream from a remote source.',stagename,inputstreamname));
+                    
+                    cprintf('text', 'Stage')
+                    cprintf([65, 105, 225]/255, stagename)
+                    cprintf('text', 'required input')
+                    cprintf([46, 139, 87]/255, inputstreamname)
+                    cprintf('text', 'is not an output of any stage it is dependent on')
+                    aas_log(aap,true,'You might need to add an aas_addinitialstream command or get the stream from a remote source.');
                 else
                     [sourcestagepath sourcestagename]=fileparts(aap.tasklist.main.module(stagethatoutputs).name);
                     sourceindex=aap.tasklist.main.module(stagethatoutputs).index;
-                    aas_log(aap,false,sprintf('Stage %s input %s comes from %s which is %d dependencies prior',stagename,inputstreamname,sourcestagename,mindepth));
+                    % [AVG] to make the inputs/outpus more obvious!
+                    %aas_log(aap,false,sprintf('Stage %s input %s comes from %s which is %d dependencies prior',stagename,inputstreamname,sourcestagename,mindepth));
+                    cprintf('text', 'Stage')
+                    cprintf([65, 105, 225]/255, stagename)
+                    cprintf('text', 'input')
+                    cprintf([46, 139, 87]/255, inputstreamname)
+                    cprintf('text', 'comes from')
+                    cprintf('Magenta', sourcestagename)
+                    cprintf('text', 'which is')
+                    cprintf('-text', num2str(mindepth));
+                    cprintf('text', 'dependencies prior.\n')
+                    
                     stream=[];
                     stream.name=inputstreamname;
                     stream.sourcenumber=stagethatoutputs;

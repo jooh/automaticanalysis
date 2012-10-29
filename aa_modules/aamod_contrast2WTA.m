@@ -112,11 +112,9 @@ switch task
         end
         
         %% DIAGNOSTIC IMAGE
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
         if ~isempty(ROIimg)
             % Display the pattern of voxel-wise T-values across the contrasts
             figure(2)
@@ -132,7 +130,6 @@ switch task
                 
                 xlabel('Contrasts')
                 ylabel('T-values')
-                
                 
             end
             

@@ -106,13 +106,9 @@ switch task
             end
         end
         
-        % Diagnostic image?
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-        
+        %% Diagnostic image?
+        mriname = aas_prepare_diagnostic(aap,subj);
+                
         %% Draw templates
         
         spm_check_registration(outTemp)

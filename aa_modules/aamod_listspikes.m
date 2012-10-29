@@ -13,6 +13,8 @@ resp='';
 switch task
     case 'doit'
         
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
         try close(2); catch; end
         figure(2)
         set(2,'Position', [0 0 800 600])
@@ -87,10 +89,6 @@ switch task
         end
         
         %% Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
     case 'checkrequirements'

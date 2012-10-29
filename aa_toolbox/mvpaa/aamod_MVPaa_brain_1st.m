@@ -11,7 +11,8 @@ switch task
         
         %% PREPARATIONS...
         
-        mriname = strtok(aap.acq_details.subjects(p).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);
+                
         fprintf('Working with data from participant %s. \n', mriname)
         
         % Get the contrasts for this subject...

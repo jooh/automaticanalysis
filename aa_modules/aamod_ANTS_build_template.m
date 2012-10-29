@@ -79,20 +79,15 @@ switch task
             end
         end
         
-        % Diagnostic image?
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        %% DIAGNOSTIC
+        mriname = aas_prepare_diagnostic(aap, subj);
         
-        %% Draw template
+        % Draw template
         
         spm_check_registration(outTemp)
         
         spm_orthviews('reposition', [0 0 0])
         
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
 end

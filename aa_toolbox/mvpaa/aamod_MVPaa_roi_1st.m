@@ -11,7 +11,7 @@ switch task
         
         %% PREPARATIONS
         
-        mriname = strtok(aap.acq_details.subjects(p).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);        
         fprintf('Working with data from participant %s. \n', mriname)
         
         % Get the contrasts for this subject...
@@ -87,10 +87,6 @@ switch task
             
             %% SOME DIAGNOSTICS...
             if aap.tasklist.currenttask.settings.diagnostic
-                if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-                    mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-                end
-                
                 try close(2); catch;end
                 figure(2)
                 set(2, 'Position', [0 0 1200 500], 'Name', Rfn)

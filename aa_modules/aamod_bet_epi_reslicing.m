@@ -51,11 +51,9 @@ switch task
             img2mask(fullfile(mpth,['r' mnme mext]))
         end
         
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        %% DIAGNOSTIC
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
         if ~isempty(aap.tasklist.currenttask.settings.maskBrain)
             
             fprintf('Masking the brain with %s \n', aap.tasklist.currenttask.settings.maskBrain)

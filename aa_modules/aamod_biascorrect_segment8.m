@@ -94,6 +94,9 @@ switch task
         % get the structural image
         Simg = aas_getfiles_bystream(aap, subjind, 'structural');
         
+        if isempty(aap.tasklist.currenttask.settings.structural)
+            aap.tasklist.currenttask.settings.structural = 1:size(Simg,1);
+        end
         
         if isempty(Simg) || strcmp(Simg,'/')
             aas_log(aap, true, 'Did not find a structural image.');

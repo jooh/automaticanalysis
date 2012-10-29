@@ -55,7 +55,7 @@ switch task
         % a single WM and GM mass...
         looseBits = 1;
         
-        while looseBits == 1
+        while ~isnan(looseBits)
             fprintf('Runing LoAd...\n')
             %% Use LoAd to segment the structural!
             LoAd_command = ['sh LoAd_brainonly.sh ' ... % Run LoAd command
@@ -100,7 +100,7 @@ switch task
                 sumPixels = sum(numPixels);
                 
                 if length(CC.PixelIdxList) == 1 || sumPixels < aap.tasklist.currenttask.settings.looseBits_voxthresh
-                    looseBits = 0;
+                    looseBits = NaN;
                 else
                     for b = 1:CC.NumObjects
                         if b~=idx
@@ -112,7 +112,7 @@ switch task
                 
             catch aa_error
                 aas_log(aap, false, 'You may be lacking the MATLAB image toolbox')
-                looseBits = 0;
+                looseBits = NaN;
             end
             
             % Then erode and dilate sequentially, several times
@@ -162,6 +162,8 @@ switch task
                 BETmask)); % Get BET mask
             spm_orthviews('reposition', [0 0 0])
             fprintf('\n')
+            
+            looseBits = looseBits + 1;
         end
         
         % Mask current structural with the more accurate mask, to improve
@@ -171,11 +173,8 @@ switch task
         sY = sY .* mY;
         spm_write_vol(sV,sY);
         
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        %% DIAGNOSTIC
+        mriname = aas_prepare_diagnostic(aap,subj);
         
         % This will only work for 1-7 segmentations
         OVERcolours = aas_colours;
@@ -190,7 +189,6 @@ switch task
         
         spm_orthviews('reposition', [0 0 0])
         
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         

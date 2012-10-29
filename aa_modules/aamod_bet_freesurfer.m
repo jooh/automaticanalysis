@@ -125,11 +125,7 @@ switch task
         aap=aas_desc_outputs(aap,subj,'BETmask',outMask);
         
         %% DIAGNOSTIC IMAGE
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);
         
         %% Draw structural image...
         spm_check_registration(Simg)
@@ -139,8 +135,6 @@ switch task
         
         spm_orthviews('reposition', [0 0 0])
         
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        set(gcf,'PaperPositionMode','auto')
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         

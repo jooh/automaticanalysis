@@ -99,20 +99,21 @@ switch task
             aas_log(aap, true, 'optimNn is not in your Matlab path but needs to be.');
         end
 
-
         % get the structural image
         Simg = aas_getfiles_bystream(aap, subj, 'structural');
-
 
         if isempty(Simg) || strcmp(Simg,'/')
             aas_log(aap, true, 'Did not find a structural image.');
         end
 
-        % if more than one found, use the first one and hope this is right
-        Simg = strtok(Simg(1,:));
+        % Which file is considered, as determined by the structural parameter!
+        if size(Simg,1) > 1
+            Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
+            fprintf('WARNING: Several structurals found, considering: \n')
+            fprintf('\t%s\n', Simg(1,:))
+        end
 
         aas_log(aap, false, sprintf('Found structural image: %s\n', Simg));
-
 
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		% do the segmentation
@@ -178,12 +179,35 @@ switch task
         end
         
         %% DIAGNOSTICS
+        mriname = aas_prepare_diagnostic(aap,subj);
         
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
+        % This will only work for 1-7 segmentations
+        OVERcolours = aas_colours;
+        
+        %% Draw native template
+        spm_check_registration(Simg)
+        % Add segmentations...
+        for t = 1:length(tiss)
+            spm_orthviews('addcolouredimage',1,nativeSeg{t}, OVERcolours{t})
         end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        
+        spm_orthviews('reposition', [0 0 0])
+        
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
+        
+        % Another diagnostic image, looking at how well the segmentation worked...
+        Pthresh = 0.95;
+        
+        ROIdata = roi2hist(Simg, ...
+            nativeSeg, Pthresh);
+        
+        [h, pv, ci, stats] = ttest2(ROIdata{2}, ROIdata{1});
+        
+        title(sprintf('GM vs WM... T-val: %0.2f (df = %d)', stats.tstat, stats.df))
+        
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '_Hist.jpeg']));
         
         %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
@@ -202,21 +226,4 @@ switch task
                 end
             end
         end
-        
-        % This will only work for 1-7 segmentations
-        OVERcolours = aas_colours;
-        
-        %% Draw native template
-        spm_check_registration(Simg)
-        % Add segmentations...
-        for t = 1:length(tiss)
-            spm_orthviews('addcolouredimage',1,native{t}, OVERcolours{t})
-        end
-        
-        spm_orthviews('reposition', [0 0 0])
-        
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
-            [mfilename '__' mriname '.jpeg']));
-        
 end

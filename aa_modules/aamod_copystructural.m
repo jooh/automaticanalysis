@@ -26,8 +26,13 @@ switch task
     % Save EXAMPLE dicom header (not all as previous code)
     subjpath=aas_getsubjpath(aap,subj);
 
-     % Save outputs?
+    for f = 1:size(convertedfns,1)
+        V = spm_vol(convertedfns{f});
+        fprintf('Size of structural n=%d %s: %dx%dx%d\n', f, dcmhdr{f}.SeriesDescription, ...
+            V.dim(1), V.dim(2), V.dim(3));
+    end
     
+     % Save outputs?
     aap=aas_desc_outputs(aap,subj,'structural',convertedfns);
             
     dcmhdrfn=fullfile(subjpath,'structural_dicom_header.mat');

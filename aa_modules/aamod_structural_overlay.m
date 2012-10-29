@@ -129,12 +129,8 @@ switch task
         set(gca,'XTick',0:length(aap.acq_details.subjects))
         
         %% DIAGNOSTIC IMAGE
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-        set(gcf,'PaperPositionMode','auto')
+        mriname = aas_prepare_diagnostic(aap,subj);
+                
         print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '.jpeg']));
         
