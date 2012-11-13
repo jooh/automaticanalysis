@@ -13,7 +13,7 @@ switch task
         resp='subject';  % this module needs to be run once per subject
         
     case 'description'
-        resp='SPM5 align';
+        resp='denoise ANLM';
         
     case 'summary'
         subjpath=aas_getsubjpath(subj);
