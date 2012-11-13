@@ -93,7 +93,11 @@ for subdirind=1:length(subdirs)
             if k == 1
                 infoD = dicominfo(deblank(dicomdata_subdir(k,:)));
                 
-                if strcmp(infoD.MRAcquisitionType, '3D')
+                % Only attempt to find 3D if field exist AND if
+                % InversionTime does NOT exist (this field is present in 3D
+                % MPRAGE acquisitions). 
+                if strcmp(infoD.MRAcquisitionType, '3D') && ...
+                        ~isfield(infoD,'InversionTime')
                     % In 3D sequence we can find a Private field
                     % Works for Siemens scanners (not tested elsewhere)
                     fi = 'Private_0029_1020';
