@@ -68,101 +68,138 @@ switch task
             end
         end
         
-        for conind=1:length(contrasts.con)
-            % support eval'ed strings to define contrasts (e.g. ones, eye)
-            if ischar(contrasts.con(conind).vector)
-                contrasts.con(conind).vector = eval(...
-                    contrasts.con(conind).vector);
+        % logical vector for run-specific contrasts
+        % First the general case - across all runs
+        nregr = length(SPM.xX.name);
+        nruns = length(SPM.Sess);
+        runI = logical(ones(1,nregr));
+        noregr = zeros(1,nregr);
+        % Do we also want run-specific contrasts?
+        if contrasts.oneconperrun && (nruns > 1)
+            for r = 1:nruns
+                % All zeros
+                runI(r+1,:) = noregr;
+                % Then fill in run regs
+                runI(r+1,SPM.Sess(r).col)=1;
             end
-            
-            switch(contrasts.con(conind).format)
-                case {'singlesession','sameforallsessions'}
-                    if (strcmp(contrasts.con(conind).format,'singlesession'))
-                        sessforcon=[strcmp({aap.acq_details.sessions.name},contrasts.con(conind).session)];
-                    else
-                        % [AVG] To make the selected sessions work...
-                        sessforcon=zeros(1,length(aap.acq_details.sessions));
-                        for sess=aap.acq_details.selected_sessions
-                            sessforcon(sess) = 1;
-                        end
-                        %sessforcon=ones(1,length(SPM.Sess));
-                    end;
-                    convec=[];
-                    sessnuminspm=1;
-                    for sess=aap.acq_details.selected_sessions
-                        numcolsinthissess=length(SPM.Sess(sessnuminspm).col);
-                        if (sessforcon(sess))
-                            if (size(contrasts.con(conind).vector,2) > numcolsinthissess)
-                                aas_log(aap,true,sprintf('Number of columns in contrast matrix for session %d is more than number of columns in model for this session - wanted %d columns, got ',sess,numcolsinthissess)); disp(contrasts.con(conind).vector);
-                            elseif (size(contrasts.con(conind).vector,2) < numcolsinthissess)
-                                convec = [convec contrasts.con(conind).vector zeros(size(contrasts.con(conind).vector,1),numcolsinthissess-size(contrasts.con(conind).vector,2))];
-                                aas_log(aap,false,sprintf('Warning: Number of columns in contrast matrix for session %d is less than number of columns in model for this session - wanted %d columns, so padding to ',sess,numcolsinthissess)); disp(convec);
-                            else
-                                convec=[convec contrasts.con(conind).vector];
-                            end
+        end
+        
+        ccount = 0;
+        % Separately for each run config (only one if ~oneconperrun)
+        for r = 1:size(runI,1)
+            % For each unique contrast
+            for conind=1:length(contrasts.con)
+                % For each individual contrast (different if oneconperrun)
+                ccount = ccount + 1;
+                % Get or make automatic contrast name
+                if (isfield(contrasts.con(conind),'name') && ~isempty(contrasts.con(conind).name))
+                    finalname = contrasts.con(conind).name;
+                else
+                    finalname = sprintf('Con%d',conind);
+                end
+                % may have to change name to reflect run
+                if r == 1
+                    connames{ccount} = finalname;
+                else
+                    connames{ccount} = sprintf('%s-run%02d',finalname,r-1);
+                end
+                % support eval'ed strings to define contrasts (e.g. ones, eye)
+                if ischar(contrasts.con(conind).vector)
+                    contrasts.con(conind).vector = eval(...
+                        contrasts.con(conind).vector);
+                end
+                % Make contract vector
+                switch(contrasts.con(conind).format)
+                    case {'singlesession','sameforallsessions'}
+                        if (strcmp(contrasts.con(conind).format,'singlesession'))
+                            sessforcon=[strcmp({aap.acq_details.sessions.name},contrasts.con(conind).session)];
                         else
-                            convec=[convec zeros(size(contrasts.con(conind).vector,1),numcolsinthissess)];
-                        end;
-                        sessnuminspm=sessnuminspm+1;
-                    end;
-                case 'uniquebysession'
-                    totnumcolsbarconstants = size(SPM.xX.X,2) - length(aap.acq_details.selected_sessions);
-                    if (size(contrasts.con(conind).vector,2) > totnumcolsbarconstants)
-                        aas_log(aap,true,sprintf('Number of columns in contrast matrix for session %d is more than number of columns in model (bar constants) - wanted %d columns, got ',totnumcolsbarconstants)); disp(contrasts.con(conind).vector);
-                    elseif (size(contrasts.con(conind).vector,2) < totnumcolsbarconstants)
-                        convec = [contrasts.con(conind).vector zeros(size(contrasts.con(conind).vector,1),totnumcolsbarconstants-size(contrasts.con(conind).vector,2))];
-                        if (contrasts.automatic_movesandmeans)
-                            convec_out=[];
-                            ind=1;
-                            sessnuminspm=1;
+                            % [AVG] To make the selected sessions work...
+                            sessforcon=zeros(1,length(aap.acq_details.sessions));
                             for sess=aap.acq_details.selected_sessions
-                                numcolsinthissess_withoutmoves=length(SPM.Sess(sessnuminspm).col)-6;
-                                newind=ind+numcolsinthissess_withoutmoves;
-                                convec_out=[convec_out convec(:,ind:(newind-1)) zeros(size(convec,1),6)];
-                                ind=newind;
-                                sessnuminspm=sessnuminspm+1;
+                                sessforcon(sess) = 1;
+                            end
+                            %sessforcon=ones(1,length(SPM.Sess));
+                        end;
+                        convec=[];
+                        sessnuminspm=1;
+                        for sess=aap.acq_details.selected_sessions
+                            numcolsinthissess=length(SPM.Sess(sessnuminspm).col);
+                            if (sessforcon(sess))
+                                if (size(contrasts.con(conind).vector,2) > numcolsinthissess)
+                                    aas_log(aap,true,sprintf('Number of columns in contrast matrix for session %d is more than number of columns in model for this session - wanted %d columns, got ',sess,numcolsinthissess)); disp(contrasts.con(conind).vector);
+                                elseif (size(contrasts.con(conind).vector,2) < numcolsinthissess)
+                                    convec = [convec contrasts.con(conind).vector zeros(size(contrasts.con(conind).vector,1),numcolsinthissess-size(contrasts.con(conind).vector,2))];
+                                    aas_log(aap,false,sprintf('Warning: Number of columns in contrast matrix for session %d is less than number of columns in model for this session - wanted %d columns, so padding to ',sess,numcolsinthissess)); disp(convec);
+                                else
+                                    convec=[convec contrasts.con(conind).vector];
+                                end
+                            else
+                                convec=[convec zeros(size(contrasts.con(conind).vector,1),numcolsinthissess)];
                             end;
-                            convec=convec_out;
+                            sessnuminspm=sessnuminspm+1;
                         end;
-                        if (size(convec,2) < totnumcolsbarconstants)
-                            aas_log(aap,false,sprintf('Warning: Number of columns in contrast matrix for ''uniquebysession'' option is less than number columns in model (bar constants) = %d, so padding to ',totnumcolsbarconstants)); disp(convec);
-                        end;
-                    else
-                        convec=contrasts.con(conind).vector;
-                    end
-                otherwise
-                    aas_log(aap,true,sprintf('Unknown format %s specified for contrast %d',contrasts.con(conind).format,conind));
+                    case 'uniquebysession'
+                        totnumcolsbarconstants = size(SPM.xX.X,2) - length(aap.acq_details.selected_sessions);
+                        if (size(contrasts.con(conind).vector,2) > totnumcolsbarconstants)
+                            aas_log(aap,true,sprintf('Number of columns in contrast matrix for session %d is more than number of columns in model (bar constants) - wanted %d columns, got ',totnumcolsbarconstants)); disp(contrasts.con(conind).vector);
+                        elseif (size(contrasts.con(conind).vector,2) < totnumcolsbarconstants)
+                            convec = [contrasts.con(conind).vector zeros(size(contrasts.con(conind).vector,1),totnumcolsbarconstants-size(contrasts.con(conind).vector,2))];
+                            if (contrasts.automatic_movesandmeans)
+                                convec_out=[];
+                                ind=1;
+                                sessnuminspm=1;
+                                for sess=aap.acq_details.selected_sessions
+                                    numcolsinthissess_withoutmoves=length(SPM.Sess(sessnuminspm).col)-6;
+                                    newind=ind+numcolsinthissess_withoutmoves;
+                                    convec_out=[convec_out convec(:,ind:(newind-1)) zeros(size(convec,1),6)];
+                                    ind=newind;
+                                    sessnuminspm=sessnuminspm+1;
+                                end;
+                                convec=convec_out;
+                            end;
+                            if (size(convec,2) < totnumcolsbarconstants)
+                                aas_log(aap,false,sprintf('Warning: Number of columns in contrast matrix for ''uniquebysession'' option is less than number columns in model (bar constants) = %d, so padding to ',totnumcolsbarconstants)); disp(convec);
+                            end;
+                        else
+                            convec=contrasts.con(conind).vector;
+                        end
+                    otherwise
+                        aas_log(aap,true,sprintf('Unknown format %s specified for contrast %d',contrasts.con(conind).format,ccount));
+                end;
+                cons{ccount} = [convec zeros(size(convec,1),length(aap.acq_details.selected_sessions))];  % Add final constant terms
+                
+                % Check not empty
+                if (~any(cons{ccount}(:)))
+                    aas_log(aap,true,sprintf('Contrast %d has no non-zero values, not permitted.',contrasts_set(ccount)));
+                end;
+                
+                % Allow F tests
+                if (isfield(contrasts.con(conind),'type') && isempty(contrasts.con(conind).type))
+                    contype{ccount}='T';
+                else
+                    contype{ccount}=contrasts.con(conind).type;
+                end;
+
+                % Zero out run-irrelevant entries
+                % support for multi-row F contrasts
+                nrows = size(cons{ccount},1);
+                inds = repmat(runI(r,:)~=1,[nrows 1]);
+                cons{ccount}(inds) = 0;
             end;
-            
-            cons{conind} = [convec zeros(size(convec,1),length(aap.acq_details.selected_sessions))];  % Add final constant terms
-            
-            % Check not empty
-            if (~any(cons{conind}(:)))
-                aas_log(aap,true,sprintf('Contrast %d has no non-zero values, not permitted.',contrasts_set(conind)));
-            end;
-            
-            % Get or make automatic contrast name
-            if (isfield(contrasts.con(conind),'name') && ~isempty(contrasts.con(conind).name))
-                cname{conind}=contrasts.con(conind).name;
-            else
-                cname{conind}=sprintf('Con%d',conind);
-            end
-            
-            % Allow F tests
-            if (isfield(contrasts.con(conind),'type') && isempty(contrasts.con(conind).type))
-                type{conind}='T';
-            else
-                type{conind}=contrasts.con(conind).type;
-            end;
-        end;
+        end
         
         % Make the con images
         SPM.xCon =[];
-        for conind = 1:size(cons,2)
+        for cc = 1:size(cons,2)
+            % skip empty regressors 
+            if all(cons{cc}(:) == 0)
+                continue
+            end
             if length(SPM.xCon)==0
-                SPM.xCon = spm_FcUtil('Set',cname{conind},type{conind},'c',cons{conind}',SPM.xX.xKXs);
+                SPM.xCon = spm_FcUtil('Set',connames{cc},contype{cc},'c',cons{cc}',SPM.xX.xKXs);
             else
-                SPM.xCon(end+1) = spm_FcUtil('Set',cname{conind},type{conind},'c',cons{conind}',SPM.xX.xKXs);
+                SPM.xCon(end+1) = spm_FcUtil('Set',connames{cc},contype{cc},'c',cons{cc}',SPM.xX.xKXs);
             end
         end
         spm_contrasts(SPM);
