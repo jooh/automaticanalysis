@@ -1,0 +1,16 @@
+% AAS function that defines finds different files at a determined location
+
+function niftiList = aas_fileList(aap, location, prefix, postfix)
+
+if nargin < 
+
+niftiList = {};
+
+D = dir(fullfile(aap.directory_conventions.rawdatadir, location, [prefix '*' postfix]));
+
+for d = 1:length(D)
+    niftiList = [niftiList, ...
+        fullfile(aap.directory_conventions.rawdatadir, location, ...
+        D(d).name)];
+end
+end

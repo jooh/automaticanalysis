@@ -69,7 +69,6 @@ switch task
             % ROI to linear index...
             ROI = find(ROI);
             
-            
             Betas = mvpaa_extraction(aap, data, ROI);
             
             fprintf('\t ROI = %s; vox. = %d (%d)\n',Rfn, voxelsReal, voxels)

@@ -1,8 +1,5 @@
 function [s w]=aas_runFScommand(aap,FScmd)
 
-%[s,w] = aas_shell(['source ' fullfile(aap.directory_conventions.freesurferdir, 'SetUpFreeSurfer.sh')]);
-%[s,w] = aas_shell(['source ' fullfile(aap.directory_conventions.freesurferdir, 'FreeSurferEnv.sh')]);
-
 pth=getenv('PATH');
 % Check whether ${FSLDIR}/bin is already in there
 FSbin = fullfile(aap.directory_conventions.freesurferdir,'bin');

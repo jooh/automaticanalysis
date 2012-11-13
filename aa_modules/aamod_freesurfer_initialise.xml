@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>
     <tasklist>
-        <currenttask domain='subject' mfile_alias='aamod_biascorrect' desc='SPM normalise estimate parameters' modality='MRI'>
+        <currenttask domain='subject' desc='Segment the brain using the freesurfer pipeline' modality='MRI'>
             
             <qsub>
                 <timeBase>0.5</timeBase>
-                <memoryBase>1</memoryBase>
+                <memoryBase>5</memoryBase>
             </qsub>
             
             <permanenceofoutput>2</permanenceofoutput>
@@ -15,14 +15,12 @@
             </inputstreams>
             
             <outputstreams>
-                <stream>structural</stream>
+                <stream>freesurfer</stream>
             </outputstreams>
-            
-            <structural desc='Which structural to use?'
+                        
+            <structural desc='Which structural do we use?'
             >1</structural>
             
-            <diagnostic>0</diagnostic>
-            
-            </currenttask>
+        </currenttask>
     </tasklist>
 </aap>

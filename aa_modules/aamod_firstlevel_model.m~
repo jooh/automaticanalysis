@@ -216,7 +216,7 @@ switch task
                         parLen = 0;
                     else
                         parametric=model.event(c).parametric;
-                        parLen = length(parametric);
+                        parLen = length;(parametric);
                     end
                     SPM.Sess(sessnuminspm).U(c) = struct(...
                         'ons',model.event(c).ons,...

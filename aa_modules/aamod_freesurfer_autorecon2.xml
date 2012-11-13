@@ -4,7 +4,7 @@
         <currenttask domain='subject' mfile_alias='aamod_freesurfer_autorecon' desc='Segment the brain using the freesurfer pipeline' modality='MRI'>
             
             <qsub>
-                <timeBase>0.5</timeBase>
+                <timeBase>3</timeBase>
                 <memoryBase>5</memoryBase>
             </qsub>
             
@@ -19,7 +19,7 @@
             </outputstreams>
             
             <extraoptions desc='This specifies the extra options/modules for recon-all'
-            >-autorecon1</extraoptions>
+            >-autorecon2</extraoptions>
             
             <!-- Diagnostic videos? Verbosity? -->
             <diagnostic desc='Do we display diagnostic videos?'

@@ -1,7 +1,7 @@
-function [aap, resp] = aamod_biascorrect_segment8(aap, task, subjind)
+function [aap, resp] = aamod_biascorrect_segment8(aap, task, subj)
 %AAMOD_BIASCORRECT_SEGMENT8 Bias corrects a structural image using SPM8's "new segment".
 %
-% [aap, resp] = AAMOD_BIASCORRECT_SEGMENT8(aap, task, subjind) Performs the bias
+% [aap, resp] = AAMOD_BIASCORRECT_SEGMENT8(aap, task, subj) Performs the bias
 % correction for the first structural iamge found for this subject.
 %
 % Performing a separate bias correction can be helpful for tissue class segmentation,
@@ -92,7 +92,7 @@ switch task
         
         
         % get the structural image
-        Simg = aas_getfiles_bystream(aap, subjind, 'structural');
+        Simg = aas_getfiles_bystream(aap, subj, 'structural');
         
         if isempty(aap.tasklist.currenttask.settings.structural)
             aap.tasklist.currenttask.settings.structural = 1:size(Simg,1);
@@ -157,10 +157,22 @@ switch task
             
             % get file name for *seg8.mat file
             seg8fn = strvcat(seg8fn, fullfile(pth, sprintf('%s_seg8.mat', nm)));
+            
+            %% Diagnostic image?
+            mriname = aas_prepare_diagnostic(aap,subj);
+            
+            % Draw image pre/post bias correction
+            spm_check_registration(strvcat(Simg(d,:), ...
+                mimgfn(aap.tasklist.currenttask.settings.structural==d,:)))
+            
+            spm_orthviews('reposition', [0 0 0])
+            
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+                [mfilename '__' mriname '_' num2str(d) '.jpeg']));
         end
         
         %% describe outputs
         % the bias-corrected structural image replaces the input image in the stream
-        aap = aas_desc_outputs(aap, subjind, 'structural', mimgfn);
-        aap = aas_desc_outputs(aap, subjind, 'seg8', seg8fn);
+        aap = aas_desc_outputs(aap, subj, 'structural', mimgfn);
+        aap = aas_desc_outputs(aap, subj, 'seg8', seg8fn);
 end

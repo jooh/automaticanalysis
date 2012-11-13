@@ -10,9 +10,7 @@ function aas_freesurfer_init(aap, subj_dir, subj_id, Simg, OverwriteFiles)
 global IDs;
 IDs = 1;
 
-try
-    setenv('SUBJECTS_DIR', fileparts(subj_dir))
-    setenv('FREESURFER_DIR', aap.directory_conventions.freesurferdir)
+try    
 
     %% Catch errors
     

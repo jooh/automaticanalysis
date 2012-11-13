@@ -40,6 +40,8 @@
             
             <structural desc='Which structural to use?'
             >1</structural>
+            
+            <diagnostic>0</diagnostic>
 	
 		</currenttask>
 	</tasklist>
