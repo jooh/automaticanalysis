@@ -16,6 +16,8 @@
             <outputstreams>
             </outputstreams>
             
+            <permanencethreshold desc='Which outputs to delete (typically set to 1 or 2 after preprocessing)'>0</permanencethreshold>
+            
         </currenttask>
     </tasklist>
 </aap>

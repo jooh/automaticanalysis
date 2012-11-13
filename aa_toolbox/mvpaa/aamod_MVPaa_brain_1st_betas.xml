@@ -25,8 +25,10 @@
         
             <!--Is the MVPA performed in native space? (0 - no, 1 - yes)-->
             <native>1</native>
-            <!--What basis functions do we use? '' - none; '_T' - time; '_TD' - time & dispersion -->
-            <basisF>''</basisF>
+            <!-- Which mask do we use? -->
+            <maskNum>1</maskNum>
+            <!-- Inclusive? (0 - no, 1 - yes) -->
+            <maskInclusive>1</maskInclusive>
             <!-- Minimum number of valid voxels present in ROI (otherwise error)-->
             <minVoxels>30</minVoxels>
             <!--Similarity measure type: 'Pearson', 'Spearman', 'Euclid', 'Mahalanobis' -->
@@ -43,10 +45,12 @@
             <balanceCons>1</balanceCons>
             <!--Convert correlation data into Z scores? (0 - no; 1 - yes) -->
             <norm2z>0</norm2z>
-            <!--Triangulate the correlation data? (0 - no; 1 - yes) @@@ DOCUMENT OTHER OPTIONS!
+            <!--Triangulate the correlation data? For options, see mvpaa_statistics
         This specifies which block-subblock comparisons are considered, and
         whether they are averaged or not. More detail in... mvpaa_statisticsM-->
-            <triangulation>1</triangulation>
+            <triangulation>withinSessions</triangulation>
+            <!--Pretend that there is only one session by merging them? (0 - no [DEFAULT], 1 - yes)-->
+            <mergeSessions>0</mergeSessions>
             
             <!-- ROIradius: the radius of the ROI (0 = single voxel, 1 = ~7 voxels, etc.), 4 by [DEFAULT] -->
             <ROIradius>4</ROIradius>

@@ -11,53 +11,6 @@ function [aap,resp]=aamod_realignunwarpDCCN(aap,task,subj)
 resp='';
 
 switch task
-    case 'domain'
-        resp='subject';
-    case 'description'
-        resp='SPM5 realign and unwarp';
-    case 'summary'
-        resp='Done SPM5 realign and unwarp\n';
-    case 'report'
-        mvmean=[];
-        mvmax=[];
-        mvstd=[];
-        mvall=[];
-        nsess=length(aap.acq_details.sessions);
-        
-        qq=[];
-        
-        % @@@ NEED TO CHANGE THIS... for aa4... @@@
-        for sess=1:nsess
-            im1fn=aas_getimages(aap,subj,sess,aap.tasklist.currenttask.epiprefix,aap.acq_details.numdummies,1+aap.acq_details.numdummies);
-            im1V=spm_vol(im1fn);
-            qq(sess,:)     = spm_imatrix(im1V.mat);
-            rpfn=spm_select('List',aas_getsesspath(aap,subj,sess),'^rp.*txt');
-            mv=spm_load(fullfile(aas_getsesspath(aap,subj,sess),rpfn));
-            mv=mv+repmat(qq(sess,1:6)-qq(1,1:6),[size(mv,1) 1]);
-            mv(:,4:6)=mv(:,4:6)*180/pi; % convert to degrees!
-            mvmean(sess,:)=mean(mv);
-            mvmax(sess,:)=max(mv);
-            mvstd(sess,:)=std(mv);
-            mvall=[mvall;mv];
-        end        
-        
-        aap.report.html=strcat(aap.report.html,'<h3>Movement maximums</h3>');
-        aap.report.html=strcat(aap.report.html,'<table cellspacing="10">');
-        aap.report.html=strcat(aap.report.html,sprintf('<tr><td align="right">Sess</td><td align="right">x</td><td align="right">y</td><td align="right">z</td><td align="right">rotx</td><td align="right">roty</td><td align="right">rotz</td></tr>',sess));
-        for sess=1:nsess
-            aap.report.html=strcat(aap.report.html,sprintf('<tr><td align="right">%d</td>',sess));
-            aap.report.html=strcat(aap.report.html,sprintf('<td align="right">%8.3f</td>',mvmax(sess,:)));
-            aap.report.html=strcat(aap.report.html,sprintf('</tr>',sess));
-        end
-        aap.report.html=strcat(aap.report.html,'</table>');
-        
-        varcomp=mean((std(mvall).^2)./(mean(mvstd.^2)));
-        aap.report.html=strcat(aap.report.html,'<h3>All variance vs. within session variance</h3><table><tr>');
-        aap.report.html=strcat(aap.report.html,sprintf('<td>%8.3f</td>',varcomp));
-        aap.report.html=strcat(aap.report.html,'</tr></table>');
-        
-        aap=aas_report_addimage(aap,fullfile(aas_getsubjpath(aap,subj),'diagnostic_aamod_realign.jpg'));
-        
     case 'doit'
         
         %% Set up a jobs file with some advisable defaults for realign/unwarp!
@@ -81,6 +34,11 @@ switch task
             fprintf('\nGetting EPI images for session %s', aap.acq_details.sessions(sess).name)
             % Get EPIs
             EPIimg = aas_getimages_bystream(aap,subj,sess,'epi');
+            if sess == aap.acq_details.selected_sessions(1)
+                % Get first image for the diagnostics...
+                diagnosticN = EPIimg(1,:);
+            end
+            
             jobs{1}.spatial{1}.realignunwarp.data(sess).scans = cellstr(EPIimg);
             
             % Try get VDMs
@@ -98,11 +56,11 @@ switch task
                 end
                 jobs{1}.spatial{1}.realignunwarp.data(sess).pmscan = ...
                     cellstr(fullfile(aas_getsubjpath(aap,subj), aap.directory_conventions.fieldmapsdirname, EPIimg));
-                fprintf('\nFound a VDM fieldmap')
+                fprintf('\nFound a VDM fieldmap\n')
             catch
                 jobs{1}.spatial{1}.realignunwarp.data(sess).pmscan = ...
                     [];
-                fprintf('\nWARNING: Failed to find a VDM fieldmap')
+                fprintf('\nWARNING: Failed to find a VDM fieldmap\n')
             end
         end
         
@@ -110,37 +68,52 @@ switch task
         
         spm_jobman('run',jobs);
         
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        figure(1);
-        [junk, mriname] = fileparts(aas_getsubjpath(aap,subj));
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-            [mfilename '__' mriname '.jpeg']));
-        
         %% Describe outputs
+        movPars = {};
         for sess = aap.acq_details.selected_sessions
-            rimgs=[];
+            uwEPIimg = [];
             for k=1:length(jobs{1}.spatial{1}.realignunwarp.data(sess).scans);
-                [pth nme ext]=fileparts(jobs{1}.spatial{1}.realignunwarp.data(sess).scans{k});
-                rimgs=strvcat(rimgs,fullfile(pth,['u' nme ext]));
+                [pth nme ext] = fileparts(jobs{1}.spatial{1}.realignunwarp.data(sess).scans{k});
+                uwEPIimg = strvcat(uwEPIimg,fullfile(pth,['u' nme ext]));
             end
-            aap = aas_desc_outputs(aap,subj,sess,'epi',rimgs);
+            aap = aas_desc_outputs(aap,subj,sess,'epi',uwEPIimg);
             
             % Get the realignment parameters...
             fn=dir(fullfile(pth,'rp_*.txt'));
-            outpars = fullfile(pth,fn(1).name);                                   
+            outpars = fullfile(pth,fn(1).name); 
+            % Add it to the movement pars...
+            movPars = [movPars outpars];
             fn=dir(fullfile(pth,'*uw.mat'));
             outpars = strvcat(outpars, fullfile(pth,fn(1).name));
             aap = aas_desc_outputs(aap,subj,sess,'realignment_parameter',outpars);
             
-            if sess==1
+            if sess == aap.acq_details.selected_sessions(1)
                 % mean only for first session
                 fn=dir(fullfile(pth,'mean*.nii'));
-                aap = aas_desc_outputs(aap,subj,1,'meanepi',fullfile(pth,fn(1).name));
+                aap = aas_desc_outputs(aap,subj,'meanepi',fullfile(pth,fn(1).name));
+                
+                % Get first image for the diagnostics...
+                diagnosticU = uwEPIimg(1,:);
             end
         end
+        
+        %% Save graphical output to common diagnostics directory
+        mriname = aas_prepare_diagnostic(aap,subj);
+
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
+        
+        aas_realign_graph(movPars)
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '_MP.jpeg']));
+        
+        % Let's compare the Native and Unwarped EPI images...
+        spm_check_registration(char({diagnosticN; ...
+            diagnosticU}))
+        
+        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '_EPI.jpeg']));
         
     case 'checkrequirements'
         

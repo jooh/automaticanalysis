@@ -1,11 +1,11 @@
 % MVPAA Load Data
 % Automatically attempts to load data, based on the model you have...
 
-function [aap data] = mvpaa_loadData(aap, p)
+function [aap data] = mvpaa_loadData(aap, subj)
 
 fprintf('Loading beta images \r')
 
-load(aas_getfiles_bystream(aap,p,'firstlevel_spm'));
+load(aas_getfiles_bystream(aap,subj,'firstlevel_spm'));
 
 % Factor number in each session (must NOT be different)
 factorNum = cell(size(SPM.Sess));
@@ -48,21 +48,24 @@ for s = 1:length(SPM.Sess)
         % If each block contains a different number of conditions...
         if sum(blockNum{s} == blocks(b)) ~= ...
                 sum(blockNum{s} == blocks(b-1))
-            error('You have a different number of conditions per block')
+            aas_log(aap,true,'You have a different number of conditions per block')
         end
     end
     blockNum{s} = length(blocks);
     if s > 1
         if blockNum{s} ~= blockNum{s-1}
-            error('Unequal number of blocks across the two sessions')
+            if aap.tasklist.currenttask.settings.mergeSessions
+                aas_log(aap,false,'Unequal number of blocks across the two sessions')
+            else
+                aas_log(aap,true,'Unequal number of blocks across the two sessions')
+            end
         end
     end
     
     %% DEAL WITH NUISANCE REGRESSORS
-    nuisanceNum{s} = sum(nuisanceNum{s});
     if s > 1
-        if nuisanceNum{s} ~= nuisanceNum{s-1}
-            error('Unequal number of nuisance regressors across the two sessions')
+        if sum(nuisanceNum{s}) ~= sum(nuisanceNum{s-1});
+            aas_log(aap,true,'Unequal number of nuisance regressors across the two sessions')
         end
     end
     
@@ -70,30 +73,58 @@ for s = 1:length(SPM.Sess)
     % Get rid of nuisance conditions...
     factorNum{s}(isnan(factorNum{s})) = [];
     
-    if all(factorNum{s} == factorNum{s}(1))
-        % If number of conditions is constant...
+    if isempty(factorNum{s})
+        if  aap.tasklist.currenttask.settings.mergeSessions
+            aas_log(aap, false, sprintf('You have no trials in session %d...', s))
+            factorNum{s} = 0;
+        else
+            aas_log(aap,true,'You have no trials in session %d...', s)
+        end
     else
-        error('There is something wrong with your regressors...')
-    end
-    % Now factorNum becomes the number of real different cells
-    % Not anymore the number of factors...
-    factorNum{s} = sum(factorNum{s}>0)/blockNum{s};
-    if s > 1
-        if factorNum{s} ~= factorNum{s-1}
-            error('Unequal number of factors across the two sessions')
+        % If we have conditions in this session, check constancy of blocks
+        if all(factorNum{s} ~= factorNum{s}(1))
+            % If number of conditions is not constant...
+            aas_log(aap,true,'There is something wrong with your regressors...')
+        end
+        
+        % Now factorNum becomes the number of real different cells
+        % Not anymore the number of factors...
+        factorNum{s} = sum(factorNum{s}>0)/blockNum{s};
+        
+        if s > 1
+            % Also allows to ignore sessions with no RSA data...
+            if factorNum{s} ~= factorNum{s-1} && (factorNum{s-1}~=0 && factorNum{s}~=0)
+                aas_log(aap,true,'Unequal number of factors across the two sessions')
+            end
         end
     end
 end
 
 %% SAVE SOME PARAMETERS TO AAP
-aap.tasklist.currenttask.settings.conditions = factorNum{1};
-aap.tasklist.currenttask.settings.blocks = blockNum{1};
-aap.tasklist.currenttask.settings.nuisance = nuisanceNum{1};
-aap.tasklist.currenttask.settings.sessions = length(SPM.Sess);
+if aap.tasklist.currenttask.settings.mergeSessions
+    factors = [factorNum{:}];
+    factors(factors == 0) = [];
+    aap.tasklist.currenttask.settings.conditions = factors(1);
+else
+    aap.tasklist.currenttask.settings.conditions = factorNum{1};
+end
+if aap.tasklist.currenttask.settings.mergeSessions
+    aap.tasklist.currenttask.settings.blocks = sum([blockNum{:}]);
+else
+    aap.tasklist.currenttask.settings.blocks = blockNum{1};
+end
+if aap.tasklist.currenttask.settings.mergeSessions
+    aap.tasklist.currenttask.settings.sessions = 1;
+else
+    aap.tasklist.currenttask.settings.sessions = length(SPM.Sess);
+end
 % Get rid of repeated condition names...
-tempCond = conditions{1}( ...
-    (1:aap.tasklist.currenttask.settings.conditions*aap.tasklist.currenttask.settings.blocks) + ...
-    aap.tasklist.currenttask.settings.nuisance);
+for s = 1:length(conditions)
+    tempCond = conditions{s}(~nuisanceNum{s});
+    if ~isempty(tempCond)
+        break
+    end
+end
 for t1 = length(tempCond):-1:1
     for t2 = t1-1:-1:1
         if strcmp(tempCond{t1}, tempCond{t2})
@@ -105,38 +136,20 @@ end
 aap.tasklist.currenttask.settings.conditionNames = tempCond;
 
 %% PREPARATION BEFORE LOADING DATA
-fprintf('\nThis experiment contains \n\t%d sessions\n\t%d blocks\n\t%d conditions', ...
-    aap.tasklist.currenttask.settings.sessions, ...
-    aap.tasklist.currenttask.settings.blocks, ...
-    aap.tasklist.currenttask.settings.conditions)
 
 % Define data structure
 data = cell(aap.tasklist.currenttask.settings.conditions, ...
     aap.tasklist.currenttask.settings.blocks, ...
     aap.tasklist.currenttask.settings.sessions);
 
-% Define multiplier depending on the basis function set used...
-if strcmp(aap.tasklist.currenttask.settings.basisF, '_TD')
-    mult = 3;
-elseif strcmp(aap.tasklist.currenttask.settings.basisF, '_T')
-    mult = 2;
-else
-    mult = 1;
-end
+fprintf('\nThis experiment contains \n\t%d conditions\n\t%d blocks\n\t%d sessions', ...
+    size(data,1), size(data,2), size(data,3))
+fprintf('\n(%d Nuisance variables)\n\n', sum(nuisanceNum{1}))
 
 % Do we grey/white/CSF matter mask the data?
 % Get segmentation masks we wish to use, if any
 
-SEGimg = [];
-for Sind=1:length(aap.tasklist.currenttask.inputstreams.stream)
-    if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'mask'))
-        if isempty(SEGimg)
-            SEGimg = aas_getfiles_bystream(aap,p,aap.tasklist.currenttask.inputstreams.stream{Sind});
-        else
-            aas_log(aap, true, 'Several masking streams have been found, not sure what we should do here!')
-        end
-    end
-end
+SEGimg = aas_findstream(aap, 'mask', subj);
 
 if ~isempty(SEGimg)
     if aap.tasklist.currenttask.settings.native
@@ -167,42 +180,26 @@ end
 
 %% NOW LET US ACTUALLY LOAD DATA (& MASK it with segmentation mask...)
 
-nuis = 0;
-
-Bimg = [];
-for Sind=1:length(aap.tasklist.currenttask.inputstreams.stream)
-    if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'spmts')) || ...
-            ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'betas'))
-        try
-            Bimg = aas_getfiles_bystream(aap,p,aap.tasklist.currenttask.inputstreams.stream{Sind});
-            break
-        catch
-        end
-    end
-end
-
-if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'betas'))
+Bimg = aas_findstream(aap,'spmts', subj);
+dataType = 'spmts';
+if isempty(Bimg)
+    Bimg = aas_findstream(aap,'betas', subj);
     dataType = 'betas';
-elseif ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'spmts'))
-    dataType = 'spmts';
 end
 
-if strcmp(dataType, 'betas')
-    prevSess = 0;
-    for s = 1:aap.tasklist.currenttask.settings.sessions
-        
-        % Works for movement parameters and spikes!
-        if s > 1
-            prevSess = prevSess + size(SPM.Sess(s - 1).C.C, 2) + length(SPM.Sess(s - 1).U);
-        end
-        
-        % This assumes no order...
-        %   sessions
-        %       conditions
-        %           blocks
+prevSess = 0;
+mergeInd = 0; % Used only if we want to merge sessions...
+for s = 1:length(SPM.Sess)
+    % Works for movement parameters and spikes! Relevant only for betas...
+    if s > 1
+        prevSess = prevSess + size(SPM.Sess(s - 1).C.C, 2) + length(SPM.Sess(s - 1).U);
+    end
+    
+    for b=1:blockNum{s}
+        mergeInd = mergeInd + 1;
         for c=1:aap.tasklist.currenttask.settings.conditions
-            for b=1:aap.tasklist.currenttask.settings.blocks
-                
+            % Do we want betas or T-values?
+            if strcmp(dataType, 'betas')
                 condStr =  [aap.tasklist.currenttask.settings.conditionNames{c} '_sub' num2str(b)];
                 
                 imageNum = find(strcmp([SPM.Sess(s).U(:).name], ...
@@ -214,41 +211,26 @@ if strcmp(dataType, 'betas')
                     error(['Something went wrong with the condition labelling' ...
                         '\This is probably not your fault! Contact the developer!'])
                 end
-                
-                % Get either betas or or T values...
-                V = spm_vol(deblank(Bimg(imageNum*2,:))); % We want .img, not .hdr
-                data{c,b,s}=spm_read_vols(V);
-                
-                if ~isempty(SEGimg)
-                    data{c,b,s}(M==0) = NaN;
-                end
-            end
-        end
-    end
-elseif strcmp(dataType, 'spmts')
-    for s = 1:aap.tasklist.currenttask.settings.sessions
-        % This assumes no order...
-        %   sessions
-        %       conditions
-        %           blocks
-        for c=1:aap.tasklist.currenttask.settings.conditions
-            for b=1:aap.tasklist.currenttask.settings.blocks
-                
+            elseif strcmp(dataType, 'spmts')
                 condStr =  [aap.tasklist.currenttask.settings.conditionNames{c} '_sub' num2str(b)];
                 
                 imageNum = find(strcmp({SPM.xCon.name}, ...
                     condStr));
                 imageNum = imageNum(s);
-                
-                % Get either betas or or T values...
-                V = spm_vol(deblank(Bimg(imageNum*2,:))); % We want .img, not .hdr
-                data{c,b,s}=spm_read_vols(V);
-                
-                % Set anything that is 0 to NaN
-                data{c,b,s}(data{c,b,s}==0) = NaN;
-                if ~isempty(SEGimg)
-                    data{c,b,s}(M==0) = NaN;
-                end
+            end
+            
+            % Get either betas or or T values...
+            V = spm_vol(deblank(Bimg(imageNum*2,:))); % We want .img, not .hdr
+            Y=spm_read_vols(V);
+            % Set anything that is 0 to NaN
+            Y(Y==0) = NaN;
+            if ~isempty(SEGimg)
+                Y(M==0) = NaN;
+            end
+            if aap.tasklist.currenttask.settings.mergeSessions
+                data{c,mergeInd,1} = Y;
+            else
+                data{c,b,s} = Y;
             end
         end
     end

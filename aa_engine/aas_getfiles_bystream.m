@@ -12,6 +12,12 @@ function [allfiles md5]=aas_getfiles_bystream(aap,varargin)
 
 [inpstreamdesc localroot]=aas_getinputstreamfilename(aap,varargin{:});
 
+% Backward compatibility (esp in the case of the 'meanepi' stream...)
+if (~exist(inpstreamdesc,'file')) && length(varargin) == 2
+    varargin = {varargin{1} 1 varargin{2:end}}; % add session number...
+    [inpstreamdesc localroot]=aas_getinputstreamfilename(aap,varargin{:});
+end
+
 if (~exist(inpstreamdesc,'file'))
     aas_log(aap,true,sprintf('Attempting to load stream %s from file %s, but not found',streamname,inpstreamdesc));
 end;

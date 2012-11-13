@@ -3,7 +3,7 @@
 % i=subject num
 % Rhodri Cusack MRC CBU 2004-6
 
-function [aap,resp]=aamod_realign(aap,task,i)
+function [aap,resp]=aamod_fieldmap_undistort(aap,task,i)
 
 resp='';
 
@@ -55,7 +55,7 @@ switch task
         end;
         % Save graphical output
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r75',fullfile(aas_getsubjpath(aap,i),'diagnostic_aamod_fieldmapundistort'));
+        print('-djpeg','-r150',fullfile(aas_getsubjpath(aap,i),'diagnostic_aamod_fieldmapundistort'));
 
     case 'checkrequirements'
 

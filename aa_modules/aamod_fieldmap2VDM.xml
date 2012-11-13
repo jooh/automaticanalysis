@@ -13,20 +13,29 @@
             <inputstreams>
                 <stream>epi</stream>
                 <stream>fieldmap</stream>
+                <stream>fieldmap_dicom_header</stream>
             </inputstreams>
             
             <outputstreams>
                 <stream>fieldmap</stream>
             </outputstreams>
             
-            <te1>10.0</te1>
-            <te2>12.46</te2>
-            <epifm>0</epifm>
-            <tert>23.76</tert>
-            <kdir>-1</kdir>
-            <mask>1</mask>
-            <match>1</match>
-            <writeunwarpedEPI>0</writeunwarpedEPI>
+            <te1 desc='short TE'
+            ></te1>
+            <te2 desc='long TE'
+            ></te2>
+            <epifm desc='Is this an EPI fieldmap (most FMs are not!)? (0 for GRE)'
+            >0</epifm>
+            <tert desc='totalEPI read out time: Echo spacing * PE steps [Base Resolution] * Phase Partial Fourier / Accel. factor PE'
+            ></tert>
+            <kdir desc='blip direction of EPI (+1/-1); depends on Phase Enc. Dir. (e.g. P>A: 1, A>P: -1, L>R: 1, R>L: -1)'
+            ></kdir>
+            <mask desc='Mask brain?'
+            >1</mask>
+            <match desc='Match fieldmap to EPI?'
+            >1</match>
+            <writeunwarpedEPI desc='Write unwarped EPI?'
+            >0</writeunwarpedEPI>
             
         </currenttask>
     </tasklist>

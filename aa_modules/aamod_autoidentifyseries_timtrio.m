@@ -1,7 +1,7 @@
 % AA initialisation module - Identify dicom headers from Tim Trio
 % Rhodri Cusack MRC CBU Cambridge Dec 2005
 
-function  [aap,resp]=aamod_autoidentifyseries_timtrio(aap,task,i)
+function  [aap,resp]=aamod_autoidentifyseries_timtrio(aap,task,subj)
 
 resp='';
 
@@ -36,10 +36,10 @@ switch task
     case 'doit'
         global aaworker
         dontrescan=false;
-        aisfn=fullfile(aas_getsubjpath(aap,i),'autoidentifyseries_saved.mat');
+        aisfn=fullfile(aas_getsubjpath(aap,subj),'autoidentifyseries_saved.mat');
         
         % Get a listing of all of the series for this subject
-        rawdata_subj=fullfile(aap.directory_conventions.rawdatadir,aap.acq_details.subjects(i).mriname);
+        rawdata_subj=fullfile(aap.directory_conventions.rawdatadir,aap.acq_details.subjects(subj).mriname);
         switch (aap.directory_conventions.remotefilesystem)
             case 'none'
                 % Looks for DICOMs in here and in all subdirectories
@@ -70,10 +70,15 @@ switch task
                     
                 end
                 
-                rawdata_allseries=unique(serieslist)
+                rawdata_allseries=unique(serieslist);
+                disp(rawdata_allseries)
                 
-                for j=1:length(rawdata_allseries);
-                    aas_log(aap,false,sprintf('Series %d with %d dicom files',rawdata_allseries(j),length(alldicomfiles{rawdata_allseries(j)}))); 
+                for sess=1:length(rawdata_allseries)
+                    H=aas_dicom_headers_light(alldicomfiles{rawdata_allseries(sess)}{1});
+                    aas_log(aap,false,sprintf('Series %d with %d dicom files [%s]', ...
+                        rawdata_allseries(sess), ...
+                        length(alldicomfiles{rawdata_allseries(sess)}), ...
+                        H{1}.SeriesDescription)); 
                 end
             case 's3'
                 % Use delimiter to get series names as CommonPrefixes
@@ -90,11 +95,11 @@ switch task
         tmpdir=aas_gettempfilename();
         
         % Go through each series, and examine type
-        for j=1:length(rawdata_allseries)
-            % Get the path to a single dicom file from series "j", downloading from S3 first if necessary
+        for sess=1:length(rawdata_allseries)
+            % Get the path to a single dicom file from series "sess", downloading from S3 first if necessary
             switch(aap.directory_conventions.remotefilesystem)
                 case 's3'
-                    seriespth=rawdata_allseries{j};
+                    seriespth=rawdata_allseries{sess};
                     while (seriespth(end)==filesep)
                         seriespth=seriespth(1:(end-1));
                     end
@@ -112,17 +117,14 @@ switch task
                     % scanner, or ordering of files
                     
                     if (aap.directory_conventions.rawseries_usefileorder)
-                        seriesnum=j;
+                        seriesnum=sess;
                     else
                         [aap seriesnum]=aas_getseriesnumber(aap,dicomseriesname);
                     end
                 case 'none'
-                    seriesnum=rawdata_allseries(j);
+                    seriesnum=rawdata_allseries(sess);
                     dicomfilepath=alldicomfiles{seriesnum}{1};
             end
-            
-            
-            
             
             % For this series, find type from a single DICOM file
             if (~isempty(dicomfilepath))
@@ -132,7 +134,6 @@ switch task
                 % absolute number rather than index (jc)
                 if ~any(aap.acq_details.subjects(i).ignoreseries == ...
                         rawdata_allseries(j))
-                    
                     if (aap.options.autoidentifyfieldmaps)
                         % Just identify all possible fieldmaps without
                         % error checking (comes later)
@@ -153,7 +154,6 @@ switch task
                             series_spgr=[series_spgr seriesnum];
                         end
                     end
-                    
                     
                     if (aap.options.autoidentifytmaps)
                         % Use directory name rather than protocol to
@@ -235,7 +235,7 @@ switch task
             aas_log(aap,0,comment)
         end
         
-        aap=aas_desc_outputs(aap,i,'autoidentifyseries',aisfn);
+        aap=aas_desc_outputs(aap,subj,'autoidentifyseries',aisfn);
     case 'checkrequirements'
         
     otherwise

@@ -35,20 +35,15 @@ switch task
         %% IN PROGRESS
         
         subjDir = aas_getsubjpath(aap,subj);
-        
-        %% 1: Select the relevant DMLT object and classification labels
-        
-        % DMLT object
-        DMLTobj = aap.tasklist.currenttask.settings.DMLTobj;
-        
+                
         % Classification labels
         % Name of subject...
         subjname = aap.acq_details.subjects(subj).mriname;
         % Get model data from aap
-        subjmatches=strcmp(subjname,{aap.tasklist.currenttask.settings.DMLT.subject});
+        subjmatches=strcmp(subjname,{aap.tasklist.currenttask.settings.model.subject});
         % If no exact spec found, try subject wildcard
         if (~any(subjmatches))
-            subjwild=strcmp('*',{aap.tasklist.currenttask.settings.DMLT.subject});
+            subjwild=strcmp('*',{aap.tasklist.currenttask.settings.model.subject});
             if any(subjwild)
                 subjmatches = subjwild;
             end
@@ -61,19 +56,17 @@ switch task
         if (isempty(modelnum))
             aas_log(aap,true,'Cannot find MVPaa contrasts specification. Check either user script');
         end
-        DMLTlabels = aap.tasklist.currenttask.settings.model(modelnum).DMLT;
+        
+        %% 1: Select the relevant DMLT object and classification labels
+        DMLT = aap.tasklist.currenttask.settings.model(modelnum).DMLT;        
         
         %% 1: Get the data - either beta images, contrast images or raw EPIs!
         Bimg = [];
         for Sind=1:length(aap.tasklist.currenttask.inputstreams.stream)
             if ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'cons')) || ...
                     ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'betas')) || ...
-                    ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'epi')) || ...
-                    try
-                    Bimg = aas_getfiles_bystream(aap,subj,aap.tasklist.currenttask.inputstreams.stream{Sind});
-                    break
-                    catch
-                    end
+                    ~isempty(strfind(aap.tasklist.currenttask.inputstreams.stream{Sind}, 'epi'))
+                Bimg = aas_getfiles_bystream(aap,subj,aap.tasklist.currenttask.inputstreams.stream{Sind});
             end
         end
         
@@ -117,18 +110,27 @@ switch task
             
             %% 3: TRAIN/CLASSIFY/WEIGHTS!
             
-            for c = 1:length(DMLTlabels)
-                Y = DMLTlabels(c).DMLTvector;
+            for c = 1:length(DMLT)
                 
                 % X = trials x voxels
                 % Y = trails x 1 [column vector of conditions]
+
+                Y = DMLT(c).vector;
+                
+                % The crucial line that calls the DMLTobj train method 
+                DMLT(c).object = DMLT(c).object.train(X,Y);
+                
+                keyboard
+                
+                % when DMLTobj is a crossvalidator object:
+%                accuracy    = DMLT(c).object.statistic('accuracy');
+%                pval        = DMLT(c).object.statistic('binomial');
+ 
+                % when DMLTobj is a permutation object
+                pval        = DMLT(c).object.statistic;
         
-            % @@@ MARCEL SHOULD IMPLEMENT HIS DMLT CODE HERE, USING THE
-            % "DMLTobj" VARIABLE @@@
             end
         end
-        
-        
         
         %% 7: DESCRIBE OUTPUTS!
         

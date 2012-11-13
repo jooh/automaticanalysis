@@ -11,7 +11,7 @@ switch task
         
         %% PREPARATIONS
         
-        mriname = strtok(aap.acq_details.subjects(p).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);        
         fprintf('Working with data from participant %s. \n', mriname)
         
         % Get the contrasts for this subject...
@@ -44,12 +44,14 @@ switch task
             aap.tasklist.currenttask.settings.conditions, ...
             aap.tasklist.currenttask.settings.conditions);
         
+        ROIname = {};
         % Loop the routine over all ROIs
         for r = 1:ROInum
             [Rpth Rfn Rext] = fileparts(deblank(ROIimg(r,:)));
+            ROIname = [ROIname Rfn];
             
             % Extract betas from each: ROI, voxel, condition, subblock, session
-            ROI = int8(spm_read_vols(spm_vol(fullfile(Rpth, [Rfn Rext]))));
+            ROI = uint8(spm_read_vols(spm_vol(fullfile(Rpth, [Rfn Rext]))));
             
             % Check that the ROI size is equal to the data size
             if any(size(ROI) ~= size(data{1,1,1}));
@@ -65,7 +67,7 @@ switch task
             % ROI to linear index...
             ROI = find(ROI);
             
-            Betas = mvpaa_extraction(aap, data, ROI, voxels);
+            Betas = mvpaa_extraction(aap, data, ROI);
             
             fprintf('\t ROI = %s; vox. = %d (%d)\n',Rfn, sum(~isnan(data{1,1,1}(ROI))), voxels)
             
@@ -85,10 +87,6 @@ switch task
             
             %% SOME DIAGNOSTICS...
             if aap.tasklist.currenttask.settings.diagnostic
-                if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-                    mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-                end
-                
                 try close(2); catch;end
                 figure(2)
                 set(2, 'Position', [0 0 1200 500], 'Name', Rfn)
@@ -118,11 +116,12 @@ switch task
                 axis off
                 title('...collapsed across sessions and blocks')
                 
-                print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+                print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '_' num2str(r) '.jpeg']));
             end     
             try close(2); catch;end
         end
+        aap.tasklist.currenttask.settings.ROIname = ROIname;
         
         %% DESCRIBE OUTPUTS
         EP = aap.tasklist.currenttask.settings;

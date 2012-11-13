@@ -9,8 +9,6 @@ resp='';
 switch task
     case 'doit'
         
-        warning off
-        
         %% Template image
         % [AVG] Changed to allow specification of any T1 template, does not
         % need to be in the SPM folder any more...
@@ -70,19 +68,16 @@ switch task
                 tmpM = aap.tasklist.currenttask.settings.(['metric' num2str(m)]);
                 tmpW = num2str(aap.tasklist.currenttask.settings.(['weight' num2str(m)]));
                 tmpP = aap.tasklist.currenttask.settings.(['parameters' num2str(m)]);
-                if isnumeric(tmpP)
-                    tmpP = num2str(tmpP);
-                end
                 
                 metrics = [ metrics ...
-                    '-m ' tmpM '[' sTimg ',' Simg ',' tmpW ',' tmpP '] '];
+                    '-m ' tmpM '[' sTimg ',' Simg ',' tmpW ',' tmpP ' '];
             else
                 break
             end
         end
         
         % Any extra options?...
-        if ~isempty(aap.tasklist.currenttask.settings.SyN)
+        if ~isempty(aap.tasklist.currenttask.settings.extraoptions)
             extraoptions = aap.tasklist.currenttask.settings.extraoptions;
         else
             extraoptions = '';
@@ -102,7 +97,7 @@ switch task
             ' -R ' sTimg ' '... % reference image
             fullfile(Spth, 'antsWarp.nii')]; % transform
         if exist(fullfile(Spth,'antsAffine.txt'), 'file')
-            warpANTS_command = [warpANTS_command ' antsAffine.txt']; % and affine, if this exists...
+            warpANTS_command = [warpANTS_command ' ' fullfile(Spth,'antsAffine.txt')]; % and affine, if this exists...
         end    
         
         [s w] = aas_shell(warpANTS_command);
@@ -117,12 +112,8 @@ switch task
         end
         aap=aas_desc_outputs(aap,subj,'ANTs', outANTS);
         
-        % Diagnostic image?
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        %% DIAGNOSTIC
+        mriname = aas_prepare_diagnostic(aap,subj)
         
         %% Draw native template
         spm_check_registration(strvcat( ...
@@ -134,8 +125,7 @@ switch task
         
         spm_orthviews('reposition', [0 0 0])
         
-        try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
             [mfilename '__' mriname '.jpeg']));
         
 end

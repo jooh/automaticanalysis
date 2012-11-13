@@ -23,9 +23,6 @@ switch task
     case 'doit'
         %get subject directory
         cwd=pwd;
-        % This does not work [AVG]
-        %[junk, subjname]=fileparts(subj_dir);
-        % Try this instead!
         subjname = aap.acq_details.subjects(subj).mriname;
         
         %% Movement regressors (extended!) [AVG]
@@ -68,7 +65,7 @@ switch task
         else
             % Get TR from DICOM header checking they're the same for all sessions
             for sess=aap.acq_details.selected_sessions
-                DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_header'));
+                DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_dicom_header'));
                 try
                     TR=DICOMHEADERS.DICOMHEADERS{1}.volumeTR;
                 catch
@@ -229,13 +226,13 @@ switch task
         
         %% REDO MODEL WITH MVPA bonus...
         
-        % Make temporary directory inside folder
-        Tanadir = (fullfile(anadir, 'temp'));
-        
         % Find out how large the model{sess} should be (per session)
         sessRegs = 1:size(model{aap.acq_details.selected_sessions(1)}.event,2);
         
         for n = sessRegs
+            % Make temporary directory inside folder
+            Tanadir = (fullfile(anadir, sprintf('temp_%03f', n)));
+            
             try rmdir(Tanadir); catch; end
             mkdir(Tanadir)
         
@@ -269,8 +266,8 @@ switch task
                     % Make sure we don't include the modelled regressor in
                     % the noise regressor
                     if r ~= n
-                        Tons = [Tons; model{sess}.event(r).ons];
-                        Tdur = [Tdur; model{sess}.event(r).dur];
+                        Tons = [Tons; model{sess}.event(r).ons(:)];
+                        Tdur = [Tdur; model{sess}.event(r).dur(:)];
                     end
                 end
                 
@@ -332,6 +329,12 @@ switch task
             rSPMdes.xX.iG=cols_nuisance;
             rSPMdes.xX.iC=cols_interest;
             
+            % Turn off masking if requested
+            if ~aap.tasklist.currenttask.settings.firstlevelmasking
+                SPMdes.xM.I=0;
+                SPMdes.xM.TH=-inf(size(SPMdes.xM.TH));
+            end
+            
             spm_unlink(fullfile('.', 'mask.img')); % avoid overwrite dialog
             rSPMest = spm_spm(rSPMdes);
             
@@ -370,7 +373,11 @@ switch task
         for betaind=1:length(allbetas);
             betafns=strvcat(betafns,fullfile(anadir,allbetas(betaind).name));
         end
-        otherfiles={'mask.hdr','mask.img','ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        if ~aap.tasklist.currenttask.settings.firstlevelmasking
+            otherfiles={'ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        else
+            otherfiles={'mask.hdr','mask.img','ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        end
         for otherind=1:length(otherfiles)
             betafns=strvcat(betafns,fullfile(anadir,otherfiles{otherind}));
         end

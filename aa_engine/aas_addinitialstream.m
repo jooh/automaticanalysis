@@ -25,10 +25,7 @@ switch (length(varargin)-1)
         domain='session'
 end;
 
-<<<<<<< HEAD
-=======
 
->>>>>>> master
 if strcmp(domain, 'subject') || strcmp(domain, 'session')
     if ischar(varargin{1})
         subjnum=find(strcmp(varargin{1},{aap.acq_details.subjects.mriname}));
@@ -69,7 +66,7 @@ if (~moduleexists)
     aap=aas_addtask(aap,'aamod_importfilesasstream',varargin(1:(end-1)));
     
     aap.aap_beforeuserchanges.tasksettings.aamod_importfilesasstream = aap.tasksettings.aamod_importfilesasstream;
-    
+
     % Now we need to tailor with this
     if length(aap.tasklist.main.module)>1
         % First, lets move it to the beginning
@@ -77,16 +74,6 @@ if (~moduleexists)
         % and do same to "before user changes" to prevent error trapping
         aap.aap_beforeuserchanges.tasklist.main.module=[aap.aap_beforeuserchanges.tasklist.main.module(end) aap.aap_beforeuserchanges.tasklist.main.module(1:(end-1))];
     end;
-    
-    if strcmp(domain, 'session')
-<<<<<<< HEAD
-       aap.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = sessnum;
-       aap.aap_beforeuserchanges.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = sessnum;
-=======
-        aap.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = sessnum;
-        aap.aap_beforeuserchanges.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = sessnum;
->>>>>>> master
-    end
     
     % It's a little involved changing the engine's details by hand. For each
     % change, also make change to "aap_beforeuserchanges" to prevent error
@@ -104,6 +91,21 @@ if (~moduleexists)
 else
     modposinsettings=aap.tasklist.main.module(modposintasklist).index;
 end;
+
+% [AVG!]
+if strcmp(domain, 'session') && varargin{1} == 1
+    if isempty(aap.tasklist.main.module(1).extraparameters)
+        aap.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = ...
+            sessnum;
+        aap.aap_beforeuserchanges.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = ...
+            sessnum;
+    else
+        aap.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = ...
+            [aap.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions sessnum];
+        aap.aap_beforeuserchanges.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = ...
+            [aap.aap_beforeuserchanges.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions sessnum];
+    end
+end
 
 
 % ADD A MATCH ENTRY (SPECIFIC FOR THIS SUBJECT & SESSION IF NECESSARY)

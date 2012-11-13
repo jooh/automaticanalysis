@@ -10,47 +10,17 @@ function [aap,resp]=aamod_tSNR_EPI(aap,task,subj,sess)
 resp='';
 
 switch task
-    case 'domain'
-        resp='subject';  % this module needs to be run once per subject
-        
-    case 'description'
-        resp='SPM5 align';
-        
-    case 'summary'
-        sesspath=aas_getsesspath(aap,subj,sess);
-        resp=sprintf('Estimate tSNR of EPI series of %s\n',sesspath);
-        
-    case 'report'
-        
-    case 'doit'     
+    case 'doit'
         
         EPIimg = aas_getfiles_bystream(aap,subj,sess,'epi');
-        ROIimg = aas_getfiles_bystream(aap,subj,'rois');
-                
-        %% retrieve TR from DICOM header & set up the HiPass filter
-        % if TR is manually specified (not recommended as source of error)
-        if (isfield(aap.tasklist.currenttask.settings,'TR'))
-            K.RT = aap.tasklist.currenttask.settings.TR;
+        if any(strcmp('rois',aap.tasklist.currenttask.inputstreams.stream))
+            ROIimg = aas_getfiles_bystream(aap,subj,'rois');
         else
-            % Get TR from DICOM header
-            DICOMHEADERS = load(aas_getfiles_bystream(aap,subj,sess,'epi_header'));
-            K.RT = DICOMHEADERS.DICOMHEADERS{1}.volumeTR;
+           ROIimg = ''; 
         end
-        % High pass filter or detrend data
-        % Let's first set up the parameters...
-        K.row = 1:size(EPIimg,1);
-        K.HParam = aap.tasklist.currenttask.settings.HParam; % cut-off period in seconds
-        % If total length > filter cut-off
         
-        if K.RT * length(K.row) > K.HParam
-            fprintf('\nWill do high pass filtering of time series with a %d second cut-off', K.HParam)
-        else
-            fprintf('\nWill do linear detrending across time series')
-        end
         %% Get started with the processing
         % ROIvol{r}based measures
-        EPIsnROI= cell(size(ROIimg,1),1);
-        EPIsnHist = cell(size(ROIimg,1),1);
         mROI = cell(size(ROIimg,1),1);
         sROI = cell(size(ROIimg,1),1);
         SNmROI= cell(size(ROIimg,1),1);
@@ -66,6 +36,8 @@ switch task
         
         fprintf('\n\tLoading ROIs')
         for r = 1:size(ROIimg,1)
+            [junk, ROIname{r}] = fileparts(ROIimg(r,:));
+            
             % Now load each of the ROIs we wish to examine (usually using the grey matter)
             rV = spm_vol(ROIimg(r,:));
             ROIvol{r} = spm_read_vols(rV);
@@ -83,7 +55,7 @@ switch task
         fprintf('\n\tProcessing data (%d scans)', size(EPIimg,1))
         
         taskComplete = 0;
-        chunkDim = 1;
+        chunkDim = aap.tasklist.currenttask.settings.chunks;
         
         while taskComplete == 0
             fprintf('\nTrying with %d chunks', chunkDim)
@@ -128,36 +100,6 @@ switch task
                                 end
                             end
                             
-                            if K.RT * length(K.row) > K.HParam
-                                % Create the frequencies to be removed and apply them...
-                                % Important: first dimension must be time dimension!
-                                
-                                EPIdata = spm_filter(K, EPIdata);
-                                % And the ROI data...
-                                if x == 1 && y == 1 && z == 1
-                                    for r = 1:size(ROIimg,1)
-                                        mROI{r}(:,1) = spm_filter(K, mROI{r});
-                                    end
-                                end
-                            else
-                                % Use linear detrending instead (might be slower due to loops)
-                                for a = 1:length(Xind)
-                                    for b = 1:length(Yind)
-                                        vRow = squeeze(EPIdata(:,a,b,:));
-                                        mRow = repmat(mean(vRow,1), [size(EPIimg,1) 1]);
-                                        vRow = detrend(vRow);
-                                        % Add mean back after detrending!
-                                        EPIdata(:,a,b,:) = vRow + mRow;
-                                    end
-                                end
-                                % And the ROI data...
-                                if x == 1 && y == 1 && z == 1
-                                    for r = 1:size(ROIimg,1)
-                                        mROI{r}(:,1) = detrend(mROI{r}) + mean(mROI{r});
-                                    end
-                                end
-                            end
-                            
                             % Calcultate signal as mean of the data across volumes
                             EPIsignal(Xind,Yind,Zind) = squeeze(mean(EPIdata, 1));
                             % Calculate noise as standard deviation across volumes
@@ -167,10 +109,10 @@ switch task
                 end
                 % If we get here, then we completed the task...
                 taskComplete = 1;
-            catch tSNR_error
+            catch aa_error
                 %disp(tSNR_error)
                 
-                if chunkDim > 3
+                if chunkDim > 4
                     error('Error is probably not due to MEMORY')
                 end
                 
@@ -180,178 +122,99 @@ switch task
         
         fprintf('\n\tCalculating & saving the tSNR image')
         % Calculate SNR as ratio of the two...
-        EPIsnr = EPIsignal ./ EPInoise;
+        EPIsnr = zeros(size(EPIsignal));
+        EPIsnr(EPIsignal ~= 0) = EPIsignal(EPIsignal ~= 0) ./ EPInoise(EPIsignal ~= 0);
         EPIsnr(isnan(EPIsnr)|isinf(EPIsnr)) = 0;
-        
-        % Avoids extreeme outliers!
-        EPImaxSNR = squeeze(max(EPIsnr(EPIsnr<1000)));
         
         % Save the SNR image!
         sV = V;
-        sV.fname = fullfile(aas_getsubjpath(aap,subj), ...
+        sV.fname = fullfile(aas_getsesspath(aap,subj,sess), ...
             ['tSNR_' aap.acq_details.sessions(sess).name '.nii']);
         spm_write_vol(sV, EPIsnr);
         
-        fprintf('\n\tFinalising ROI data')
-        
-        for r = 1:size(ROIimg,1)
-            % Now get the voxels specific to each ROI
-            EPIsnROI{r} = EPIsnr(ROIvol{r}>0);
-            EPIsnROI{r} = EPIsnROI{r}(EPIsnROI{r}>0); % We don't want to include zero values...
-            % Also get a whole ROI signal and noise estimate
-            SNmROI{r} = mean(mROI{r}) ./ std(mROI{r});
-        end
-        
-        %% DIAGNOSTIC IMAGE
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-        for r = 1:size(ROIimg,1)
-            [junk, ROIname{r}] = fileparts(ROIimg(r,:));
-            
-            %% Diagnostic VIDEO of masks
-            if aap.tasklist.currenttask.settings.diagnostic
-                
-                movieFilename = fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname '_' ROIname{r} '.avi']);
-                % Create movie file by defining aviObject
-                try delete(movieFilename); catch; end
-                aviObject = avifile(movieFilename,'compression','none');                
-                windowSize = [0 0 800 800];
-                
-                % Plot the ROIvol{r}overlaid onto mean data
-                try close(2); catch; end
-                figure(2)
-                set(2, 'Position', windowSize)
-                
-                for x = 1:size(ROIvol{r},1)
-                    h = subplot(1,1,1);
-                    % Edge of the ROI
-                    sOutline = rot90(edge(squeeze(ROIvol{r}(x,:,:)), 'canny'));
-                    
-                    sImage = rot90(squeeze(EPIsnr(x,:,:)));
-                    sImage(sOutline) = EPImaxSNR * 2;
-                    
-                    imagesc(sImage);
-                    caxis([0 EPImaxSNR])
-                    colorbar
-                    axis equal off
-                    title(sprintf('SNR of our scan, overlaid with ROI: %s',ROIname{r}))
-                    zoomSubplot(h, 1.2)
-                    
-                    pause(0.01)
-                    % Capture frame and store in aviObject
-                    aviObject = addframe(aviObject,getframe(2,windowSize));
-                end
-                
-                aviObject = close(aviObject);
+        if ~isempty(ROIimg)
+            fprintf('\n\tFinalising ROI data')
+            for r = 1:size(ROIimg,1)
+                % Get a whole ROI signal and noise estimate
+                SNmROI{r} = mean(mROI{r}) ./ std(mROI{r});
             end
-        end
-        
-        %% tSNR results figure!
-        fprintf('\nDisplaying the results of the tSNR analysis')
-        colorsB = {'r' 'g' 'b' 'c' 'm' 'y' 'w'};
-        
-        % We need to make a string for eval, that will print the legend...
-        legStr = 'legend(';
-        for r = 1:size(ROIimg,1)
-            legStr = [legStr ...
-                'sprintf(''%s; mn:%.2f; SD:%.2f; med:%.0f; ROI:%.2f (%.0fv)'', ' ...
-                'ROIname{' num2str(r) '}, '  ...
-                'mean(EPIsnROI{' num2str(r) '}), ' ...
-                'std(EPIsnROI{' num2str(r) '}), ' ...
-                'median(EPIsnROI{' num2str(r) '}), ' ...
-                'SNmROI{' num2str(r) '}, ' ...
-                'sum(EPIsnROI{' num2str(r) '}(:))),'];
-        end
-        legStr = [legStr(1:end-1) ');'];
-        
-        try close(2); catch; end
-        
-        figure(2)
-        set(2, 'Position', [0 0 1200 700])
-        maxI = 0;
-        windI = 0;
-        maxV = 0;
-        hold on
-        
-        for r = 1:size(ROIimg,1)
-            % What range do the SNR values take?
-            maxI = max(max(EPIsnROI{r}), maxI);
-            % What window do we wish to present?
-            windI = max(median(EPIsnROI{r}) + std(EPIsnROI{r}) * 3, windI);
-        end
-        vals = 0:windI/100:ceil(maxI);
-        for r = 1:size(ROIimg,1)
-            % Now make a histogram and "normalise" it
-            EPIsnHist{r} = hist(EPIsnROI{r}, vals);
-            EPIsnHist{r} = EPIsnHist{r}./sum(EPIsnHist{r});
-            % And decide what is the greatest prop value
-            maxV = max(max(EPIsnHist{r}), maxV);
             
-            % Make bars semi-transparent for overlaying
-            B = bar(vals, EPIsnHist{r}, 1, colorsB{r});
-            ch = get(B,'child');
-            set(ch, 'faceA', 0.3, 'edgeA', 0.2);
-        end
-        vals = 0:windI/100:ceil(windI);
-        % Set the axis to a good value!
-        axis([vals(1), vals(end), 0, maxV*1.05])
-        xlabel('SNR')
-        ylabel('Proportion of voxels')
-        set(gca,'XTick', 0:ceil(maxI./50):maxI)
-        title(sprintf('\nSNR for session %s, using %.0f scans and TR %.3f', ...
-            regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
-            size(EPIimg,1), ...
-            K.RT))
-        eval(legStr);
-        
-        set(gcf,'PaperPositionMode','auto')
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-            [mfilename '__' mriname '_tSNR.jpeg']));
-        
-        %% Time-course results figure!
-        
-        fprintf('\nDisplaying the results of the timecourse analysis')
-        
-        try close(2); catch; end
-        
-        figure(2)
-        set(2, 'Position', [0 0 1200 700])
-        
-        for r = 1:size(ROIimg,1)
-            subplot(size(ROIimg,1),1,r)
-            hold on
+            %% DIAGNOSTIC IMAGE
+            mriname = aas_prepare_diagnostic(aap,subj);
             
-            % We need to make a string for eval, that will print the legend...
-            legStr = ['legend(sprintf(''%s (%.0fv)'', ' ...
-                'ROIname{' num2str(r) '}, ' ...
-                'sum(EPIsnROI{' num2str(r) '}(:))));'];
-                        
-            % Plot main results (errorbars displayed differently now...)
-            plot(mROI{r}, ['.' colorsB{r}])
-            plot(mROI{r} - sROI{r}, '--k')
-            plot(mROI{r} + sROI{r}, '--k')
+            %% tSNR results figure!
+            fprintf('\nDisplaying the results of the tSNR analysis')
             
+            legendExtra = cell(1,length(ROIname));
+            for r = 1:length(ROIname)
+                legendExtra{r} = sprintf(' ROI=%.2f', SNmROI{r});
+            end
+            
+            roi2hist(sV.fname, ROIimg, [], legendExtra)
+                                    
+            title(sprintf('\nSNR for session %s, using %.0f scans', ...
+                regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
+                size(EPIimg,1)))
+            
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+                [mfilename '__' mriname '_tSNR.jpeg']));
+            
+            %% Time-course results figure!            
+            fprintf('\nDisplaying the results of the timecourse analysis')
+            colorsB = aas_colours;
+            
+            try close(2); catch; end
+            figure(2)
+            set(2, 'Position', [0 0 1200 700])
+            
+            legStr = 'legend(';
+            
+            for r = 1:size(ROIimg,1)
+                %subplot(size(ROIimg,1),1,r)
+                hold on
+                
+                % We need to make a string for eval, that will print the legend...
+                legStr = [legStr 'sprintf(''%s (%.0fv)'', ' ...
+                    'ROIname{' num2str(r) '}, ' ...
+                    'sum(ROIvol{' num2str(r) '}(:))),'];
+                
+                % Plot main results (errorbars displayed differently now...)
+                plot(mROI{r}, '.', 'Color',  colorsB{r})
+            end
+            legStr = [legStr(1:end-1) ');'];
+            eval(legStr);
+            
+            for r = 1:size(ROIimg,1)
+                plot(mROI{r} - sROI{r}, '--k')
+                plot(mROI{r} + sROI{r}, '--k')
+            end
+            
+            xlim([0 size(EPIimg,1)])
+            %ylim([mean(mROI{r} - 2*mean(sROI{r})) mean(mROI{r} + 2*mean(sROI{r}))])
             xlabel('Scan')
             ylabel('Mean signal')
             set(gca,'XTick', 0:ceil(size(EPIimg,1)./25):size(EPIimg,1))
-            xlim([0 size(EPIimg,1)])
-            ylim([mean(mROI{r} - 2*mean(sROI{r})) mean(mROI{r} + 2*mean(sROI{r}))])
-            title(sprintf('\nTimecourse for session %s, using %.0f scans and TR %.3f', ...
+            title(sprintf('\nTimecourse for session %s, using %.0f scans', ...
                 regexprep(aap.acq_details.sessions(sess).name, '[^a-zA-Z0-9]', ''), ...
-                size(EPIimg,1), ...
-                K.RT))
-            eval(legStr);
+                size(EPIimg,1)))
+            
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+                [mfilename '__' mriname '_timecourse.jpeg']));
+            
+            %% Diagnostic VIDEO
+            if aap.tasklist.currenttask.settings.diagnostic && sess == aap.acq_details.selected_sessions(1)
+                
+                aas_image_avi(sV.fname, ...
+                    ROIimg, ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '.avi']), ...
+                    2, ... % Axis
+                    [800 600], ...
+                    1); % Rotations
+                try close(2); catch; end
+            end
         end
-        
-        set(gcf,'PaperPositionMode','auto')
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-            [mfilename '__' mriname '_timecourse.jpeg']));
         
         %% DESCRIBE OUTPUTS
         
-        aap=aas_desc_outputs(aap,subj,'tSNR',sV.fname);
+        aap=aas_desc_outputs(aap,subj,sess,'tSNR',sV.fname);
 end

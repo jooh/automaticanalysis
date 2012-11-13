@@ -3,7 +3,12 @@
     <tasklist>
         <currenttask domain='subject' desc='Use ANTS to coregister structural to template' modality='MRI'>
             
-            <permanenceofoutput>2</permanenceofoutput>
+            <qsub>
+                <timeBase>1</timeBase>
+                <memoryBase>1</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
             
             <inputstreams>
                 <stream>structural</stream>
@@ -42,11 +47,11 @@
             <!-- Weight of the metric -->
             <weight1>1</weight1>
             <!-- Parameters for that metric -->
-            <parameters1>4</parameters1>            
+            <parameters1>4]</parameters1>            
             <!-- NOTE: More metrics & weights and parameters can be added up to 9 -->
                         
             <!-- Diagnostic videos? -->
-            <diagnostic>1</diagnostic>
+            <diagnostic>0</diagnostic>
             
             
         </currenttask>

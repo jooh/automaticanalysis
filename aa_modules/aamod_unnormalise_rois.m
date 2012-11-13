@@ -40,7 +40,7 @@ switch task
             end
         end
         
-        mEPIimg = aas_getfiles_bystream(aap,subj,1,'meanepi');
+        mEPIimg = aas_getfiles_bystream(aap,subj,'meanepi');
         if isempty(mEPIimg)
             aas_log(aap, true, 'Problem finding mean functional image.');
         elseif size(mEPIimg,1) > 1
@@ -77,7 +77,7 @@ switch task
         while ~isempty(ROIstr)
             [tmp, ROIstr] = strtok(ROIstr,',');
             ROIlist = [ROIlist fullfile(...
-                aap.directory_conventions.ROIdir, tmp)];
+                aap.directory_conventions.ROIdir, strtrim(tmp))];
         end
         
         outstream = '';
@@ -123,12 +123,7 @@ switch task
             outstream = strvcat(outstream, roi_fn);
         end
         
-        % Diagnostic image?
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);
         try
             %% Draw mean EPI...
             spm_check_registration(mEPIimg)
@@ -141,6 +136,7 @@ switch task
             for r = 1:size(outstream,1)
                 spm_orthviews('addcolouredimage',1,outstream(r,:), OVERcolours{r})
             end
+            
             %% Diagnostic VIDEO of segmentations
             aas_checkreg_avi(aap, subj, 2)
             
@@ -148,7 +144,7 @@ switch task
             
             try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
             set(gcf,'PaperPositionMode','auto')
-            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '.jpeg']));
         catch
         end

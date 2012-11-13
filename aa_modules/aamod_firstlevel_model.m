@@ -17,23 +17,26 @@ switch task
     case 'doit'
         %get subject directory
         cwd=pwd;
-        % This does not work [AVG]
-        %[junk, subjname]=fileparts(subj_dir);
-        % Try this instead!
         subjname = aap.acq_details.subjects(subj).mriname;
+        
+        streams = aap.tasklist.currenttask.inputstreams;
         
         %% Movement regressors (extended!) [AVG]
         [moves, mnames] = aas_movPars(aap,subj, aap.tasklist.currenttask.settings.moveMat);
         
         %% Compartment regressors [AVG]
-        compRegNames = {'GM', 'WM', 'CSF', 'OOH'};
-        compTC = [];
-        Cregs = cell(1,length(aap.acq_details.sessions));
-        for sess = aap.acq_details.selected_sessions
-            % If we have compartment Signals load them...
-            if (exist(aas_getinputstreamfilename(aap,subj,sess,'compSignal'),'file'))
-                load(aas_getfiles_bystream(aap,subj,sess,'compSignal'));
-                Cregs{sess} = compTC;
+        CRstreams = streams.stream(strcmp('compSignal', streams.stream));
+        
+        if ~isempty(CRstreams)
+            compRegNames = {'GM', 'WM', 'CSF', 'OOH'};
+            compTC = [];
+            Cregs = cell(1,length(aap.acq_details.sessions));
+            for sess = aap.acq_details.selected_sessions
+                % If we have compartment Signals load them...
+                if (exist(aas_getinputstreamfilename(aap,subj,sess,'compSignal'),'file'))
+                    load(aas_getfiles_bystream(aap,subj,sess,'compSignal'));
+                    Cregs{sess} = compTC;
+                end
             end
         end
         
@@ -64,7 +67,7 @@ switch task
         else
             % Get TR from DICOM header checking they're the same for all sessions
             for sess=aap.acq_details.selected_sessions
-                DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_header'));
+                DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_dicom_header'));
                 try
                     TR=DICOMHEADERS.DICOMHEADERS{1}.volumeTR;
                 catch
@@ -140,6 +143,15 @@ switch task
         for sess = aap.acq_details.selected_sessions
             sessnuminspm=sessnuminspm+1;
             
+            %% SETTINGS & GET FILES
+            
+            files = aas_getfiles_bystream(aap,subj,sess,'epi');
+            allfiles = strvcat(allfiles,files);
+            
+            SPM.xX.K(sessnuminspm).HParam = aap.tasklist.currenttask.settings.highpassfilter;
+            
+            SPM.nscan(sessnuminspm) = size(files,1);
+            
             %% Get model data from aap
             subjmatches=strcmp(subjname,{aap.tasklist.currenttask.settings.model.subject});
             sessmatches=strcmp(aap.acq_details.sessions(sess).name,{aap.tasklist.currenttask.settings.model.session});
@@ -201,16 +213,18 @@ switch task
                 for c = 1:length(model.event);
                     if (isempty(model.event(c).parametric))
                         parametric=struct('name','none');
+                        parLen = 0;
                     else
                         parametric=model.event(c).parametric;
+                        parLen = length(parametric);
                     end
                     SPM.Sess(sessnuminspm).U(c) = struct(...
                         'ons',model.event(c).ons,...
                         'dur',model.event(c).dur,...
                         'name',{{model.event(c).name}},...
                         'P',parametric);
-                    cols_interest=[cols_interest currcol];
-                    currcol=currcol+1;
+                    cols_interest=[cols_interest currcol:(currcol+parLen)];
+                    currcol=currcol+1+parLen;
                 end
             else
                 SPM.Sess(sessnuminspm).U = [];
@@ -281,14 +295,58 @@ switch task
                     + length(aap.tasklist.currenttask.settings.compRegs);
             end
             
-            %% SETTINGS & GET FILES
             
-            files = aas_getfiles_bystream(aap,subj,sess,'epi');
-            allfiles = strvcat(allfiles,files);
+            %% Physiological Regressors?
+            PRstreams = streams.stream(strcmp('physreg', streams.stream));
             
-            SPM.xX.K(sessnuminspm).HParam = aap.tasklist.currenttask.settings.highpassfilter;
+            if ~isempty(PRstreams)
+                
+                PRfn = aas_getimages_bystream(aap,subj,sess,PRstreams{:});
+                
+                % Contains spike scan numbers
+                PR = load(PRfn);
+                
+                SPM.Sess(sessnuminspm).C.C = [SPM.Sess(sessnuminspm).C.C ...
+                    PR.R];
+                SPM.Sess(sessnuminspm).C.name = [SPM.Sess(sessnuminspm).C.name ...
+                    PR.names];
+                cols_nuisance=[cols_nuisance [currcol:(currcol+length(PR.names)-1)]];
+                currcol = currcol + length(PR.names);
+                
+                if isempty(PR.R)
+                    aas_log(aap,false, sprintf('Could not find Physiological Regressors for session %d\n', sess))
+                end
+            end
             
-            SPM.nscan(sessnuminspm) = size(files,1);
+            %% Spikes and moves, if these exist...
+            % open file with spikes and moves
+            SPstreams = streams.stream(strcmp('listspikes', streams.stream));
+            
+            if ~isempty(SPstreams)
+                
+                SPfn = aas_getimages_bystream(aap,subj,sess,SPstreams{:});
+                
+                % Contains spike scan numbers
+                SP = load(SPfn);
+                
+                % Combine spikes and moves...
+                regrscans = union(SP.TSspikes(:,1), SP.Mspikes(:,1));
+                
+                regr = zeros( size(files,1), length(regrscans));
+                regrnames = {};
+                
+                for s=1:length(regrscans),
+                    regr(regrscans(s),s) = 1;    % scan regrscan(s) is at one for scan s
+                    regrnames{s} = sprintf('SpikeMov%d', s);
+                end
+                SPM.Sess(sessnuminspm).C.C = [SPM.Sess(sessnuminspm).C.C ...
+                    regr];
+                SPM.Sess(sessnuminspm).C.name = [SPM.Sess(sessnuminspm).C.name ...
+                    regrnames];
+                cols_nuisance=[cols_nuisance [currcol:(currcol+length(regrnames)-1)]];
+                currcol = currcol + length(regrnames);
+            end
+            
         end
         
         cd (anadir)
@@ -300,6 +358,12 @@ switch task
         % specified correctly
         SPMdes.xX.iG=cols_nuisance;
         SPMdes.xX.iC=cols_interest;
+        
+        % Turn off masking if requested
+        if ~aap.tasklist.currenttask.settings.firstlevelmasking
+            SPMdes.xM.I=0;
+            SPMdes.xM.TH=-inf(size(SPMdes.xM.TH));
+        end
         
         spm_unlink(fullfile('.', 'mask.img')); % avoid overwrite dialog
         SPMest = spm_spm(SPMdes);
@@ -318,7 +382,11 @@ switch task
         for betaind=1:length(allbetas);
             betafns=strvcat(betafns,fullfile(anadir,allbetas(betaind).name));
         end
-        otherfiles={'mask.hdr','mask.img','ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        if ~aap.tasklist.currenttask.settings.firstlevelmasking
+            otherfiles={'ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        else
+            otherfiles={'mask.hdr','mask.img','ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        end
         for otherind=1:length(otherfiles)
             betafns=strvcat(betafns,fullfile(anadir,otherfiles{otherind}));
         end

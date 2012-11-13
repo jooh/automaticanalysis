@@ -19,7 +19,9 @@ switch task
         load(aas_getfiles_bystream(aap,p,'MVPaa'));
         
         % get sn mat file from normalisation
-        normMAT = aas_getfiles_bystream(aap,p,'normalisation_seg_sn');
+        if aap.tasklist.currenttask.settings.normalise == 1
+            normMAT = aas_getfiles_bystream(aap,p,'normalisation_seg_sn');
+        end
         
         % Load SPM used for this analysis...
         load(aas_getfiles_bystream(aap, p, 'firstlevel_spm'));
@@ -32,16 +34,14 @@ switch task
                 Mimg = deblank(Mimg(a,:));
                 break
             end
-        end           
+        end
         
         % FWHM in millimetres
         FWHMmm = aap.tasklist.currenttask.settings.FWHM;
         
         V = spm_vol(Mimg);
-            
-        brainSize = V.dim;
-        
-        %% GET MASK        
+                
+        %% GET MASK
         mask = spm_read_vols(V);
         
         % Write out mask image...
@@ -50,7 +50,7 @@ switch task
         spm_write_vol(V, mask);
         
         %% WRITE .img
-        Stats = reshape(Stats, [brainSize(1), brainSize(2), brainSize(3), length(EP.contrasts), length(EP.tests)]);
+        Stats = reshape(Stats, [V.dim(1), V.dim(2), V.dim(3), length(EP.contrasts), length(EP.tests)]);
         
         Flist = V.fname;
         V.dt(1) = 16; % Save in a format that accepts NaNs and negative values...
@@ -66,7 +66,7 @@ switch task
             V.fname = fullfile(aas_getsubjpath(aap,p), sprintf('spmT_%04d.img', c));
             Flist = strvcat(Flist, V.fname);
             spm_write_vol(V, squeeze(Stats(:,:,:,c,2)));
-        end        
+        end
         
         %% NORMALISE
         if aap.tasklist.currenttask.settings.normalise == 1
@@ -79,7 +79,7 @@ switch task
             % This automatically reslices images to warped size
             spm_write_sn(Flist, normMAT, normPars);
         end
-                
+        
         %% SMOOTH IMAGES
         if FWHMmm > 0
             
@@ -104,13 +104,14 @@ switch task
             if strfind(Flist(f,:), 'spmT')
                 % Zero mask in statistics...
                 Y(~mask) = 0;
+                Y(isnan(Y)) = 0;
             elseif strfind(Flist(f,:), 'con')
                 % NaN mask in statistics...
                 Y(~mask) = NaN;
             end
             spm_write_vol(V, Y);
         end
-                
+        
         %% Modify SPM!
         % Clear SPM.xCon
         SPM.xCon = [];
@@ -124,7 +125,7 @@ switch task
         SPM.xVol.iM = inv(SPM.xVol.M);
         
         % Size of the volume
-        SPM.xVol.DIM = brainSize';
+        SPM.xVol.DIM = V.dim';
         
         % Smoothness of the volume...
         % ...Get the number of mm per voxel...
@@ -153,7 +154,7 @@ switch task
         
         % Filehandle of resels per voxel image (i.e. none!)
         SPM.xVol.VRpv = [];
-                
+        
         for c = 1:length(EP.contrasts)
             % SPM.xCon (.name)
             SPM.xCon(c).name = EP.contrasts(c).name;

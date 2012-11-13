@@ -12,15 +12,16 @@
             
             <inputstreams>
                 <stream>epi</stream>
-                <stream>epi_header</stream>
             </inputstreams>
             
             <outputstreams>
                 <stream>tSNR</stream>
             </outputstreams>
             
-            <HParam>100</HParam>
-            <diagnostic>1</diagnostic>
+            <chunks desc='Chunk data into n^3 pieces (default = 1)'
+            >1</chunks>
+            
+            <diagnostic>0</diagnostic>
             
         </currenttask>
     </tasklist>

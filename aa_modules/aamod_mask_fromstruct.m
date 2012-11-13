@@ -13,7 +13,7 @@ switch task
                 
         Simg = aas_getfiles_bystream(aap,subj,'structural');
         SEGimg = aas_getfiles_bystream(aap,subj,'segmentation');
-        mEPIimg = aas_getfiles_bystream(aap,subj,1,'meanepi');
+        mEPIimg = aas_getfiles_bystream(aap,subj,'meanepi');
         
         % Whether the images in SEGimg are native (1) or warped (0)
         NWlogical = zeros(size(SEGimg,1), 1);
@@ -163,4 +163,16 @@ switch task
         aap = aas_desc_outputs(aap,subj,'segmasksStrict',Soutstream);
         aap = aas_desc_outputs(aap,subj,'segmasksExclusive',Eoutstream);
         
+        %% Some diagnostic images
+        spm_check_registration(strvcat( ...
+            mEPIimg, ... % Get mean EPI across sessions
+            Eoutstream(1,:))); % Get first segmented GM image
+        
+        % Outline of structural!
+        spm_ov_reorient('context_init', 2)
+        
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
+        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
 end

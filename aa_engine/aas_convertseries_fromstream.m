@@ -80,7 +80,7 @@ for subdirind=1:length(subdirs)
     % Limit number of volumes read in at a time
     chunksize_volumes=16;
     k=1;
-     
+    
     while (k<=size(dicomdata_subdir,1))
         %    fprintf('***New chunk\n');
         oldAcquisitionNumber=-1;
@@ -89,35 +89,67 @@ for subdirind=1:length(subdirs)
         while (k<=size(dicomdata_subdir,1))
             
             tmp = spm_dicom_headers(deblank(dicomdata_subdir(k,:)));
-            % [AVG] Let us use get the TR and save it to the DICOMHEADERS
-            if k == 1
-                infoD = dicominfo(deblank(dicomdata_subdir(k,:)));
-                
-                % Only attempt to find 3D if field exist AND if
-                % InversionTime does NOT exist (this field is present in 3D
-                % MPRAGE acquisitions). 
-                if strcmp(infoD.MRAcquisitionType, '3D') && ...
-                        ~isfield(infoD,'InversionTime')
-                    % In 3D sequence we can find a Private field
-                    % Works for Siemens scanners (not tested elsewhere)
-                    fi = 'Private_0029_1020';
-                    % let's make sure this solution has a chance of
-                    % working
-                    assert(isfield(infoD,fi),...
-                        '3D sequence but TR cannot be recovered');
-                    str =  infoD.(fi);
+            % If the dicoms are EPIs...
+            if strcmp(inputstream, 'dicom_epi')
+                % [AVG] Let us use get the TR and sliceorder and save it to the DICOMHEADERS
+                if k == 1
+                    infoD = dicominfo(deblank(dicomdata_subdir(k,:)));
+
+                    str =  infoD.Private_0029_1020;
                     xstr = char(str');
-                    n = findstr(xstr, 'sWiPMemBlock.adFree[8]');
-                    if isempty(n)
-                        error('Could not find TR in the DICOM header!')
+                    
+                    % Get the TR...
+                    % Only attempt to find 3D if field exist AND if
+                    % InversionTime does NOT exist (this field is present in 3D
+                    % MPRAGE acquisitions). 
+                    if strcmp(infoD.MRAcquisitionType, '3D') && ...
+                            ~isfield(infoD,'InversionTime')
+                        fi = 'Private_0029_1020';
+                        % let's make sure this solution has a chance of
+                        % working
+                        assert(isfield(infoD,fi),...
+                            '3D sequence but TR cannot be recovered');
+                        % In 3D sequence we can find a Private field
+                        % Works for Siemens scanners (not tested elsewhere)
+                        n = findstr(xstr, 'sWiPMemBlock.adFree[8]');
+                        if isempty(n)
+                            error('Could not find TR in the DICOM header!')
+                        end
+                        [junk, r] = strtok(xstr(n:n+100), '=');
+                        TR = str2double(strtok(strtok(r, '=')));
+                    else
+                        % If 2D sequence...
+                        TR = infoD.RepetitionTime;
                     end
-                    [junk, r] = strtok(xstr(n:n+100), '=');
-                    TR = str2double(strtok(strtok(r, '=')));
-                else
-                    % If 2D sequence...
-                    TR = infoD.RepetitionTime;
+                    fprintf('Sequence has a TR of %.1f ms\n', TR);
+                    
+                    % Get the slice-timing...
+                    if strcmp(infoD.MRAcquisitionType, '3D')
+                        % In 3D sequence we do not have slice timings...
+                        sliceorder = 'Order undetermined';
+                    else
+                        % If 2D sequence...
+                        n = findstr(xstr, 'sSliceArray.ucMode');
+                        [t, r] = strtok(xstr(n:n+100), '=');
+                        ucmode = strtok(strtok(r, '='));
+                        switch(ucmode)
+                            case '0x1'
+                                sliceorder = 'Ascending';
+                            case '0x2'
+                                sliceorder = 'Descending';
+                            case '0x4'
+                                sliceorder = 'Interleaved';
+                            otherwise
+                                sliceorder = 'Order undetermined';
+                        end
+                    end
+                    fprintf('Sequence has a %s slice order\n', sliceorder);
                 end
-                fprintf('Sequence has a TR of %.1f ms\n', TR);
+                
+                % [AVG] Add the TR to the DICOMHEADERS explicitly before
+                % saving (and in seconds!)
+                tmp{1}.volumeTR = TR/1000;
+                tmp{1}.sliceorder = sliceorder;
             end
             
             % [AVG] Add the TR to the DICOMHEADERS explicitly before
@@ -148,7 +180,14 @@ for subdirind=1:length(subdirs)
                 end
             end
         end
-        conv=spm_dicom_convert(DICOMHEADERS_selected,'all','flat','nii');
+        % [AVG] to cope with modern cutting edge scanners, and other probs
+        % (e.g. 7T Siemens scanners, which seem to mess up the ICE dimensions...)
+         if ~isempty(aap.options.customDCMconvert)
+            aas_log(aap, false, sprintf('Using alternate %s script...', aap.options.customDCMconvert))
+            eval(sprintf('conv=%s(DICOMHEADERS_selected,''all'',''flat'',''nii'')', aap.options.customDCMconvert));
+        else
+            conv=spm_dicom_convert(DICOMHEADERS_selected,'all','flat','nii');
+        end
         out=[out(:);conv.files(:)];
     end
     out_allechoes{subdirind}=unique(out);

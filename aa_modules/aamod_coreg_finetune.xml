@@ -8,7 +8,7 @@
                 <memoryBase>0.5</memoryBase>
             </qsub>
             
-            <permanenceofoutput>1</permanenceofoutput>
+            <permanenceofoutput>2</permanenceofoutput>
             
             <inputstreams>
                 <stream>meanepi</stream>  
@@ -24,7 +24,7 @@
             <structural>1</structural>
             <bias>1</bias>
             
-            <diagnostic>1</diagnostic>
+            <diagnostic>0</diagnostic>
             
         </currenttask>
     </tasklist>

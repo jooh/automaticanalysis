@@ -23,7 +23,7 @@ classdef aaq_qsub<aaq
             obj.jobnotrun = true(njobs,1);
             obj.jobnotrun(submittedJobs) = false;
             
-            while any(obj.jobnotrun) && ~waitforalljobs
+            while any(obj.jobnotrun) || waitforalljobs
                 
                 % Lets not overload the filesystem
                 pause(10);
@@ -77,9 +77,11 @@ classdef aaq_qsub<aaq
                                 obj.filestomonitor(ftmind).name(1:end-11), moduleName), ...
                                 obj.aap.gui_controls.colours.running)
                             
+                            dateNtime = datestr(now);
+                            
                             aas_log(obj.aap,false,...
-                                sprintf('Job used %0.4f hours. and %0.9f GB', ...
-                                JobLog.optout{2}./(60*60), JobLog.optout{4}./(1024^3)), ...
+                                sprintf('Job used %0.4f hours. and %0.9f GB at %s', ...
+                                JobLog.optout{2}./(60*60), JobLog.optout{4}./(1024^3), dateNtime), ...
                                 obj.aap.gui_controls.colours.running)
                             
                             if obj.aap.options.qsub.verbose
@@ -93,6 +95,7 @@ classdef aaq_qsub<aaq
                             fprintf(fid,'%s\n',moduleName);
                             fprintf(fid,'Job used %0.4f hours. and %0.9f GB\n', ...
                                 JobLog.optout{2}./(60*60), JobLog.optout{4}./(1024^3));
+                            fclose(fid);
                             
                             % Job finished, so no need to monitor
                             donemonitoring(ftmind)=true;
@@ -161,8 +164,9 @@ classdef aaq_qsub<aaq
                 'diary', 'always');
             warning on
             % State what the assigned number of hours and GB is...
-            fprintf('Job %s, assigned %0.4f hours. and %0.9f GB\n\n', ...
-                job.stagename, timReq./(60*60), memReq./(1024^3))
+            dateNtime = datestr(now);
+            fprintf('Job %s, assigned %0.4f hours. and %0.9f GB at %s\n\n', ...
+                job.stagename, timReq./(60*60), memReq./(1024^3), dateNtime)
             
             % And monitor for files with the job output
             fles.name=[jobid '_output.mat'];

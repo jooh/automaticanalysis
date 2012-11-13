@@ -3,7 +3,7 @@
 %  any inputs to a module that are not also specified as an output.
 %  Rhodri Cusack  www.cusacklab.org  March 2012
 
-function aap=aas_garbagecollection(aap, actuallydelete, modulestoscan )
+function aap=aas_garbagecollection(aap, actuallydelete, modulestoscan, permanencethreshold )
 
 if (~strcmp(aap.directory_conventions.remotefilesystem,'none'))
     aas_log(aap,true,'Remote file systems not currently supported by garbage collection');
@@ -12,77 +12,133 @@ end
 if (~strcmp(aap.directory_conventions.outputformat,'splitbymodule'))
     aas_log(aap,false,sprintf('No garbage collection as aap.directory_conventions.outputformat is %s',aap.directory_conventions.outputformat));
 else
-
-if (~exist('modulestoscan','var'))
-    modulestoscan=1:length(aap.tasklist.main.module);
-end
-
-if (~exist('actuallydelete','var'))
-    actuallydelete=false;
-end;
-
-numdel=0;
-
-for modind=modulestoscan
-    inps={};
-    outs={};
-    % Get all the input and output stream files
-    aap=aas_setcurrenttask(aap,modind);
-    for streamname=aap.tasklist.currenttask.inputstreams.stream
-        streamfn=sprintf('stream_%s_inputto_%s.txt',streamname{1},aap.tasklist.currenttask.name);
-        inps=[inps findstreamfiles(aap,streamfn)];
-    end
-    for streamname=aap.tasklist.currenttask.outputstreams.stream
-        streamfn=sprintf('stream_%s_outputfrom_%s.txt',streamname{1},aap.tasklist.currenttask.name);
-        outs=[outs findstreamfiles(aap,streamfn)];
+    
+    if (~exist('modulestoscan','var')) || isempty(modulestoscan)
+        modulestoscan=1:length(aap.tasklist.main.module);
     end
     
-    % Load up these stream files
-    inpfn={};
-    outfn={};
-    for inpind=1:length(inps)
-        inpfn=[inpfn loadstreamfile(aap,inps{inpind})];
-    end
-    for outind=1:length(outs)
-        outfn=[outfn loadstreamfile(aap,outs{outind})];
+    if (~exist('permanencethreshold','var')) || isempty(permanencethreshold)
+        permanencethreshold = 0;
     end
     
-    % Find which inputs aren't an output
-    % N^2 string comparisons - might be costly [seems fine, though]
-    inpnotout=false(size(inpfn));
-    for inpind=1:length(inpfn)
-        inpnotout(inpind)=~any(strcmp(inpfn{inpind},outfn));         
-    end
+    if (~exist('actuallydelete','var'))
+        actuallydelete=false;
+    end;
     
-    % Garbage collect
-    if (~isempty(inpfn) && exist(aas_getstudypath(aap),'file'))
-        garbagelog=fullfile(aas_getstudypath(aap),sprintf('garbage_collection.txt'));
-        if (actuallydelete)
-            fid=fopen(garbagelog,'a');
-            fprintf(fid,'Garbage collected: %s\n',datestr(now,31));
-            fprintf(fid,'---following files deleted---\n');
+    % What things fall under the image category?
+    imgCategory = {'.IMA' '.dcm' '.nii' '.img' '.hdr'};
+    
+    numdel=0;
+    
+    for modind=modulestoscan
+        inps={};
+        outs={};
+        % Get all the input and output stream files
+        aap=aas_setcurrenttask(aap,modind);
+        
+        fprintf('Working on task %s\n', aap.tasklist.currenttask.name)
+        
+        for streamname=aap.tasklist.currenttask.inputstreams.stream
+            streamfn=sprintf('stream_%s_inputto_%s.txt',streamname{1},aap.tasklist.currenttask.name);
+            inps=[inps findstreamfiles(aap,streamfn)];
         end
-        for fn=inpfn(inpnotout)
-            if (exist(fn{1},'file'))
-                if (actuallydelete)
-                   delete(fn{1});
-                    fprintf(fid,'%s\n',fn{1});
+        for streamname=aap.tasklist.currenttask.outputstreams.stream
+            streamfn=sprintf('stream_%s_outputfrom_%s.txt',streamname{1},aap.tasklist.currenttask.name);
+            outs=[outs findstreamfiles(aap,streamfn)];
+        end
+        
+        % Load up these stream files
+        inpfn={};
+        outfn={};
+        for inpind=1:length(inps)
+            inpfn=[inpfn loadstreamfile(aap,inps{inpind})];
+        end
+        for outind=1:length(outs)
+            outfn=[outfn loadstreamfile(aap,outs{outind})];
+        end
+        
+        % Find which inputs aren't an output
+        % N^2 string comparisons - might be costly [seems fine, though]
+        inpnotout=false(size(inpfn));
+        for inpind=1:length(inpfn)
+            inpnotout(inpind)=~any(strcmp(inpfn{inpind},outfn));
+        end
+        
+        % Garbage collect outputs
+        if ~isfield(aap.tasklist.currenttask.settings, 'permanenceofoutput')
+            % To be on the safe side keep stuff without a permanenceofoutput flag!
+            aap.tasklist.currenttask.settings.permanenceofoutput = Inf;
+        end
+        if abs(aap.tasklist.currenttask.settings.permanenceofoutput) <= permanencethreshold
+            delete_outputs = 1;
+        else
+            delete_outputs = 0;
+        end
+        if aap.tasklist.currenttask.settings.permanenceofoutput < 0
+            % If permanenceofoutput has negative value, delete only images
+            % .nii .img .hdr files
+            delete_onlyImg = 1;
+        else
+            % Otherwise delete also non-image outputs...
+            delete_onlyImg = 0;
+        end
+        
+        % Garbage collect inputs
+        if (~isempty(inpfn) && exist(aas_getstudypath(aap),'file'))
+            garbagelog=fullfile(aas_getstudypath(aap),sprintf('garbage_collection_inputs.txt'));
+            if (actuallydelete)
+                fid=fopen(garbagelog,'a');
+                fprintf(fid,'Garbage collected: %s\n',datestr(now,31));
+                fprintf(fid,'---following files deleted---\n');
+            end
+            for fn=inpfn(inpnotout)
+                if (exist(fn{1},'file'))
+                    if (actuallydelete)
+                        delete(fn{1});
+                        fprintf(fid,'%s\n',fn{1});
+                    end
+                    numdel=numdel+1;
                 end
-                numdel=numdel+1;
+            end
+            if (actuallydelete)
+                fprintf(fid,'---end---');
+                fclose(fid);
             end
         end
-        if (actuallydelete)
-            fprintf(fid,'---end---');
-            fclose(fid);
-        end;
+        
+        % Garbage collect outputs
+        if (~isempty(outfn) && exist(aas_getstudypath(aap),'file') && delete_outputs)
+            garbagelog=fullfile(aas_getstudypath(aap),sprintf('garbage_collection_outputs.txt'));
+            if (actuallydelete)
+                fid=fopen(garbagelog,'a');
+                fprintf(fid,'Garbage collected: %s\n',datestr(now,31));
+                fprintf(fid,'---following files deleted---\n');
+            end
+            for fn=outfn
+                if (exist(fn{1},'file'))
+                    if (actuallydelete)
+                        % Also check if it is an image...
+                        [Fpth, Fname, Fext] = fileparts(fn{1});
+                        if any(strcmp(Fext, imgCategory)) || delete_onlyImg == 0
+                            delete(fn{1});
+                            fprintf(fid,'%s\n',fn{1});
+                        end
+                    end
+                    numdel=numdel+1;
+                end
+            end
+            if (actuallydelete)
+                fprintf(fid,'---end---');
+                fclose(fid);
+            end
+        end
     end
-end
-
-if (~actuallydelete)
-    aas_log(aap,false,sprintf('Garbage collection would delete %d files',numdel));
-else
-    aas_log(aap,false,sprintf('Garbage collection deleted %d files',numdel));
-end
+    
+    if (~actuallydelete)
+        aas_log(aap,false,sprintf('Garbage collection would delete %d files',numdel));
+    else
+        aas_log(aap,false,sprintf('Garbage collection deleted %d files',numdel));
+    end
 end
 end
 
@@ -93,7 +149,7 @@ pthstocheck={aas_getstudypath(aap)};
 for subjind=1:length(aap.acq_details.subjects)
     pthstocheck=[pthstocheck aas_getsubjpath(aap,subjind)];
     for sessind = 1:length(aap.acq_details.sessions)
-        pthstocheck=[pthstocheck aas_getsesspath(aap,subjind,sessind)];        
+        pthstocheck=[pthstocheck aas_getsesspath(aap,subjind,sessind)];
     end
 end
 % Check to see which of these exist
@@ -108,7 +164,7 @@ end
 
 function [imgfns]=loadstreamfile(aap,streampth)
 fid=fopen(streampth,'r');
-header=fgetl(fid);  
+header=fgetl(fid);
 % If we don't see MD5 at top, something odd is wrong, so throw
 % error
 if (~strcmp(header(1:3),'MD5'))

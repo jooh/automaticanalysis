@@ -4,11 +4,11 @@
         <currenttask domain='subject' mfile_alias='aamod_denoiseANLM' desc='Denoises the structural(s) provided' modality='MRI'>
             
             <qsub>
-                <timeBase>3</timeBase>
+                <timeBase>3.9</timeBase>
                 <memoryBase>1</memoryBase>
             </qsub>
             
-            <permanenceofoutput>1</permanenceofoutput>
+            <permanenceofoutput>-1</permanenceofoutput>
             
             <inputstreams>
                 <stream>structural</stream>
@@ -21,14 +21,19 @@
                 <stream>denoiseResidual</stream>
             </outputstreams>
             
+            <!-- denoise parameters... -->
             <patchsize>1</patchsize>
             <searcharea>3</searcharea>
             <beta>1</beta>
             <rician>1</rician>
-            <verbose>0</verbose>
-            <structurals>2,5</structurals>
             
-            <diagnostic>1</diagnostic>
+            <structural desc='Which structural(s) do we use?'
+            >2,5</structural>
+            
+            <diagnostic desc='Do we make diagnostic videos?'
+            >0</diagnostic>
+            <verbose desc='Do we print shell output?'
+            >0</verbose>
             
         </currenttask>
     </tasklist>

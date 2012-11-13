@@ -2,13 +2,13 @@
 % Coregistration of structural to mean EPI output by realignment
 % Does not require skull stripping any more
 % Modified for sparse imaging since prefix for mean is different
-% i=subject num
+% subj=subject num
 % Rhodri Cusack MRC CBU 2004-6 based on original by Matthew Brett
 % 
 % Major changes Aug 2010: removed support for central store of structrual
 % images. This code was very long in tooth, and unloved.
 
-function [aap,resp]=aamod_coreg(aap,task,i)
+function [aap,resp]=aamod_coreg(aap,task,subj)
 
 resp='';
 
@@ -17,7 +17,7 @@ switch task
         global defaults;
         flags = defaults.coreg;
         % check local structural directory exists
-        subjpath=aas_getsubjpath(aap,i);
+        subjpath=aas_getsubjpath(aap,subj);
         structdir=fullfile(subjpath,aap.directory_conventions.structdirname);
         if (~length(dir(structdir)))
             [s w]=aas_shell(['mkdir ' structdir]);
@@ -28,15 +28,15 @@ switch task
         
         % dirnames,
         % get the subdirectories in the main directory
-        dirn = aas_getsesspath(aap,i,1);
+        dirn = aas_getsesspath(aap,subj,1);
         % get mean EPI stream
-        PG = aas_getimages_bystream(aap,i,1,'meanepi');
+        PG = aas_getimages_bystream(aap,subj,'meanepi');
         VG = spm_vol(PG);
         
         % Get path to structural for this subject
-        subj_dir=aas_getsubjpath(aap,i);
+        subj_dir=aas_getsubjpath(aap,subj);
         structdir=fullfile(subj_dir,aap.directory_conventions.structdirname);
-        PF = dir( fullfile(structdir,['s' aap.acq_details.subjects(i).structuralfn '*.nii']));
+        PF = dir( fullfile(structdir,['s' aap.acq_details.subjects(subj).structuralfn '*.nii']));
         if (length(PF)>1)
             aas_log(aap,false,sprintf('Found more than one structural (%d), expected only one, but will continue with first',length(PF)));
         end;
@@ -53,11 +53,11 @@ switch task
           
         spm_get_space(structfn, M*spm_get_space(structfn));
        
-        aap = aas_desc_outputs(aap,i,'structural',structfn);
+        aap = aas_desc_outputs(aap,subj,'structural',structfn);
 
         % Save graphical output - this will now be done by report task
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;            
-        print('-djpeg','-r75',fullfile(aas_getsubjpath(aap,i),'diagnostic_aamod_coreg'));
+        print('-djpeg','-r150',fullfile(aas_getsubjpath(aap,subj),'diagnostic_aamod_coreg'));
         
     case 'checkrequirements'
         aas_log(aap,0,'No need to trim or skull strip structural\n' );

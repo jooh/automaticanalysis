@@ -1,7 +1,7 @@
-function [aap,resp] = aamod_segment8(aap, task, subjind)
+function [aap,resp] = aamod_segment8(aap, task, subj)
 % AAMOD_SEGMENT8 Perform SPM8's segment8 segmentation.
 %
-% [aap,resp] = AAMOD_SEGMENT8(aap, task, subjind)
+% [aap,resp] = AAMOD_SEGMENT8(aap, task, subj)
 %
 % These segmentations can then be fed into DARTEL or used in
 % non-DARTEL VBM.
@@ -30,7 +30,7 @@ switch task
     case 'domain'
         resp='subject';
     case 'description'
-        resp='SPM8 segment8 for structural images.'
+        resp = 'SPM8 segment8 for structural images.'
     case 'doit'
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -99,20 +99,21 @@ switch task
             aas_log(aap, true, 'optimNn is not in your Matlab path but needs to be.');
         end
 
-
         % get the structural image
-        img = aas_getfiles_bystream(aap, subjind, 'structural');
+        Simg = aas_getfiles_bystream(aap, subj, 'structural');
 
-
-        if isempty(img) || strcmp(img,'/')
+        if isempty(Simg) || strcmp(Simg,'/')
             aas_log(aap, true, 'Did not find a structural image.');
         end
 
-        % if more than one found, use the first one and hope this is right
-        img = strtok(img(1,:));
+        % Which file is considered, as determined by the structural parameter!
+        if size(Simg,1) > 1
+            Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
+            fprintf('WARNING: Several structurals found, considering: \n')
+            fprintf('\t%s\n', Simg(1,:))
+        end
 
-        aas_log(aap, false, sprintf('Found structural image: %s\n', img));
-
+        aas_log(aap, false, sprintf('Found structural image: %s\n', Simg));
 
 		%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		% do the segmentation
@@ -127,7 +128,7 @@ switch task
             tissue(k).warped = cfg.warped;
         end
 
-        job.channel(1).vols{1} = img;
+        job.channel(1).vols{1} = Simg;
         job.channel(1).biasreg = cfg.biasreg;
         job.channel(1).biasfwhm = cfg.biasfwhm;
         job.channel(1).write = cfg.writebiascorrected;
@@ -154,15 +155,75 @@ switch task
 
         %% describe outputs
 
-        [pth, nm, ext] = fileparts(img);
+        [pth, nm, ext] = fileparts(Simg);
         seg8fn = fullfile(pth, sprintf('%s_seg8.mat', nm));
-        aap = aas_desc_outputs(aap, subjind, 'seg8', seg8fn);
+        aap = aas_desc_outputs(aap, subj, 'seg8', seg8fn);
 
         tiss={'grey','white','csf'};
-        for tissind=1:3
-            aap = aas_desc_outputs(aap, subjind, sprintf('native_%s', tiss{tissind}), fullfile(pth, sprintf('c%d%s', tissind, [nm ext])));
-            aap = aas_desc_outputs(aap, subjind, sprintf('dartelimported_%s', tiss{tissind}), fullfile(pth, sprintf('rc%d%s', tissind, [nm ext])));
-            aap = aas_desc_outputs(aap, subjind, sprintf('normalised_density_%s', tiss{tissind}), fullfile(pth, sprintf('wc%d%s', tissind, [nm ext])));
-            aap = aas_desc_outputs(aap, subjind, sprintf('normalised_volume_%s', tiss{tissind}), fullfile(pth, sprintf('mwc%d%s', tissind, [nm ext])));
+        
+        nativeSeg = cell(1,length(tiss));
+        dartelimpSeg = cell(1,length(tiss));
+        normdensSeg = cell(1,length(tiss));
+        normvolSeg = cell(1,length(tiss));
+        
+        for tissind=1:length(tiss);
+            nativeSeg{tissind} = fullfile(pth, sprintf('c%d%s', tissind, [nm ext]));
+            dartelimpSeg{tissind} = fullfile(pth, sprintf('rc%d%s', tissind, [nm ext]));
+            normdensSeg{tissind} = fullfile(pth, sprintf('wc%d%s', tissind, [nm ext]));
+            normvolSeg{tissind} = fullfile(pth, sprintf('mwc%d%s', tissind, [nm ext]));
+            
+            aap = aas_desc_outputs(aap, subj, sprintf('native_%s', tiss{tissind}), nativeSeg{tissind});
+            aap = aas_desc_outputs(aap, subj, sprintf('dartelimported_%s', tiss{tissind}), dartelimpSeg{tissind});
+            aap = aas_desc_outputs(aap, subj, sprintf('normalised_density_%s', tiss{tissind}), normdensSeg{tissind});
+            aap = aas_desc_outputs(aap, subj, sprintf('normalised_volume_%s', tiss{tissind}), normvolSeg{tissind});
+        end
+        
+        %% DIAGNOSTICS
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
+        % This will only work for 1-7 segmentations
+        OVERcolours = aas_colours;
+        
+        %% Draw native template
+        spm_check_registration(Simg)
+        % Add segmentations...
+        for t = 1:length(tiss)
+            spm_orthviews('addcolouredimage',1,nativeSeg{t}, OVERcolours{t})
+        end
+        
+        spm_orthviews('reposition', [0 0 0])
+        
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
+        
+        % Another diagnostic image, looking at how well the segmentation worked...
+        Pthresh = 0.95;
+        
+        ROIdata = roi2hist(Simg, ...
+            nativeSeg, Pthresh);
+        
+        [h, pv, ci, stats] = ttest2(ROIdata{2}, ROIdata{1});
+        
+        title(sprintf('GM vs WM... T-val: %0.2f (df = %d)', stats.tstat, stats.df))
+        
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '_Hist.jpeg']));
+        
+        %% Diagnostic VIDEO
+        if aap.tasklist.currenttask.settings.diagnostic
+            Ydims = {'X', 'Y', 'Z'};
+            
+            for d = 1:length(Ydims)
+                if (aap.tasklist.currenttask.settings.usesegmentnotnormalise)
+                    aas_image_avi(Simg, ...
+                        nativeSeg, ...
+                        fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                        d, ... % Axis
+                        [800 600], ...
+                        2, ... % Rotations
+                        'none'); % No outline...
+                    try close(2); catch; end
+                end
+            end
         end
 end

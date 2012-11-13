@@ -89,7 +89,10 @@ switch task
                 foundit=false;
                 for fileind=1:size(confiles{s},1);
                     [pth nme ext]=fileparts(confiles{s}(fileind,:));
-                    if strcmp(nme,sprintf('con_%04d',n))
+                    % [alevic] Changed this so that it works even if we
+                    % change (e.g. warp/smooth) the contrast images before
+                    % putting them into the second level...
+                    if ~isempty(strfind(nme,sprintf('con_%04d',n)))
                         foundit=true;
                         break;
                     end;
@@ -140,9 +143,17 @@ switch task
             spm_unlink(fullfile('.', 'mask.img')); % avoid overwrite dialog
             SPM = spm_spm(SPM);
             
+            %% Define contrasts
+            eval(sprintf('cd %s',rfxrootdir));
             
-            % Output streams
-            % Describe outputs
+            SPM = rmfield(SPM,'xCon'); %just in case 
+
+            SPM.xCon(1) = spm_FcUtil('Set',sprintf('%s',conname),'T','c',[1],SPM.xX.xKXs);
+            SPM.xCon(2) = spm_FcUtil('Set',sprintf('- %s',conname),'T','c',[-1],SPM.xX.xKXs);
+
+            spm_contrasts(SPM);
+            
+            %% Describe outputs
             %  secondlevel_spm
             aap=aas_desc_outputs(aap,'secondlevel_spm',fullfile(rfxdir,'SPM.mat'));
             

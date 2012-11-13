@@ -25,17 +25,22 @@ switch task
         %% retrieve TR from DICOM header & set up the HiPass filter
         % if TR is manually specified (not recommended as source of error)
         if (isfield(aap.tasklist.currenttask.settings,'TR'))
-            K.RT =aap.tasklist.currenttask.settings.TR;
+            K.RT = aap.tasklist.currenttask.settings.TR;
         else
             % Get TR from DICOM header
-            DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_header'));
+            DICOMHEADERS=load(aas_getfiles_bystream(aap,subj,sess,'epi_dicom_header'));
             K.RT = DICOMHEADERS.DICOMHEADERS{1}.volumeTR;
         end
         
         % High pass filter or detrend data
+        
         % Let's first set up the parameters...
         K.row = 1:size(EPIimg, 1);
         K.HParam = aap.tasklist.currenttask.settings.HParam; % cut-off period in seconds
+        
+        if K.RT * length(K.row) < K.HParam && ~strcmp(aap.tasklist.currenttask.settings.HFtype, 'detrend')
+            aas_log(aap, true, 'The data length is shorter than the cutoff of the filter, consider detrending instead')
+        end
         
         if K.RT * length(K.row) > K.HParam
             fprintf('\nWill do high pass filtering of time series with a %d second cut-off', K.HParam)
@@ -49,7 +54,7 @@ switch task
         fprintf('\n\tProcessing data (%d scans)', size(EPIimg,1))
         
         taskComplete = 0;
-        chunkDim = 1;
+        chunkDim = aap.tasklist.currenttask.settings.chunks;
         
         while taskComplete == 0
             fprintf('\nTrying with %d chunks', chunkDim)
@@ -84,22 +89,34 @@ switch task
                                 EPIdata(e,:,:,:) = Y(Xind,Yind,Zind);
                             end
                             
-                            if K.RT * length(K.row) > K.HParam
+                            if strcmp(aap.tasklist.currenttask.settings.HFtype, 'spm')
                                 % Create the frequencies to be removed and apply them...
                                 % Important: first dimension must be time dimension!
                                 
                                 EPIdata = spm_filter(K, EPIdata);
-                            else
+                                
+                            elseif strcmp(aap.tasklist.currenttask.settings.HFtype, 'detrend')
                                 % Use linear detrending instead (might be slower due to loops)
-                                for a = 1:length(Xind)
-                                    for b = 1:length(Yind)
-                                        vRow = squeeze(EPIdata(:,a,b,:));
-                                        mRow = repmat(mean(vRow,1), [size(EPIimg,1) 1]);
-                                        vRow = detrend(vRow);
-                                        % Add mean back after detrending!
-                                        EPIdata(:,a,b,:) = vRow + mRow;
-                                    end
-                                end
+                                
+                                szY=size(EPIdata);
+                                Y=reshape(EPIdata,[size(EPIimg,1) prod(szY(2:4))]);
+                                mY = repmat(mean(Y,1), [size(EPIimg,1) 1]);
+                                % Add mean back after detrending!
+                                Y=detrend(Y)+mY;
+                                EPIdata = reshape(Y,szY);
+                                
+                            elseif strcmp(aap.tasklist.currenttask.settings.HFtype, 'butterworth')
+                                % Regress out discrete cosine components to do filtering
+                                
+                                szY=size(EPIdata);
+                                Y=reshape(EPIdata,[size(EPIimg,1) prod(szY(2:4))]);
+                                X0 = spm_dctmtx( size(EPIimg,1), ...
+                                    fix(2*(size(EPIimg,1) * K.RT) / aap.tasklist.currenttask.settings.HParam + 1));
+                                X0 = X0(:,2:end);
+                                beta = X0\Y;
+                                Y = Y-X0*beta;
+                                EPIdata = reshape(Y,szY);
+                                
                             end
                             
                             % Now save the data back...
@@ -114,14 +131,14 @@ switch task
                 end
                 % If we get here, then we completed the task...
                 taskComplete = 1;
-            catch tSNR_error
+            catch aa_error
                 %disp(tSNR_error)
                 
                 if x > 1 || y > 1 || z > 1
                     aas_log(aap, true, 'The script broke between chunks, you should probably delete the subject folder for this module and try again...')
                 end
                 
-                if chunkDim > 3
+                if chunkDim > 4
                     aas_log(aap, true, 'Error is probably not due to MEMORY')
                 end
                 

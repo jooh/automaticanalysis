@@ -21,6 +21,36 @@ switch task
         
     case 'doit'
         
+        if isempty(aap.tasklist.currenttask.settings.tert)
+           aas_log(aap, true, 'You must specify a Total EPI Readout Time [in ms]') 
+        end
+        
+        if isempty(aap.tasklist.currenttask.settings.kdir)
+            aas_log(aap, true, 'You must specify a Blip Direction [1 or -1] (dependent on PE direction)') 
+        end
+        
+        if isempty(aap.tasklist.currenttask.settings.te1) || ...
+                isempty(aap.tasklist.currenttask.settings.te2)
+            aas_log(aap, false, 'TE not specified, so let us get it from the fieldmap headers');
+           
+            HDRfn = aas_getfiles_bystream(aap,subj,'fieldmap_dicom_header');
+            
+            TE = [];
+            HDR = load(HDRfn);
+            for h = 1:length(HDR.dcmhdr)
+                TE = [TE HDR.dcmhdr{h}.EchoTime];
+            end
+            TE = unique(TE);
+            if length(TE) > 2
+                aas_log(aap, true, 'Too many TEs!');
+            end
+            
+            aap.tasklist.currenttask.settings.te1 = TE(1);
+            aap.tasklist.currenttask.settings.te2 = TE(2);
+        end
+        
+        
+        
         % Defaults specified in this path
         % You can set your own settings in your own copy of the XML or recipe!
         pm_defs = ...
@@ -32,6 +62,10 @@ switch task
             aap.tasklist.currenttask.settings.mask, ... % (mask)
             aap.tasklist.currenttask.settings.match, ... % (match)
             aap.tasklist.currenttask.settings.writeunwarpedEPI]; % (writeunwarpedEPI)
+        
+        aas_log(aap, false, sprintf(['Parameters used:' ...
+            '\nTE1: %0.3f\tTE2: %0.3f\tTotEPIread: %0.3f\tBlipDir: %d'], ...
+            pm_defs(1), pm_defs(2), pm_defs(4), pm_defs(5)));
         
         % Fieldmap path
         FMdir = fullfile(aas_getsubjpath(aap, subj), aap.directory_conventions.fieldmapsdirname);

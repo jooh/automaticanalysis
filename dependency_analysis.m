@@ -11,7 +11,9 @@ addpath(fldrDir); % To add the path to this toolbox!
 ind = 0;
 
 Dependencies = [];
+Dependencies.path = [];
 Dependencies.name = [];
+Depencencies.ext = [];
 Dependencies.deps = [];
 Dependencies.depsI = [];
 Dependencies.number = [];
@@ -28,41 +30,38 @@ while ~isempty(strtok(fldrDir, ':'))
         if ~strcmp(D(d).name, [mfilename '.m'])
             ind = ind + 1;
             
-            Dependencies(ind).name = fullfile(fldrCurr, D(d).name);
+            [junk, Dependencies(ind).name, ...
+                Denendencies(ind).ext] = fileparts(D(d).name);
+            Dependencies(ind).path = fldrCurr;
         end
     end
 end
 
-% Find out dependency!
+% Find out inverse dependency (how many scripts depend on this code)!
 for ind = 1:length(Dependencies)    
     fprintf('\nWorking %d/%d: %s', ind, length(Dependencies), Dependencies(ind).name)
     
-    clear deps
-    deps = depfun(Dependencies(ind).name, '-quiet');
-    pause(0.0001);
+    depsI = search_code(Dependencies(ind).name, 0, {'*.m'});
     
-    for e = length(deps):-1:1
+    for e = size(depsI,1):-1:1
         % If toolbox path is not in the dependency, ignore it!
-        if isempty(strfind(deps{e}, toolboxPath))
-            deps(e) = [];
-        elseif strcmp(deps{e}, Dependencies(ind).name)
-            deps(e) = [];
+        if ~isempty(strfind(depsI(e,:), Dependencies(ind).name))
+            depsI(e,:) = [];
         end
     end
-    Dependencies(ind).deps = deps;
+    Dependencies(ind).depsI = depsI;
+    Dependencies(ind).number = size(depsI,1);
 end
 
-% Find out inverse dependency!
+% Find out dependency!
 for ind = 1:length(Dependencies)
-    Dependencies(ind).number = 0;
-    Dependencies(ind).depsI = {};
+    Dependencies(ind).deps = '';
     
     for d = 1:length(Dependencies)
         if d ~= ind
-            for e = 1:length(Dependencies(d).deps)
-                if strcmp(Dependencies(ind).name, Dependencies(d).deps{e})
-                    Dependencies(ind).depsI(end+1) = {Dependencies(d).name};
-                    Dependencies(ind).number = Dependencies(ind).number + 1;
+            for e = 1:size(Dependencies(d).depsI,1)
+                if ~isempty(strfind(Dependencies(d).depsI(e,:), Dependencies(ind).name))
+                    Dependencies(ind).deps = strvcat(Dependencies(ind).deps, Dependencies(d).depsI(e,:));
                 end
             end
         end

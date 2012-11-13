@@ -129,47 +129,27 @@ switch task
         set(gca,'XTick',0:length(aap.acq_details.subjects))
         
         %% DIAGNOSTIC IMAGE
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-        set(gcf,'PaperPositionMode','auto')
-        print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
+        mriname = aas_prepare_diagnostic(aap,subj);
+                
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
                 [mfilename '__' mriname '.jpeg']));
         
-        %% Diagnostic VIDEO of masks
+        %% Diagnostic VIDEO
         if aap.tasklist.currenttask.settings.diagnostic
-            
-            movieFilename = fullfile(aap.acq_details.root, 'diagnostics', ...
-                [mfilename '__' mriname '.avi']);
-            % Create movie file by defining aviObject
-            try delete(movieFilename); catch; end
-            aviObject = avifile(movieFilename,'compression','none');
-            
-            try close(2); catch; end
-            figure(2)
-            set(2, 'Position', [0 0 1000 350])
-            windowSize = get(2,'Position');
-            
-            for y = 1:size(structOverlay{2},2)
-                for sess = 1:length(structOverlay)-1
-                    h = subplot(1,length(structOverlay)-1,sess);
-                    imagesc(rot90(squeeze(structOverlay{sess+1}(:,y,:))));
-                    caxis([0 length(aap.acq_details.subjects)])
-                    axis equal off
-                    zoomSubplot(h, 1.2)
-                end
-                
-                pause(0.01)                
-                % Capture frame and store in aviObject
-                aviObject = addframe(aviObject,getframe(2,windowSize));
+            segImg = {};
+            for seg = 1:size(SEGimg,1)
+                segImg = [segImg deblank(outstream(1+seg, :))];
             end
-
-            aviObject = close(aviObject);
+            
+            aas_image_avi(segImg, ...
+                [], ...
+                fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '.avi']), ...
+                2, ... % Axis
+                [1000 350], ...
+                2); % Rotations
             try close(2); catch; end
         end
-
+        
         %% DESCRIBE OUTPUTS
         aap=aas_desc_outputs(aap,'overlap_structural',outstream);
         

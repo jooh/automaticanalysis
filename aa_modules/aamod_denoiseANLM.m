@@ -25,13 +25,12 @@ switch task
         
         Sfn = aas_getfiles_bystream(aap,subj,'structural');
         
-        try
-            DCMfn = aas_getfiles_bystream(aap,subj,'structural_dicom_header');
-            
+        DHimg = aas_findstream(aap,'structural_dicom_header', subj);
+        
+        if ~isempty(DHimg)
             % dcmhdr{n}.SeriesDescription
             dcmhdr = [];
-            load(DCMfn);
-        catch
+            load(DHimg);
         end
         
         %% Denoise the images
@@ -39,11 +38,11 @@ switch task
         outstruct = '';
         outresid = '';
         
-        for d = aap.tasklist.currenttask.settings.structurals
+        for d = aap.tasklist.currenttask.settings.structural
             fprintf('Denoise structural image %s!\n', Sfn(d,:))
-            try
+            if ~isempty(DHimg)
                 fprintf('\t structural type %s!\n', dcmhdr{d}.SeriesDescription)
-            catch
+            else
                 fprintf('\t structural type UNKNOWN!\n')
             end
             
@@ -75,72 +74,38 @@ switch task
             spm_write_vol(rV, rY);
             
             try close(2); catch; end
-            % Then plot a diagnostic image...
-            % Save graphical output to common diagnostics directory
-            if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-                mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-            end
-            mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-            try
-                %% Draw noisy and denoised structural...
-                spm_check_registration(strvcat(V.fname, dV.fname))
-                
-                spm_orthviews('reposition', [0 0 0])
-                
-                figure(1);
-                set(gcf,'PaperPositionMode','auto')
-                print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname '_' num2str(d) '.jpeg']));
-            catch
-            end
+            
+            mriname = aas_prepare_diagnostic(aap,subj);
+            
+            %% Draw noisy and denoised structural...
+            spm_check_registration(strvcat(V.fname, dV.fname))
+            
+            spm_orthviews('reposition', [0 0 0])
+            
+            print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+                [mfilename '__' mriname '_' num2str(d) '.jpeg']));
+            
+            %% Diagnostic VIDEO
             if aap.tasklist.currenttask.settings.diagnostic
+                [junk, ROIname{r}] = fileparts(ROIimg(r,:));
                 
-                movieFilename = fullfile(aap.acq_details.root, 'diagnostics', ...
-                    [mfilename '__' mriname '_' num2str(d) '.avi']);
-                % Create movie file by defining aviObject
-                try delete(movieFilename); catch; end
-                aviObject = avifile(movieFilename,'compression','none');
-                
+                aas_image_avi({V.fname dV.fname}, ...
+                    [], ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' num2str(d) '.avi']), ...
+                    3, ... % Axis
+                    [800 600], ...
+                    2); % Rotations
                 try close(2); catch; end
-                figure(2)
-                set(2, 'Position', [0 0 1000 600])
-                windowSize = get(2,'Position');
-                
-                % Get resliced structural
-                EPIlims = [min(Y(:)) max(Y(:))];
-                
-                for z = 1:size(Y,3)
-                    h = subplot(1,2,1);
-                    imagesc(rot90(squeeze(Y(:,:,z))))
-                    caxis(EPIlims)
-                    axis equal off
-                    title('Before denoiseANLM')
-                    zoomSubplot(h, 1.2)
-                    
-                    h = subplot(1,2,2);
-                    imagesc(rot90(squeeze(dY(:,:,z))))
-                    caxis(EPIlims)
-                    axis equal off
-                    title('After denoiseANLM')
-                    zoomSubplot(h, 1.2)
-                    
-                    % Capture frame and store in aviObject
-                    pause(0.01)
-                    aviObject = addframe(aviObject,getframe(2,windowSize));
-                end
-                
-                aviObject = close(aviObject);
             end
         end
         
         %% DESCRIBE OUTPUTS!
         
-        try
-            dcmhdr = {dcmhdr{aap.tasklist.currenttask.settings.structurals}};
-            save(DCMfn, 'dcmhdr')
+        if ~isempty(DHimg)
+            dcmhdr = {dcmhdr{aap.tasklist.currenttask.settings.structural}};
+            save(DHimg, 'dcmhdr')
             
-            aap=aas_desc_outputs(aap,subj,'structural_dicom_header', DCMfn);
-        catch
+            aap=aas_desc_outputs(aap,subj,'structural_dicom_header', DHimg);
         end
         
         % Structural image after denoising

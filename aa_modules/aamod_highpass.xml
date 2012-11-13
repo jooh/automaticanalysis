@@ -12,13 +12,20 @@
             
             <inputstreams>
                 <stream>epi</stream>
-                <stream>epi_header</stream>
+                <stream>epi_dicom_header</stream>
             </inputstreams>
             <outputstreams>
                 <stream>epi</stream>
             </outputstreams>
-            <HParam>100</HParam>
-            <diagnostic>1</diagnostic>
+            
+            <!-- Type of high pass filter: detrend, spm, butterworth -->
+            <HFtype>spm</HFtype>
+            
+            <HParam desc='High pass filter cutoff, in seconds - as for SPM'
+            >128</HParam>
+            <chunks desc='Chunk data into n^3 pieces (default = 1)'
+            >1</chunks>
+            
         </currenttask>
     </tasklist>
 </aap>

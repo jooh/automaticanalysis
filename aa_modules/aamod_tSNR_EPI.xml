@@ -4,8 +4,8 @@
         <currenttask domain='session' desc='Calculate tSNR from a set of EPI images' modality='MRI'>
             
             <qsub>
-                <timeBase>1</timeBase>
-                <memoryBase>1</memoryBase>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.5</memoryBase>
             </qsub>
             
             <permanenceofoutput>2</permanenceofoutput>
@@ -13,15 +13,16 @@
             <inputstreams>
                 <stream>rois</stream>
                 <stream>epi</stream>
-                <stream>epi_header</stream>
             </inputstreams>
             
             <outputstreams>
                 <stream>tSNR</stream>
             </outputstreams>
             
-            <HParam>100</HParam>
-            <diagnostic>1</diagnostic>
+            <chunks desc='Chunk data into n^3 pieces (default = 1)'
+            >1</chunks>
+            
+            <diagnostic>0</diagnostic>
             
         </currenttask>
     </tasklist>

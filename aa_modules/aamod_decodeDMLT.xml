@@ -6,9 +6,10 @@
             <permanenceofoutput>3</permanenceofoutput>
             
             <inputstreams>
-                <stream>epi</stream>
-                <!-- We can use betas or T contrasts even
                 <stream>firstlevel_betas</stream>
+                
+                <!-- We can use betas or T contrasts even
+                <stream>epi</stream>
                 <stream>firstlevel_cons</stream>
                 -->
                 <!-- ROIs that we want to test -->
@@ -29,15 +30,17 @@
             <!-- To add our DMLT vector -->
             <model>
                 <subject></subject>
-                <session></session>
                 <DMLT>
                     <name></name>
                     <vector></vector>
-                </DMLT>
+                    <object></object>
+                </DMLT>                
             </model>
             
             <!-- Classifier! -->
+            <!--
             <DMLTobj>dml.crossvalidator(''mva'',{dml.svm},''type'',''nfold'',''folds'',5)</DMLTobj>
+            -->
             
         </currenttask>
     </tasklist>

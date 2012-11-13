@@ -10,7 +10,7 @@ EP = aap.tasklist.currenttask.settings;
 %C => [EP.blocks*EP.sessions, EP.blocks*EP.sessions, EP.conditions, EP.conditions]
 
 ind=0;
-if EP.triangulation == 1
+if strcmp(EP.triangulation, 'acrossSessions')
     uSimil = zeros(EP.conditions, ...
         EP.conditions, ...
         ((EP.blocks ...
@@ -24,7 +24,23 @@ if EP.triangulation == 1
             uSimil(:,:,ind) = Simil(i,j,:,:);
         end
     end
-elseif EP.triangulation == 0
+elseif strcmp(EP.triangulation, 'withinSessions')
+    % Triangulation but only consider within block comparisons...
+    uSimil = zeros(EP.conditions, ...
+        EP.conditions, ...
+        EP.sessions ...
+        * ((EP.blocks)^2 ...
+        - EP.blocks) / 2);
+    % Triangulate, such that comparisons across EP.blocks within each block occur only once...    
+    for b = EP.sessions
+        for i = 1:(EP.blocks)
+            for j = (i+1):(EP.blocks)
+                ind = ind + 1;
+                uSimil(:,:,ind) = Simil((b-1)*EP.blocks + i, (b-1)*EP.blocks + j,:,:);
+            end
+        end
+    end
+elseif strcmp(EP.triangulation, 'all')
     uSimil = zeros(EP.conditions, ...
         EP.conditions, ...
         (EP.blocks ...
@@ -42,7 +58,7 @@ elseif EP.triangulation == 0
             uSimil(:,:,ind) = Simil(i,j,:,:);
         end
     end
-elseif EP.triangulation == 2
+elseif strcmp(EP.triangulation, 'none')
     % One single big matrix!
     % Already sorted out in mvpaa_correlation script.
     uSimil = zeros(EP.conditions ...
@@ -52,23 +68,8 @@ elseif EP.triangulation == 2
         * EP.blocks ...
         * EP.sessions, 1);
     uSimil(:,:,1) = Simil;    
-elseif EP.triangulation == 3
-    % Triangulation but only consider within block comparisons...
-    uSimil = zeros(EP.conditions, ...
-        EP.conditions, ...
-        EP.sessions ...
-        * ((EP.blocks)^2 ...
-        - EP.blocks) / 2);
-    % Triangulate, such that comparisons across EP.blocks within each block occur only once...    
-    for b = EP.sessions
-        for i = 1:(EP.blocks)
-            for j = (i+1):(EP.blocks)
-                ind = ind + 1;
-                uSimil(:,:,ind) = Simil((b-1)*EP.blocks + i, (b-1)*EP.blocks + j,:,:);
-            end
-        end
-    end
-elseif EP.triangulation == 4
+
+elseif strcmp(EP.triangulation, 'average')
     % This averages over all subblock/block comparisons (excluding the
     % equivalent ones, but does not exclue the leading diagonal, instead
     % naning it when i and j are equal. Finally, it nanmeans the matrix.
@@ -92,6 +93,8 @@ elseif EP.triangulation == 4
         end
     end
     uSimil = nanmean(uSimil,3);
+else
+    aas_log(aap, true, 'Cannot find the correct triangulation')
 end
 
 % Useful for ROI analysis visualization...

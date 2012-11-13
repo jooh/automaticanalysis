@@ -23,7 +23,7 @@ switch task
             end
         end
         
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
+        mriname = aas_prepare_diagnostic(aap,subj);
         
         %% CONCATENATE THE DATA...
         fprintf('\nConcatenating the data')

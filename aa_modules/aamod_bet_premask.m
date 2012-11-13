@@ -28,10 +28,15 @@ switch task
         % Which file is considered, as determined by the structural parameter!
         if size(Simg,1) > 1
             Simg = deblank(Simg(aap.tasklist.currenttask.settings.structural, :));
-            fprintf('\tWARNING: Several structurals found, considering: %s\n', Simg)
+            fprintf('WARNING: Several structurals found, considering: \n')
+            for t = 1:length(aap.tasklist.currenttask.settings.structural)
+                fprintf('\t%s\n', Simg(t,:))
+            end
         end
         
-        Sdir = fileparts(Simg);
+        % Image that we will be using for coregistration...
+        cSimg = deblank(Simg(1,:));
+        Sdir = fileparts(cSimg);
         
         %% 0) Check that the templates we need exist!
         % Get the template
@@ -50,8 +55,8 @@ switch task
         copyfile(sTimg, fullfile(Sdir, 'T1.nii'));
         sTimg = fullfile(Sdir, 'T1.nii');
         
-        % Coregister template to Structural
-        x = spm_coreg(spm_vol(Simg), spm_vol(sTimg), flags.estimate);
+        % Coregister template to first Structural included
+        x = spm_coreg(spm_vol(cSimg), spm_vol(sTimg), flags.estimate);
         
         % Set entire template matrix to 1
         V = spm_vol(sTimg);
@@ -79,47 +84,51 @@ switch task
             'mean', 0);           % write mean image
         
         % Reslice
-        spm_reslice(strvcat(Simg, sTimg), resFlags);
+        spm_reslice(strvcat(cSimg, sTimg), resFlags);
         
-        %% 3) Mask the Structural image using the T1 template
+        %% 3) Mask the Structural(s) image using the T1 template
         
         fprintf('Mask structural with resliced T1 template\n')
         
         M = spm_read_vols(spm_vol(fullfile(Sdir, 'rT1.nii')));
         M = M>0;
         
-        % Mask structural
-        V = spm_vol(Simg);
-        Y = spm_read_vols(V);
-        Y = Y.*M;
-        spm_write_vol(V,Y);
+        for t = 1:length(aap.tasklist.currenttask.settings.structural)
+            % Mask structural
+            V = spm_vol(deblank(Simg(t,:)));
+            Y = spm_read_vols(V);
+            Y = Y.*M;
+            spm_write_vol(V,Y);
+        end
         
         delete(fullfile(Sdir, 'T1.nii'));
         delete(fullfile(Sdir, 'rT1.nii'));
         
         %% DIAGNOSTIC IMAGE
-        % Save graphical output to common diagnostics directory
-        if ~exist(fullfile(aap.acq_details.root, 'diagnostics'), 'dir')
-            mkdir(fullfile(aap.acq_details.root, 'diagnostics'))
-        end
-        mriname = strtok(aap.acq_details.subjects(subj).mriname, '/');
-        try
-            %% Draw structural image...
-            spm_check_registration(Simg)
+        mriname = aas_prepare_diagnostic(aap,subj);
+        
+        %% Draw structural image(s)...
+        spm_check_registration(Simg)
+        
+        print('-djpeg','-r150',fullfile(aap.acq_details.root, 'diagnostics', ...
+            [mfilename '__' mriname '.jpeg']));
+        
+        %% Diagnostic VIDEO of structural(s)
+        if aap.tasklist.currenttask.settings.diagnostic
+            Ydims = {'X', 'Y', 'Z'};
             
-            %% Diagnostic VIDEO of masks
-            spm_orthviews('reposition', [0 0 0])
-            
-            try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;
-            set(gcf,'PaperPositionMode','auto')
-            print('-djpeg','-r75',fullfile(aap.acq_details.root, 'diagnostics', ...
-                [mfilename '__' mriname '.jpeg']));
-        catch
+            for d = 1:length(Ydims)
+                aas_image_avi( Simg, ...
+                    [], ...
+                    fullfile(aap.acq_details.root, 'diagnostics', [mfilename '__' mriname '_' Ydims{d} '.avi']), ...
+                    d, ... % Axis
+                    [800 600], ...
+                    2); % Rotations
+            end
+            try close(2); catch; end
         end
         
         %% DESCRIBE OUTPUTS!
-        
         % Structural image after BETting
         aap=aas_desc_outputs(aap,subj,'structural', Simg);
-        
 end

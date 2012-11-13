@@ -8,7 +8,7 @@
                 <memoryBase>1</memoryBase>
             </qsub>
             
-            <permanenceofoutput>1</permanenceofoutput>
+            <permanenceofoutput>2</permanenceofoutput>
             
             <inputstreams>
                 <stream>epiBETmask</stream>
@@ -26,9 +26,10 @@
             <orderMM>[20 20 20]</orderMM>
             
             <!-- Alternatively, we can force the order by hand (e.g. [10 16 10] or [8 8 8]) -->
+            <structural>2</structural>
             <order></order>          
             <bias>1</bias>
-            <diagnostic>1</diagnostic>
+            <diagnostic>0</diagnostic>
             
         </currenttask>
     </tasklist>
