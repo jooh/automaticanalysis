@@ -30,15 +30,20 @@ switch task
             % Load up automatically scanned value, validate
             aisfn=fullfile(subjpath,'autoidentifyseries_saved.mat');
             ais=load(aisfn);
-            if (length(ais.series_newfieldmap)>2)
-                aas_log(aap,false,sprintf('Was expecting only two fieldmaps, but autoidentify series found %d. Will proceed with last t2o, but you might want to try using the ignoreseries field in aas_addsubject in your user script.',length(ais.series_newfieldmap)));
-                fieldseries=ais.series_newfieldmap(end-1:end);
-            elseif (isempty(ais.series_newfieldmap))
-                aas_log(aap,true,'No fieldmaps found.');
-            else
-                fieldseries=ais.series_newfieldmap;
-            end;
-        end;
+            if length(ais.series_newfieldmap)>aap.options.autoidentifyfieldmaps_number
+                if aap.options.autoidentifyfieldmaps_choosefirst
+                    fieldseries = ais.series_newfieldmap(...
+                        1:aap.options.autoidentifyfieldmaps_number);
+                elseif aap.options.autoidentifystructural_chooselast
+                    fieldseries = ais.series_newfieldmap(...
+                    (end-aap.options.autoidentifyfieldmaps_number+1):end);
+                else
+                    aas_log(aap,true,sprintf('Was expecting only %d fieldmaps, but autoidentify series found %d. Add extras to ignoreseries or use the choosefirst/chooselast options.',...
+                        aap.options.autoidentifyfieldmaps_number,...
+                        length(ais.series_newfieldmap)));
+                end
+            end
+        end
         
         dicom_files_src = {};
         % Go through each fieldmap
