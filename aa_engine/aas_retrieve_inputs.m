@@ -106,7 +106,7 @@ if (sourcestagenumber==-1)
     if (~doneremotefetch)
         aap=aas_copyfromremote(aap,inputstream.host,remoteoutputstreamdesc,outputstreamdesc,true);
     end;
-    
+
     if (exist(outputstreamdesc,'file'))
         
         reloadfiles=true;
