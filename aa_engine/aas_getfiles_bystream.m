@@ -2,7 +2,6 @@
 % function [imagefns]=aas_getfiles_bystream(aap,[i,[j,]]streamname[,inputmodulenumber])
 %  stream may be at study, subject or session level depending on number of
 %  parameters
-%  streamname is name of stream
 %
 % See a;sp aas_getfiles_bystream, which is intended for EPI images. 
 %
@@ -19,7 +18,7 @@ if (~exist(inpstreamdesc,'file')) && length(varargin) == 2
 end
 
 if (~exist(inpstreamdesc,'file'))
-    aas_log(aap,true,sprintf('Attempting to load stream %s from file %s, but not found',streamname,inpstreamdesc));
+    aas_log(aap,true,sprintf('Attempting to load stream from file %s, but not found. Attempting to load undefined input stream?',inpstreamdesc));
 end;
 fid=fopen(inpstreamdesc,'r');
 
