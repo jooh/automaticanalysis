@@ -152,10 +152,6 @@ for subdirind=1:length(subdirs)
                 tmp{1}.sliceorder = sliceorder;
             end
             
-            % [AVG] Add the TR to the DICOMHEADERS explicitly before
-            % saving (and in seconds!)
-            tmp{1}.volumeTR = TR/1000;
-            
             DICOMHEADERS=[DICOMHEADERS tmp];
             
             if (DICOMHEADERS{end}.AcquisitionNumber~=oldAcquisitionNumber)
