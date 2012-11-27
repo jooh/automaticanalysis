@@ -4,7 +4,9 @@
 function outfiles = addprefix(files,prefix)
 
 [nfiles,rowlen] = size(files);
-outfiles = char([nfiles,rowlen+length(prefix)]);
+% weirdly, there seems to be no direct way to initialise a blank char array
+% in Matlab
+outfiles = repmat(' ',[nfiles,rowlen+length(prefix)]);
 for f = 1:nfiles
     [path, name, ext] = fileparts(files(f,:));
     outfiles(f,:) = fullfile(path,[prefix name ext]);
