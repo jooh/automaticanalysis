@@ -54,14 +54,17 @@ for k1=1:length(aap.tasklist.main.module)
                 end;
                 % [AVG] to make the inputs/outpus more obvious!
                 %aas_log(aap,false,sprintf('Stage %s input %s comes from remote host %s stream %s',stagename,stream.name,stream.host,stream.sourcestagename));
-                cprintf('text', 'Stage')
-                cprintf([65, 105, 225]/255, stagename)
-                cprintf('text', 'input')
-                cprintf([46, 139, 87]/255, stream.name)
-                cprintf('text', 'comes from remote host')
-                cprintf('-text', stream.host);
-                cprintf('text', 'stream')
-                cprintf('Magenta', stream.sourcestagename)
+                % JC - don't use cprintf directly since this causes crashes
+                % if running Matlab from a terminal. aas_log handles this
+                % case much better
+                aas_log(aap,0,'Stage','text');
+                aas_log(aap,0,stagename,[65, 105, 225]/255);
+                aas_log(aap,0,'input','text');
+                aas_log(aap,0,stream.name,[46, 139, 87]/255);
+                aas_log(aap,0,'comes from remote host','text');
+                aas_log(aap,0,stream.host,'-text');
+                aas_log(aap,0,'stream','text');
+                aas_log(aap,0,stream.sourcestagename,'Magenta');
             else
                 
                 [aap stagethatoutputs mindepth]=searchforoutput(aap,k1,inputstreamname,true,0,inf);
@@ -69,26 +72,26 @@ for k1=1:length(aap.tasklist.main.module)
                     % [AVG] to make the inputs/outpus more obvious!
                     %aas_log(aap,true,sprintf('Stage %s required input %s is not an output of any stage it is dependent on. You might need to add an aas_addinitialstream command or get the stream from a remote source.',stagename,inputstreamname));
                     
-                    cprintf('text', 'Stage')
-                    cprintf([65, 105, 225]/255, stagename)
-                    cprintf('text', 'required input')
-                    cprintf([46, 139, 87]/255, inputstreamname)
-                    cprintf('text', 'is not an output of any stage it is dependent on')
+                    aas_log(aap,0,'Stage','text');
+                    aas_log(aap,0,stagename,[65, 105, 225]/255);
+                    aas_log(aap,0,'required input','text');
+                    aas_log(aap,0,inputstreamname,[46, 139, 87]/255);
+                    aas_log(aap,0,'is not an output of any stage it is dependent on','text')
                     aas_log(aap,true,'You might need to add an aas_addinitialstream command or get the stream from a remote source.');
                 else
                     [sourcestagepath sourcestagename]=fileparts(aap.tasklist.main.module(stagethatoutputs).name);
                     sourceindex=aap.tasklist.main.module(stagethatoutputs).index;
                     % [AVG] to make the inputs/outpus more obvious!
                     %aas_log(aap,false,sprintf('Stage %s input %s comes from %s which is %d dependencies prior',stagename,inputstreamname,sourcestagename,mindepth));
-                    cprintf('text', 'Stage')
-                    cprintf([65, 105, 225]/255, stagename)
-                    cprintf('text', 'input')
-                    cprintf([46, 139, 87]/255, inputstreamname)
-                    cprintf('text', 'comes from')
-                    cprintf('Magenta', sourcestagename)
-                    cprintf('text', 'which is')
-                    cprintf('-text', num2str(mindepth));
-                    cprintf('text', 'dependencies prior.\n')
+                    aas_log(aap,0,'Stage','text');
+                    aas_log(aap,0,stagename,[65, 105, 225]/255);
+                    aas_log(aap,0,'input','text');
+                    aas_log(aap,0,inputstreamname,[46, 139, 87]/255);
+                    aas_log(aap,0,'comes from','text');
+                    aas_log(aap,0,sourcestagename,'Magenta');
+                    aas_log(aap,0,'which is','text');
+                    aas_log(aap,0, num2str(mindepth),'-text');
+                    aas_log(aap,0,'dependencies prior.\n','text')
                     
                     stream=[];
                     stream.name=inputstreamname;
