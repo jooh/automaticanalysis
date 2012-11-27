@@ -220,7 +220,12 @@ else
                         %                             branchStages.module(iBInd(m)).extraparameters.aap.directory_conventions.analysisid_suffix = strcat(outBranchSuffix, thisBranchSuffix);
                         %                         end
                         
-                        if outstages.module(oIndex(oB)).branchDepth <= branchStages.module(iBInd(m)).branchDepth
+                        % JC: added extra strcmp here to avoid weird
+                        % behaviour where each module in a branch ends up
+                        % in a separate sub directory (so for suffix X
+                        % module 1 is in X, module 2 in XX, module 3 in
+                        % XXX...
+                        if (outstages.module(oIndex(oB)).branchDepth <= branchStages.module(iBInd(m)).branchDepth) && ~strcmp(thisBranchSuffix,outBranchSuffix)
                             branchStages.module(iBInd(m)).extraparameters.aap.directory_conventions.analysisid_suffix = strcat(outBranchSuffix, thisBranchSuffix);
                         else
                             branchStages.module(iBInd(m)).extraparameters.aap.directory_conventions.analysisid_suffix = outBranchSuffix;
