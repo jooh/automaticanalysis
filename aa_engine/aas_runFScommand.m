@@ -31,7 +31,7 @@ switch (aap.directory_conventions.freesurfershell)
     case 'none'
         FSsetup = fullfile(aap.directory_conventions.freesurferdir, 'SetUpFreeSurfer.sh');
         FSenv = fullfile(aap.directory_conventions.freesurferdir, 'FreeSurferEnv.sh');
-    case 'csh'
+    case {'csh','tcsh'}
         FSsetup = fullfile(aap.directory_conventions.freesurferdir, 'SetUpFreeSurfer.csh');
         FSenv = fullfile(aap.directory_conventions.freesurferdir, 'FreeSurferEnv.csh');
 end;
@@ -44,7 +44,7 @@ if not(isempty(FSenv)) && not(FSenv(end)==';')
 end;
 
 switch (aap.directory_conventions.freesurfershell)
-    case 'none'
+    case {'none','tcsh'}
         cmd=[FSsetup FSenv FScmd];
     case 'csh'
         cmd=[FSsetup FSenv 'csh -c ' FScmd];
