@@ -32,8 +32,12 @@ switch task
         end
         
         %%  make output stream
-        FSAR1Dir = fullfile(aas_getsubjpath(aap, subj)); % freesurfer autorecon1 dir
-        outstream = dirrec(FSAR1Dir);
-        aap=aas_desc_outputs(aap,subj,'freesurfer',outstream);
-end
+        % (JC: now specific to FS directories rather than everything under
+        % the sun)
+        subdir = aas_getsubjpath(aap,subj);
+        outs = [];
+        for d = {'RAW','ANAT','mri'}
+            outs = [outs; dirrec(fullfile(subdir,d{1}))];
+        end
+        aap = aas_desc_outputs(aap,subj,'freesurfer',outs);
 end
