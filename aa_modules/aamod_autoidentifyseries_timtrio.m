@@ -132,8 +132,8 @@ switch task
                 
                 % Decide whether to ignore this series [djm 20/3/06]
                 % absolute number rather than index (jc)
-                if ~any(aap.acq_details.subjects(i).ignoreseries == ...
-                        rawdata_allseries(j))
+                if ~any(aap.acq_details.subjects(subj).ignoreseries == ...
+                        rawdata_allseries(sess))
                     if (aap.options.autoidentifyfieldmaps)
                         % Just identify all possible fieldmaps without
                         % error checking (comes later)
@@ -195,7 +195,7 @@ switch task
             assert(~all([aap.options.autoidentifyfieldmaps_choosefirst ...
                 aap.options.autoidentifyfieldmaps_chooselast]),...
                 'cannot specify both choosefirst and chooselast fieldmap');
-            aap.acq_details.subjects(i).siemensfieldmap={};
+            aap.acq_details.subjects(subj).siemensfieldmap={};
             % pick first / last ntarget fieldmaps
             if aap.options.autoidentifyfieldmaps_choosefirst
                 series_newfieldmap = series_newfieldmap(1:ntarget);
@@ -210,7 +210,7 @@ switch task
                 comment=[comment ' ' sprintf(' and %d',...
                     series_newfieldmap(n))];
             end
-            aap.acq_details.subjects(i).siemensfieldmap=series_newfieldmap;
+            aap.acq_details.subjects(subj).siemensfieldmap=series_newfieldmap;
         end
         
         if (aap.options.autoidentifystructural)
@@ -221,13 +221,13 @@ switch task
                     series_spgr = series_spgr(1);
                 end
             end
-            aap.acq_details.subjects(i).structural=series_spgr;
+            aap.acq_details.subjects(subj).structural=series_spgr;
             comment=[comment sprintf(' Structural series %d ',...
                 series_spgr)];
         end
         
         if (aap.options.autoidentifytmaps)
-            aap.acq_details.subjects(i).tmaps=series_tmaps;
+            aap.acq_details.subjects(subj).tmaps=series_tmaps;
             comment=[comment [' T maps series ' sprintf('%d\t',...
                 series_tmaps)]];
         end
