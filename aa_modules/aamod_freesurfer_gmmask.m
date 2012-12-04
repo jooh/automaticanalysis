@@ -1,7 +1,7 @@
 % Generate a volumetric GM mask in freesurfer, convert to nifti and
 % resample in SPM to EPI resolution.
 % [aap,resp]=aamod_freesurfer_gmmask(aap,task,subj)
-function [aap,resp]=aamod_freesurfer_tkregister2(aap,task,subj)
+function [aap,resp]=aamod_freesurfer_gmmask(aap,task,subj)
 
 resp='';
 
@@ -75,7 +75,6 @@ switch task
             'mean', 0);           % write mean image
         spm_reslice(strvcat(epipath, outpath), resFlags);
 
-        % optionally smooth 
         outpath_epi = addprefix(outpath,'epi_');
         V = spm_vol(outpath_epi);
         Y = spm_read_vols(V);
