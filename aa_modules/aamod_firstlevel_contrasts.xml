@@ -97,6 +97,7 @@ You must specify one or more contrasts here using one of the following formats
             <inputstreams>
                 <stream>firstlevel_spm</stream>
                 <stream>firstlevel_betas</stream>
+                <stream>firstlevel_residuals</stream>
             </inputstreams>
             <outputstreams>
                 <stream>firstlevel_spm</stream>
