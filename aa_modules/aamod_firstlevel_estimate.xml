@@ -14,6 +14,8 @@
             <outputstreams>
                 <stream>firstlevel_spm</stream>
                 <stream>firstlevel_betas</stream>
+                <stream>firstlevel_mask</stream>
+                <stream>firstlevel_residuals</stream>
             </outputstreams>
         </currenttask>
     </tasklist>

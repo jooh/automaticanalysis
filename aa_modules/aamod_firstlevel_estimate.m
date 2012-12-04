@@ -40,11 +40,17 @@ switch task
         for betaind=1:length(allbetas);
             betafns=strvcat(betafns,fullfile(anadir,allbetas(betaind).name));
         end
-        otherfiles={'mask.hdr','mask.img','ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
-        for otherind=1:length(otherfiles)
-            betafns=strvcat(betafns,fullfile(anadir,otherfiles{otherind}));
-        end
         aap=aas_desc_outputs(aap,subj,'firstlevel_betas',betafns);
+        % separate stream makes more sense here
+        others = [];
+        otherfiles={'ResMS.hdr','ResMS.img','RPV.hdr','RPV.img'};
+        for otherind=1:length(otherfiles)
+            others=strvcat(others,fullfile(anadir,otherfiles{otherind}));
+        end
+        aap=aas_desc_outputs(aap,subj,'firstlevel_residuals',others);
+        % and here
+        aap = aas_desc_outputs(aap,subj,'firstlevel_mask',...
+            {fullfile(anadir,'mask.hdr'),fullfile(anadir,'mask.img')});
     case 'checkrequirements'
         
     otherwise
