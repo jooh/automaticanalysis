@@ -54,6 +54,10 @@ switch task
             if isempty(hits) || isempty(hits.label) || isempty(hits.chunk)
                 continue
             end
+            % skip t maps belonging to ignored labels
+            if any(strcmp(hits.label,ts.ignorelabels))
+                continue
+            end
             mdata(t) = struct('name',tV.fname,'label',hits.label,...
                 'chunk',str2double(hits.chunk),'order',t);
         end

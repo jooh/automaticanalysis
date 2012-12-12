@@ -13,7 +13,7 @@
             <chunkprefix>run</chunkprefix>
             <labelprefix>Sn(1)_</labelprefix>
             <chunkfirst>0</chunkfirst>
-            
+            <ignorelabels><item>feedback</item><item>responses</item></ignorelabels>
             <inputstreams>
                 <stream>freesurfer_gmmask</stream>
                 <stream>firstlevel_spmts</stream>
