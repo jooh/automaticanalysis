@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='restrict analysis to reasonably sized searchlights' modality='MRI'>
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>5</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>2</permanenceofoutput>
+            
+            <minvox>10</minvox>
+            <inputstreams>
+                <stream>freesurfer_gmmask</stream>
+                <stream>pilab_volume</stream>
+                <stream>pilab_searchlight_spheres</stream>
+                <stream>pilab_searchlight_radius</stream>
+                <stream>pilab_searchlight_nvox</stream>
+                <stream>pilab_searchlight_nspheres</stream>
+            </inputstreams>
+            
+            <outputstreams>
+                <stream>freesurfer_gmmask</stream>
+                <stream>pilab_volume</stream>
+                <stream>pilab_searchlight_spheres</stream>
+                <stream>pilab_searchlight_radius</stream>
+                <stream>pilab_searchlight_nvox</stream>
+                <stream>pilab_searchlight_nspheres</stream>
+            </outputstreams>
+
+            <!-- Diagnostic videos? Verbosity? -->
+            <diagnostic desc='Do we display diagnostic videos?'
+            >0</diagnostic>
+            <verbose desc='Do we display Freesurfer output?'
+            >1</verbose>
+            
+        </currenttask>
+    </tasklist>
+</aap>
