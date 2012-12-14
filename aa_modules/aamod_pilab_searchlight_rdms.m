@@ -29,7 +29,8 @@ switch task
         % iterate over sessions
         nsess = length(aap.acq_details.selected_sessions);
         % prepare output
-        rdms = NaN([vol.nlabels vol.nlabels vol.nfeatures nsess]);
+        npairs = nchoosek(vol.nlabels,2);
+        data = NaN([npairs vol.nfeatures nsess]);
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         outpaths_sessrdms = [];
 
@@ -37,7 +38,7 @@ switch task
         for sess = 1:nsess
             % copying here saves memory per worker in parfor
             sessvol = vol(vol.chunks==sess,:);
-            sessrdms = rdms(:,:,:,sess);
+            sessdata = data(:,:,sess);
             fprintf('running searchlight %d of %d...\n',sess,nsess)
             tic;
             parfor n = 1:vol.nfeatures
@@ -46,28 +47,31 @@ switch task
                     continue
                 end
                 sphvol = sessvol(:,spheres(n,:));
-                sessrdms(:,:,n) = squareform(pdist(sphvol.data,...
-                    aap.tasklist.currenttask.settings.distancemetric));
+                sessdata(:,n) = pdist(sphvol.data,...
+                    aap.tasklist.currenttask.settings.distancemetric);
             end
             fprintf('finished in %s.\n',seconds2str(toc));
             % RDMs
-            rdms(:,:,:,sess) = sessrdms;
-            outpath_rdms = fullfile(pidir,sprintf(...
+            data(:,:,sess) = sessdata;
+            % make a volume instance
+            sessdisvol = Volume(sessdata,vol);
+            outpath_sessdata = fullfile(pidir,sprintf(...
                 'searchlight_rdms_session%02d.mat',sess));
-            save(outpath_rdms,'sessrdms');
-            outpaths_sessrdms = [outpaths_sessrdms; outpath_rdms];
+            save(outpath_sessdata,'sessdisvol');
+            outpaths_sessrdms = [outpaths_sessrdms; outpath_sessdata];
         end
 
         % make average RDM across sessions and save
-        meanrdms = mean(rdms,4);
-        outpath_meanrdm = fullfile(pidir,'searchlight_rdms_mean.mat');
-        save(outpath_meanrdm,'meanrdms');
+        meandata = mean(data,3);
+        disvol = Volume(meandata,vol);
+        outpath_mean = fullfile(pidir,'searchlight_rdms_mean.mat');
+        save(outpath_mean,'disvol');
 
         % describe outputs
         aap=aas_desc_outputs(aap,subj,'pilab_data_rdms_sess',...
             outpaths_sessrdms);
         aap=aas_desc_outputs(aap,subj,'pilab_data_rdms_mean',...
-            outpath_meanrdm);
+            outpath_mean);
     case 'checkrequirements'
         
     otherwise
