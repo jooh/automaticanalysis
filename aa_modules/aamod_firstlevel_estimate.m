@@ -11,24 +11,12 @@ switch task
         cwd=pwd;
         spmpath = aas_getfiles_bystream(aap,subj,'firstlevel_spm');
         load(spmpath);
-        % if we want to cut scans outside a timewindow of first/last event
-        % for independence purposes
-        if ~isinf(aap.tasklist.currenttask.settings.padevents)
-            keyboard;
-        end
         anadir = fileparts(spmpath);
         cd(anadir)
-        SPMdes = spm_fmri_spm_ui(SPM);
-        % now check real covariates and nuisance variables are
-        % specified correctly
-        %% (doesn't seem to be used in any other code)
-        %SPMdes.xX.iG=cols_nuisance;
-        %SPMdes.xX.iC=cols_interest;
-        
         % (maybe disable auto mask, set explicit mask?) Apparently must be
         % done after spm_fmri_spm_ui
         spm_unlink(fullfile('.', 'mask.img')); % avoid overwrite dialog
-        SPMest = spm_spm(SPMdes);
+        spm_spm(SPM);
         cd(cwd);
         % Describe outputs
         %  firstlevel_spm

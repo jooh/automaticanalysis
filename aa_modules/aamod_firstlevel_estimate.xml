@@ -7,7 +7,6 @@
                 <memoryBase>0.25</memoryBase>
             </qsub>
             <permanenceofoutput>3</permanenceofoutput>
-            <padevents>Inf</padevents>
             <inputstreams>
                 <stream>firstlevel_spm</stream>
             </inputstreams>
