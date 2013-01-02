@@ -26,20 +26,18 @@ switch task
             end
         end
 
-        % iterate over sessions
-        nsess = length(aap.acq_details.selected_sessions);
         % prepare output
         npairs = nchoosek(vol.nlabels,2);
-        data = NaN([npairs vol.nfeatures nsess]);
+        data = NaN([npairs vol.nfeatures vol.nchunks]);
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         outpaths_sessrdms = [];
 
         % run
-        for sess = 1:nsess
+        for sess = 1:vol.nchunks
             % copying here saves memory per worker in parfor
             sessvol = vol(vol.chunks==sess,:);
             sessdata = data(:,:,sess);
-            fprintf('running searchlight %d of %d...\n',sess,nsess)
+            fprintf('running searchlight %d of %d...\n',sess,vol.nchunks)
             tic;
             parfor n = 1:vol.nfeatures
                 % skip empty spheres (these come out as NaN)
