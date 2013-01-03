@@ -70,8 +70,12 @@ switch task
                 predictors(pre).name));
             % save as volume with massive ndata
             nullvol = Volume(nulldists,disvol);
-            save(nullout,'nullvol');
+            % for mysterious reasons Matlab cannot save this in any older
+            % version
+            save(nullout,'nullvol','-v7.3');
             nulldistpaths{pre} = nullout;
+            % not much faith in Matlab garbage collection
+            clear nullvol
         end
         % describe outputs
         aap=aas_desc_outputs(aap,subj,'pilab_r',...
