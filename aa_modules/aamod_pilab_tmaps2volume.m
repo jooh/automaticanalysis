@@ -10,7 +10,7 @@ switch task
         resp='subject';   % this module needs to be run once per subject
         
     case 'description'
-        resp='T map to pilab Volume';
+        resp='T map to pilab MriVolume';
         
     case 'summary'
         
@@ -66,8 +66,9 @@ switch task
         assert(~isempty(mdata),'no matching T maps found!');
 
         % make instance and save
-        vol = Volume({mdata.name},mask,'labels',{mdata.label},...
-            'chunks',[mdata.chunk],'order',[mdata.order]);
+        vol = MriVolume({mdata.name},mask,'metasamples',struct(...
+            'labels',{{mdata.label}},'name',{{mdata.name}},'chunks',...
+            [mdata.chunk],'order',[mdata.order]));
         outdir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         if ~exist(outdir,'dir')
             mkdir(outdir);

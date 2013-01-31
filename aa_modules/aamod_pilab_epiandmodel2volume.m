@@ -10,7 +10,7 @@ switch task
         resp='subject';   % this module needs to be run once per subject
         
     case 'description'
-        resp='T map to pilab Volume';
+        resp='construct EPI and design pilab Volumes';
         
     case 'summary'
         
@@ -44,7 +44,8 @@ switch task
         % construct epi container - this can be quite slow
         fprintf('building epi volume instance...\n')
         tic;
-        epivol = Volume(volpaths,mask,'chunks',chunks,'order',order);
+        epivol = MriVolume(volpaths,mask,'metasamples',struct(...
+            'chunks',chunks,'order',order));
         fprintf('finished in %s.\n',seconds2str(toc));
         % remove any voxels that == 0 at any point (likely voxels that went
         % outside the mask after realign). NaNs are unlikely but why not
@@ -78,11 +79,12 @@ switch task
         % nreg, not nvol)
         reglabels = cellfun(@(x)x.label,labarr,'uniformoutput',false);
         regchunks = cellfun(@(x)str2double(x.chunk),labarr);
-        % NB, design matrix is actually transposed relative to volume (so
-        % regressors in rows and volumes in columns somewhat
-        % counter-intuitively).
-        designvol = Volume(dm',[],'labels',reglabels,'featuregroups',...
-            chunks,'names',SPM.xX.name,'chunks',regchunks);
+        % now no longer transpose DM - so volumes in sample dim,
+        % regressors in feature dim
+        designvol = BaseVolume(dm,'metasamples',struct('names',...
+            {{SPM.xY.VY.fname}'},'chunks',chunks),'metafeatures',struct(...
+            'labels',{reglabels},'chunks',regchunks,'names',...
+            {SPM.xX.name}));
 
         % save and describe
         outdir = fullfile(aas_getsubjpath(aap,subj),'pilab');

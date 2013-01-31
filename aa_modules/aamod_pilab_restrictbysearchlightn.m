@@ -19,14 +19,15 @@ switch task
         mask = spm_read_vols(V);
         % get volume
         vpath = aas_getfiles_bystream(aap,subj,'pilab_volume');
-        vol = load(vpath);
-        vol = vol.vol;
+        vol = loadbetter(vpath);
         % searchlight diagnostic
         spath = aas_getfiles_bystream(aap,subj,'pilab_searchlight_nvox');
         xyz = spm_read_vols(spm_vol(spath));
-
         % intersect to generate new mask
         mask = (mask>0) & (xyz>=aap.tasklist.currenttask.settings.minvox);
+        ngone = vol.nfeatures-sum(mask(:)>0);
+        fprintf('eliminated %d features (%.2f%% of total)\n',...
+          ngone,100*(ngone/vol.nfeatures));
         spm_write_vol(V,mask);
         aap = aas_desc_outputs(aap,subj,'freesurfer_gmmask',mpath);
         % update the volume
@@ -37,8 +38,8 @@ switch task
         % and spheres...
         spath = aas_getfiles_bystream(aap,subj,...
             'pilab_searchlight_spheres');
-        spheres = load(spath);
-        spheres = spheres.spheres(goodind,goodind);
+        spheres = loadbetter(spath);
+        spheres = spheres(goodind,goodind);
         save(spath,'spheres');
         aap = aas_desc_outputs(aap,subj,'pilab_searchlight_spheres',spath);
         % aaand diagnostics

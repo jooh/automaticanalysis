@@ -58,8 +58,10 @@ switch task
         diagnostic_nsampled = sum(spheres,1);
 
         % save spheres
+        % now as volume 
+        maskvol = MriVolume(spheres,vol);
         outpath_spheres = fullfile(pidir,'searchlight_spheres.mat');
-        save(outpath_spheres,'spheres');
+        save(outpath_spheres,'maskvol');
 
         % save niftis of diagnostics
         outpath_n = fullfile(pidir,...

@@ -9,16 +9,12 @@ switch task
     case 'doit'
         % get data RDMs
         vpath = aas_getfiles_bystream(aap,subj,'pilab_data_rdms_mean');
-        disvol = load(vpath);
-        disvol = disvol.disvol;
-        % TODO eventually sensitive to multiple vols in cell array here for ROI
-        % RSA
+        disvol = loadbetter(vpath);
 
         % predictor RDMs
         predictpath = aas_getfiles_bystream(aap,subj,...
             'pilab_rsapredictors');
-        predictors = load(predictpath);
-        predictors = predictors.rdms;
+        predictors = loadbetter(predictpath);
         npredictors = length(predictors);
 
         % check that parfor is available
@@ -50,6 +46,7 @@ switch task
             fprintf('finished in %s.\n',seconds2str(toc));
             % obtain Nichols / Holmes-style FWE-corrected p values
             pfwe = maxstatpfwe(nulldists);
+            fprintf('done. Min p(FWE) = %.2f\n',min(pfwe(:)));
             % r map
             rout = fullfile(resdir,sprintf('%s_r.nii',...
                 predictors(pre).name));
@@ -69,10 +66,10 @@ switch task
             nullout = fullfile(resdir,sprintf('%s_nulldist.mat',...
                 predictors(pre).name));
             % save as volume with massive ndata
-            nullvol = Volume(nulldists,disvol);
+            nullvol = MriVolume(nulldists,disvol);
             % for mysterious reasons Matlab cannot save this in any older
             % version
-            save(nullout,'nullvol','-v7.3');
+            save(nullout,'nullvol','-v7');
             nulldistpaths{pre} = nullout;
             % not much faith in Matlab garbage collection
             clear nullvol

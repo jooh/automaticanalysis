@@ -14,19 +14,21 @@ switch task
         epivol = load(epipath);
         epivol = epivol.epivol;
         % find correct labels
-        labinds = findStrInArray(designvol.uniquelabels,...
-            aap.tasklist.currenttask.settings.targetname);
+        labinds = findStrInArray(designvol.desc.features.unique.labels,...
+            aap.tasklist.currenttask.settings.targetname)';
         assert(~isempty(labinds),'found no labels matching %s',...
             aap.tasklist.currenttask.settings.targetname);
         % iterate over chunks
-        datcell = {};
-        for c = epivol.uniquechunks'
-            datcell{end+1} = tmapvol(designvol(designvol.chunks==c,...
-                designvol.featuregroups==c),epivol(epivol.chunks==c),...
-                labinds);
+        datcell = cell(epivol.desc.samples.nunique.chunks,1);
+        for chind = 1:epivol.desc.samples.nunique.chunks
+            c = epivol.desc.samples.unique.chunks(chind);
+            datcell{chind} = tmapvol(designvol(...
+                designvol.meta.samples.chunks==c,...
+                designvol.meta.features.chunks==c),epivol(...
+                epivol.meta.samples.chunks==c),labinds);
             % set meta data to avoid problems when concatenating
-            datcell{end}.order(:) = c;
-            datcell{end}.chunks(:) = c;
+            datcell{chind}.meta.samples.order(1:datcell{chind}.nsamples,1) = c;
+            datcell{chind}.meta.samples.chunks(1:datcell{chind}.nsamples,1) = c;
         end
         % finally, make a big vol
         vol = vertcat(datcell{:});
