@@ -30,30 +30,29 @@ switch task
         % get the subdirectories in the main directory
         dirn = aas_getsesspath(aap,subj,1);
         % get mean EPI stream
-        PG = aas_getimages_bystream(aap,subj,'meanepi');
+        % (looks like getimages is not functional at the moment)
+        PG = aas_getfiles_bystream(aap,subj,'meanepi');
+        if size(PG,1) > 1
+            aas_log(aap, false, 'Found more than 1 mean functional images, using first.');
+            PG = deblank(PG(1,:));
+        end
         VG = spm_vol(PG);
         
-        % Get path to structural for this subject
-        subj_dir=aas_getsubjpath(aap,subj);
-        structdir=fullfile(subj_dir,aap.directory_conventions.structdirname);
-        PF = dir( fullfile(structdir,['s' aap.acq_details.subjects(subj).structuralfn '*.nii']));
-        if (length(PF)>1)
-            aas_log(aap,false,sprintf('Found more than one structural (%d), expected only one, but will continue with first',length(PF)));
-        end;
-        if (isempty(PF))
-            aas_log(aap,true,sprintf('Did not find structural image in %s',structdir));
-        end;
-        structfn=fullfile(structdir,PF(1).name);
-        VF = spm_vol(structfn);
+        Simg = aas_getfiles_bystream(aap,subj,'structural');
+        if size(Simg,1) > 1
+            aas_log(aap, false, sprintf('Found more than 1 structural images, using structural %d', ...
+                aap.tasklist.currenttask.settings.structural));
+        end
+        VF = spm_vol(Simg);
 
         % do coregistration
         x  = spm_coreg(VG, VF,flags.estimate);
         
         M  = inv(spm_matrix(x));
           
-        spm_get_space(structfn, M*spm_get_space(structfn));
+        spm_get_space(Simg, M*spm_get_space(Simg));
        
-        aap = aas_desc_outputs(aap,subj,'structural',structfn);
+        aap = aas_desc_outputs(aap,subj,'structural',Simg);
 
         % Save graphical output - this will now be done by report task
         try figure(spm_figure('FindWin', 'Graphics')); catch; figure(1); end;            
