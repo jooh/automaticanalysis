@@ -65,7 +65,8 @@ VAL = cat(1,VAL{:}) ;
 [UFN,ind] = unique(FN) ;
 
 if numel(UFN) ~= numel(FN),
-    warning('Duplicate fieldnames found. Last value is used and fields are sorted') ;
+    % this warning is mostly just irritating
+    %warning('Duplicate fieldnames found. Last value is used and fields are sorted') ;
     sorted = 1 ;
 end
 
