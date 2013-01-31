@@ -9,6 +9,9 @@
             </qsub>
             
             <permanenceofoutput>3</permanenceofoutput>
+            <!-- flag to ignore AA sessions for cases where SPM has been
+                 fitted with more sessions than we have in AA (sub run splits) -->
+            <useaasessions>1</useaasessions>
             
             <!--
 You must specify one or more contrasts here using one of the following formats

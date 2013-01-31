@@ -40,19 +40,35 @@ switch task
         SPM=load(aas_getfiles_bystream(aap,subj,'firstlevel_spm'));
         SPM=SPM.SPM;
         SPM.swd=anadir;
+
+        ts = aap.tasklist.currenttask.settings;
+
+        if ts.useaasessions
+            sessnames = {aap.acq_details.sessions.name};
+            selected_sessions = aap.acq_details.selected_sessions;
+            nsess = length(selected_sessions);
+            nsess_all = length(sessnames);
+        else
+            % just get all sessions based on SPM file
+            sessnames = {};
+            nsess = length(SPM.Sess);
+            selected_sessions = 1:nsess;
+            nsess_all = nsess;
+        end
+
         
         % Load up contrasts from task settings
         [fle subjname ext]=fileparts(subj_dir);
-        contrasts_set=find(strcmp({aap.tasklist.currenttask.settings.contrasts.subject},subjname));
+        contrasts_set=find(strcmp({ts.contrasts.subject},subjname));
         if (isempty(contrasts_set))
             % Try for wildcard
-            contrasts_set=find(strcmp({aap.tasklist.currenttask.settings.contrasts.subject},'*'));
+            contrasts_set=find(strcmp({ts.contrasts.subject},'*'));
             if (isempty(contrasts_set))
                 aas_log(aap,true,'Can''t find declaration of what contrasts to use - insert this in a local copy of aamod_firstlevel_contrasts.xml or put into user script');
             end;
         end
         
-        contrasts=aap.tasklist.currenttask.settings.contrasts(contrasts_set);
+        contrasts=ts.contrasts(contrasts_set);
         % add contrasts for each task regressor v baseline?
         if contrasts.eachagainstbaseline
             basev = zeros(1,length(SPM.Sess(1).col));
@@ -72,7 +88,7 @@ switch task
         % First the general case - across all runs
         nregr = length(SPM.xX.name);
         nruns = length(SPM.Sess);
-        runI = logical(ones(1,nregr));
+        runI = true(1,nregr);
         noregr = zeros(1,nregr);
         % Do we also want run-specific contrasts?
         if contrasts.oneconperrun && (nruns > 1)
@@ -112,18 +128,18 @@ switch task
                 switch(contrasts.con(conind).format)
                     case {'singlesession','sameforallsessions'}
                         if (strcmp(contrasts.con(conind).format,'singlesession'))
-                            sessforcon=[strcmp({aap.acq_details.sessions.name},contrasts.con(conind).session)];
+                            sessforcon=[strcmp(sessnames,contrasts.con(conind).session)];
                         else
                             % [AVG] To make the selected sessions work...
-                            sessforcon=zeros(1,length(aap.acq_details.sessions));
-                            for sess=aap.acq_details.selected_sessions
+                            sessforcon=zeros(1,nsess_all);
+                            for sess=selected_sessions
                                 sessforcon(sess) = 1;
                             end
                             %sessforcon=ones(1,length(SPM.Sess));
                         end;
                         convec=[];
                         sessnuminspm=1;
-                        for sess=aap.acq_details.selected_sessions
+                        for sess=selected_sessions
                             numcolsinthissess=length(SPM.Sess(sessnuminspm).col);
                             if (sessforcon(sess))
                                 if (size(contrasts.con(conind).vector,2) > numcolsinthissess)
@@ -140,7 +156,7 @@ switch task
                             sessnuminspm=sessnuminspm+1;
                         end;
                     case 'uniquebysession'
-                        totnumcolsbarconstants = size(SPM.xX.X,2) - length(aap.acq_details.selected_sessions);
+                        totnumcolsbarconstants = size(SPM.xX.X,2) - nsess;
                         if (size(contrasts.con(conind).vector,2) > totnumcolsbarconstants)
                             aas_log(aap,true,sprintf('Number of columns in contrast matrix for session %d is more than number of columns in model (bar constants) - wanted %d columns, got ',totnumcolsbarconstants)); disp(contrasts.con(conind).vector);
                         elseif (size(contrasts.con(conind).vector,2) < totnumcolsbarconstants)
@@ -149,7 +165,7 @@ switch task
                                 convec_out=[];
                                 ind=1;
                                 sessnuminspm=1;
-                                for sess=aap.acq_details.selected_sessions
+                                for sess=selected_sessions
                                     numcolsinthissess_withoutmoves=length(SPM.Sess(sessnuminspm).col)-6;
                                     newind=ind+numcolsinthissess_withoutmoves;
                                     convec_out=[convec_out convec(:,ind:(newind-1)) zeros(size(convec,1),6)];
@@ -167,7 +183,7 @@ switch task
                     otherwise
                         aas_log(aap,true,sprintf('Unknown format %s specified for contrast %d',contrasts.con(conind).format,ccount));
                 end;
-                cons{ccount} = [convec zeros(size(convec,1),length(aap.acq_details.selected_sessions))];  % Add final constant terms
+                cons{ccount} = [convec zeros(size(convec,1),nsess)];  % Add final constant terms
                 
                 % Check not empty
                 if (~any(cons{ccount}(:)))
