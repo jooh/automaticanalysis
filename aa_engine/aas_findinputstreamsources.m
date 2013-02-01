@@ -67,7 +67,7 @@ for k1=1:length(aap.tasklist.main.module)
                 aas_log(aap,0,stream.sourcestagename,'Magenta');
             else
                 
-                [aap stagethatoutputs mindepth]=searchforoutput(aap,k1,inputstreamname,true,0,inf);
+                [aap stagethatoutputs mindepth]=aas_searchforoutput(aap,k1,inputstreamname,true,0,inf);
                 if isempty(stagethatoutputs)
                     % [AVG] to make the inputs/outpus more obvious!
                     %aas_log(aap,true,sprintf('Stage %s required input %s is not an output of any stage it is dependent on. You might need to add an aas_addinitialstream command or get the stream from a remote source.',stagename,inputstreamname));
@@ -123,45 +123,5 @@ for k1=1:length(aap.tasklist.main.module)
                 end;
             end;
         end;
-    end;
-end;
-
-
-% RECURSIVELY SEARCH DEPENDENCIES
-%  to see which will have outputted each
-%  input required for this stage
-%  note that inputs can be affected by dependency map
-function [aap,stagethatoutputs,mindepth]=searchforoutput(aap,currentstage,outputtype,notthislevelplease,depth,mindepth)
-
-% is this branch ever going to do better than we already have?
-if (depth>=mindepth)
-    return;
-end;
-
-stagethatoutputs=[];
-
-% Search the current level, see if it provides the required output
-if (~notthislevelplease)
-    depth=depth+1;
-    [stagepath stagename]=fileparts(aap.tasklist.main.module(currentstage).name);
-    stagetag=aas_getstagetag(aap,currentstage);
-    index=aap.tasklist.main.module(currentstage).index;
-    
-    if (isfield(aap.schema.tasksettings.(stagename)(index),'outputstreams'))
-        outputstreams=aap.schema.tasksettings.(stagename)(index).outputstreams;
-        for i=1:length(outputstreams.stream)
-            if (strcmp(outputtype,outputstreams.stream{i}) || strcmp(outputtype,[stagetag '.' outputstreams.stream{i}]))
-                stagethatoutputs=currentstage;
-                mindepth=depth;
-            end;
-        end;
-    end;
-end;
-
-% If not found, search backwards further
-if (isempty(stagethatoutputs))
-    dependenton=aap.internal.dependenton{currentstage};
-    for i=1:length(dependenton)
-        [aap stagethatoutputs mindepth]=searchforoutput(aap,dependenton(i).stage,outputtype,false,depth,mindepth);
     end;
 end;
