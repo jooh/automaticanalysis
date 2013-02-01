@@ -8,11 +8,22 @@ switch task
     case 'doit'
         % get the model / epi instances
         designpath = aas_getfiles_bystream(aap,subj,'pilab_design');
-        designvol = load(designpath);
-        designvol = designvol.designvol;
+        designvol = loadbetter(designpath);
         epipath = aas_getfiles_bystream(aap,subj,'pilab_epi');
-        epivol = load(epipath);
-        epivol = epivol.epivol;
+        epivol = loadbetter(epipath);
+        if ~isempty(aap.tasklist.currenttask.settings.sgolayK)
+            fprintf('detrending data (K=%d,F=%d)\n',...
+                aap.tasklist.currenttask.settings.sgolayK,...
+                aap.tasklist.currenttask.settings.sgolayF);
+            % here we probably want to stop and play around with r2 a bit
+            keyboard;
+            epivol.sgdetrend(aap.tasklist.currenttask.settings.sgolayK,...
+                aap.tasklist.currenttask.settings.sgolayF);
+            % detrending the design matrix doesn't make so much sense.
+            % introduces all kinds of weird artefactual drifts. I guess the
+            % problem is that this fielt is adaptive so attempts to fit the
+            % HRF.
+        end
         % find correct labels
         labinds = findStrInArray(designvol.desc.features.unique.labels,...
             aap.tasklist.currenttask.settings.targetname)';

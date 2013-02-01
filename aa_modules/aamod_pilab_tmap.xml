@@ -10,6 +10,8 @@
             
             <permanenceofoutput>3</permanenceofoutput>
             <targetname>face</targetname>
+            <sgolayK></sgolayK>
+            <sgolayF></sgolayF>
             <inputstreams>
                 <stream>pilab_epi</stream>
                 <stream>pilab_design</stream>
