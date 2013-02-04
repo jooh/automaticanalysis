@@ -10,6 +10,9 @@
             <permanenceofoutput>2</permanenceofoutput>
             
             <minvox>10</minvox>
+            <maxvox>Inf</maxvox>
+            <minradius>0</minradius>
+            <maxradius>50</maxradius>
             <inputstreams>
                 <stream>freesurfer_gmmask</stream>
                 <stream>pilab_volume</stream>

@@ -1,10 +1,7 @@
 % Restrict analysis to voxels where we obtain a sensible searchlight size
-% (default 10) for searchlight diagnostic output. Note that this
-% module makes little sense if you have done nvox-based mapping (although I
-% guess an equivalent function for that case would be to skip searchlights
-% where the radius ends up enormous).
-% [aap,resp]=aamod_pilab_restrictbysearchlightn(aap,task,subj)
-function [aap,resp]=aamod_pilab_restrictbysearchlightn(aap,task,subj)
+% defined in nvox and/or radius.
+% [aap,resp]=aamod_pilab_restrictbysearchlightsize(aap,task,subj)
+function [aap,resp]=aamod_pilab_restrictbysearchlightsize(aap,task,subj)
 
 resp='';
 
@@ -22,9 +19,14 @@ switch task
         vol = loadbetter(vpath);
         % searchlight diagnostic
         spath = aas_getfiles_bystream(aap,subj,'pilab_searchlight_nvox');
-        xyz = spm_read_vols(spm_vol(spath));
+        xyz_n = spm_read_vols(spm_vol(spath));
+        rpath = aas_getfiles_bystream(aap,subj,'pilab_searchlight_radius');
+        xyz_r = spm_read_vols(spm_vol(rpath));
         % intersect to generate new mask
-        mask = (mask>0) & (xyz>=aap.tasklist.currenttask.settings.minvox);
+        ts = aap.tasklist.currenttask.settings;
+        mask = (mask>0) & (xyz_r >= ts.minradius) & ...
+            (xyz_r <= ts.maxradius) & (xyz_n >= ts.minvox) & ...
+            (xyz_n <= ts.maxvox);
         ngone = vol.nfeatures-sum(mask(:)>0);
         fprintf('eliminated %d features (%.2f%% of total)\n',...
           ngone,100*(ngone/vol.nfeatures));
