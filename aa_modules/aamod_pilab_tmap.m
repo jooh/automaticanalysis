@@ -15,13 +15,11 @@ switch task
             fprintf('detrending data (K=%d,F=%d)\n',...
                 aap.tasklist.currenttask.settings.sgolayK,...
                 aap.tasklist.currenttask.settings.sgolayF);
-            % here we probably want to stop and play around with r2 a bit
-            keyboard;
             epivol.sgdetrend(aap.tasklist.currenttask.settings.sgolayK,...
                 aap.tasklist.currenttask.settings.sgolayF);
             % detrending the design matrix doesn't make so much sense.
             % introduces all kinds of weird artefactual drifts. I guess the
-            % problem is that this fielt is adaptive so attempts to fit the
+            % problem is that this filter is adaptive so attempts to fit the
             % HRF.
         end
         % find correct labels
