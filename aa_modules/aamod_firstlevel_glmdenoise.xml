@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='Fit gldenoise model' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <ignorelabels>
+                <item></item>
+            </ignorelabels>
+            <hrfmodel>optimize</hrfmodel>
+            <hrfknobs></hrfknobs>
+            <opt></opt>
+
+            <inputstreams>
+                <!-- NB, we get volumes out of the (modified) SPM, not from
+                     epi stream -->
+                <stream>firstlevel_spm</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>glmdenoise_results</stream>
+                <stream>glmdenoise_epi</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
