@@ -25,12 +25,16 @@ switch task
         end
 
         % prepare output
+        assert(~isempty(vol.desc.samples.nunique.labels),...
+          'input vol must have defined labels');
         npairs = nchoosek(vol.desc.samples.nunique.labels,2);
         data = NaN([npairs vol.nfeatures vol.desc.samples.nunique.chunks]);
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         outpaths_sessrdms = [];
 
         % run
+        assert(vol.desc.samples.nunique.chunks>0,...
+          'vol must have defined chunks in meta.samples');
         for sess = 1:vol.desc.samples.nunique.chunks
             % copying here saves memory per worker in parfor
             sessvol = vol(vol.meta.samples.chunks==sess,:);
