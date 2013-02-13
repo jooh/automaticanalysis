@@ -15,16 +15,38 @@
             </ignorelabels>
             <hrfmodel>optimize</hrfmodel>
             <hrfknobs></hrfknobs>
-            <opt></opt>
+            <opt>
+                <extraregressors></extraregressors>
+                <maxpolydeg></maxpolydeg>
+                <seed></seed>
+                <bootgroups></bootgroups>
+                <numforhrf></numforhrf>
+                <hrffitmask></hrffitmask>
+                <brainthresh></brainthresh>
+                <brainR2></brainR2>
+                <numpcstotry></numpcstotry>
+                <pcR2cutoff></pcR2cutoff>
+                <pcR2cutoffmask></pcR2cutoffmask>
+                <pcstop></pcstop>
+                <numboots></numboots>
+                <denoisespec></denoisespec>
+                <wantpercentbold></wantpercentbold>
+                <brainmask></brainmask>
+            </opt>
 
             <inputstreams>
                 <!-- NB, we get volumes out of the (modified) SPM, not from
                      epi stream -->
                 <stream>firstlevel_spm</stream>
+                <stream>freesurfer_gmmask</stream>
             </inputstreams>
             <outputstreams>
+                <stream>freesurfer_gmmask</stream>
                 <stream>glmdenoise_results</stream>
                 <stream>glmdenoise_epi</stream>
+                <stream>glmdenoise_diagnostic_r2</stream>
+                <stream>glmdenoise_diagnostic_snr</stream>
+                <stream>glmdenoise_diagnostic_noisepool</stream>
             </outputstreams>
             
         </currenttask>
