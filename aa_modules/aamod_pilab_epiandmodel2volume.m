@@ -88,6 +88,28 @@ switch task
         % strip constant (gets reintroduced in GLM)
         designvol = designvol.removebymeta('labels','constant');
 
+        if aap.tasklist.currenttask.settings.collapseruns
+            % you probably don't want to do this if your design matrix
+            % includes any sort of session covariates or constants!
+            fprintf('collapsing to one set of regressors across runs\n');
+            chunks = designvol.desc.features.unique.chunks;
+            tempvol = designvol.selectbymeta('chunks',chunks(1));
+            labels = tempvol.meta.features.labels(...
+                tempvol.meta.features.chunks==chunks(1));
+            % remove all features except label since these won't be
+            % reliable and can lead to unpredictable behaviour (e.g., if
+            % you keep the chunk field selectbymeta(chunks=2) can give you
+            % no columns matching...
+            tempvol.meta.features = struct('labels',{labels});
+            for c = chunks(2:end)
+                cvol = designvol.selectbymeta('chunks',c);
+                cvol.meta.features = struct('labels',...
+                    {cvol.meta.features.labels});
+                tempvol = [tempvol; cvol];
+            end
+            designvol = tempvol;
+        end
+
         % save and describe
         outdir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         mkdirifneeded(outdir);

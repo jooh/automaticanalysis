@@ -9,6 +9,7 @@
             </qsub>
             
             <permanenceofoutput>3</permanenceofoutput>
+            <collapseruns>0</collapseruns>
 
             <inputstreams>
                 <stream>freesurfer_gmmask</stream>
