@@ -45,7 +45,7 @@ switch task
         fprintf('building epi volume instance...\n')
         tic;
         epivol = MriVolume(volpaths,mask,'metasamples',struct(...
-            'chunks',chunks,'order',order));
+            'chunks',chunks,'order',order),'frameperiod',SPM.xY.RT);
         fprintf('finished in %s.\n',seconds2str(toc));
         % remove any voxels that == 0 at any point (likely voxels that went
         % outside the mask after realign). NaNs are unlikely but why not
@@ -85,6 +85,8 @@ switch task
             {{SPM.xY.VY.fname}'},'chunks',chunks),'metafeatures',struct(...
             'labels',{reglabels},'chunks',regchunks,'names',...
             {SPM.xX.name}));
+        % strip constant (gets reintroduced in GLM)
+        designvol = designvol.removebymeta('labels','constant');
 
         % save and describe
         outdir = fullfile(aas_getsubjpath(aap,subj),'pilab');
