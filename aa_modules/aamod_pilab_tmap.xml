@@ -12,6 +12,7 @@
             <targetname>face</targetname>
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
+            <covariatedeg>adaptive</covariatedeg>
             <inputstreams>
                 <stream>pilab_epi</stream>
                 <stream>pilab_design</stream>
