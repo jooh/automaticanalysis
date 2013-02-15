@@ -38,10 +38,10 @@
                 <!-- NB, we get volumes out of the (modified) SPM, not from
                      epi stream -->
                 <stream>firstlevel_spm</stream>
-                <stream>freesurfer_gmmask</stream>
+                <stream>epiBETmask</stream>
             </inputstreams>
             <outputstreams>
-                <stream>freesurfer_gmmask</stream>
+                <stream>epiBETmask</stream>
                 <stream>glmdenoise_results</stream>
                 <stream>glmdenoise_epi</stream>
                 <stream>glmdenoise_diagnostic_r2</stream>

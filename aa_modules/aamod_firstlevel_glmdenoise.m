@@ -25,8 +25,9 @@ switch task
         % detecting out of brain voxels etc.
         % TODO: might make more sense to just load epivol and make an
         % epivol2glmdenoise module.
-        mpath = aas_getfiles_bystream(aap,subj,'freesurfer_gmmask');
-        V = spm_vol(mpath(2,:));
+        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        % first mask is the brain mask
+        V = spm_vol(mpath(1,:));
         mask = spm_read_vols(V) > 0;
 
         % pass off to new independent function
@@ -80,9 +81,9 @@ switch task
         aap=aas_desc_outputs(aap,subj,'glmdenoise_epi',outpath_epi);
 
         % update mask
-        V.fname = mpath(2,:);
+        V.fname = mpath(1,:);
         spm_write_vol(V,mask);
-        aap=aas_desc_outputs(aap,subj,'freesurfer_gmmask',mpath);
+        aap=aas_desc_outputs(aap,subj,'epiBETmask',mpath);
 
         % also write out a few diagnostic volumes
         r2 = double(mask);
