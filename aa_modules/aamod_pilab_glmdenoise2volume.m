@@ -36,8 +36,8 @@ switch task
         estimates(:,badinds) = [];
 
         % load mask
-        mpath = aas_getfiles_bystream(aap,subj,'freesurfer_gmmask');
-        V = spm_vol(mpath(2,:));
+        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        V = spm_vol(mpath(1,:));
         mask = spm_read_vols(V) > 0;
         % indices for mapping glmdenoise results to vol
         maskinds = find(mask);
@@ -63,9 +63,9 @@ switch task
         aap=aas_desc_outputs(aap,subj,'pilab_volume',outpath);
 
         % save updated mask
-        V.fname = mpath(2,:);
+        V.fname = mpath(1,:);
         spm_write_vol(V,mask);
-        aap=aas_desc_outputs(aap,subj,'freesurfer_gmmask',mpath);
+        aap=aas_desc_outputs(aap,subj,'epiBETmask',mpath);
     case 'checkrequirements'
         
     otherwise

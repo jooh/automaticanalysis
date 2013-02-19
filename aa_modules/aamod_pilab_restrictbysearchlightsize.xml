@@ -14,7 +14,6 @@
             <minradius>0</minradius>
             <maxradius>50</maxradius>
             <inputstreams>
-                <stream>freesurfer_gmmask</stream>
                 <stream>pilab_volume</stream>
                 <stream>pilab_searchlight_spheres</stream>
                 <stream>pilab_searchlight_radius</stream>
@@ -23,7 +22,6 @@
             </inputstreams>
             
             <outputstreams>
-                <stream>freesurfer_gmmask</stream>
                 <stream>pilab_volume</stream>
                 <stream>pilab_searchlight_spheres</stream>
                 <stream>pilab_searchlight_radius</stream>

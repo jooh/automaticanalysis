@@ -9,11 +9,6 @@ switch task
     case 'report'
         
     case 'doit'
-        % mask
-        mpath = aas_getfiles_bystream(aap,subj,'freesurfer_gmmask');
-        % second is EPI
-        V = spm_vol(mpath(2,:));
-        mask = spm_read_vols(V);
         % get volume
         vpath = aas_getfiles_bystream(aap,subj,'pilab_volume');
         vol = loadbetter(vpath);
@@ -24,14 +19,13 @@ switch task
         xyz_r = spm_read_vols(spm_vol(rpath));
         % intersect to generate new mask
         ts = aap.tasklist.currenttask.settings;
+        mask = vol.mask;
         mask = (mask>0) & (xyz_r >= ts.minradius) & ...
             (xyz_r <= ts.maxradius) & (xyz_n >= ts.minvox) & ...
             (xyz_n <= ts.maxvox);
         ngone = vol.nfeatures-sum(mask(:)>0);
         fprintf('eliminated %d features (%.2f%% of total)\n',...
           ngone,100*(ngone/vol.nfeatures));
-        spm_write_vol(V,mask);
-        aap = aas_desc_outputs(aap,subj,'freesurfer_gmmask',mpath);
         % update the volume
         goodind = vol.linind2featind(find(mask));
         vol = vol(:,goodind);

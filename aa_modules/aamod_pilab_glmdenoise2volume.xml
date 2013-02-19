@@ -18,11 +18,11 @@
 
             <inputstreams>
                 <stream>glmdenoise_results</stream>
-                <stream>freesurfer_gmmask</stream>
+                <stream>epiBETmask</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_volume</stream>
-                <stream>freesurfer_gmmask</stream>
+                <stream>epiBETmask</stream>
             </outputstreams>
             
         </currenttask>
