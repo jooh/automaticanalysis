@@ -30,12 +30,13 @@ switch task
             % Load up automatically scanned value, validate
             aisfn=fullfile(subjpath,'autoidentifyseries_saved.mat');
             ais=load(aisfn);
-            if length(ais.series_newfieldmap)>aap.options.autoidentifyfieldmaps_number
+            fieldseries = ais.series_newfieldmap;
+            if length(fieldseries)>aap.options.autoidentifyfieldmaps_number
                 if aap.options.autoidentifyfieldmaps_choosefirst
-                    fieldseries = ais.series_newfieldmap(...
+                    fieldseries = fieldseries(...
                         1:aap.options.autoidentifyfieldmaps_number);
-                elseif aap.options.autoidentifystructural_chooselast
-                    fieldseries = ais.series_newfieldmap(...
+                elseif aap.options.autoidentifyfieldmaps_chooselast
+                    fieldseries = fieldseries(...
                     (end-aap.options.autoidentifyfieldmaps_number+1):end);
                 else
                     aas_log(aap,true,sprintf('Was expecting only %d fieldmaps, but autoidentify series found %d. Add extras to ignoreseries or use the choosefirst/chooselast options.',...
