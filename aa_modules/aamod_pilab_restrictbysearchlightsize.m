@@ -33,11 +33,11 @@ switch task
         aap = aas_desc_outputs(aap,subj,'pilab_volume',vpath);
         % and spheres...
         spath = aas_getfiles_bystream(aap,subj,...
-            'pilab_searchlight_spheres');
+            'pilab_rois');
         spheres = loadbetter(spath);
         spheres = spheres(goodind,goodind);
         save(spath,'spheres');
-        aap = aas_desc_outputs(aap,subj,'pilab_searchlight_spheres',spath);
+        aap = aas_desc_outputs(aap,subj,'pilab_rois',spath);
         % aaand diagnostics
         for dia = {'nvox','radius','nspheres'}
             streamname = ['pilab_searchlight_' dia{1}];

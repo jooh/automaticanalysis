@@ -15,7 +15,7 @@
             <maxradius>50</maxradius>
             <inputstreams>
                 <stream>pilab_volume</stream>
-                <stream>pilab_searchlight_spheres</stream>
+                <stream>pilab_rois</stream>
                 <stream>pilab_searchlight_radius</stream>
                 <stream>pilab_searchlight_nvox</stream>
                 <stream>pilab_searchlight_nspheres</stream>
@@ -23,7 +23,7 @@
             
             <outputstreams>
                 <stream>pilab_volume</stream>
-                <stream>pilab_searchlight_spheres</stream>
+                <stream>pilab_rois</stream>
                 <stream>pilab_searchlight_radius</stream>
                 <stream>pilab_searchlight_nvox</stream>
                 <stream>pilab_searchlight_nspheres</stream>
