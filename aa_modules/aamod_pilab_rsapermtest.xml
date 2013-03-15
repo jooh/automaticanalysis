@@ -11,6 +11,7 @@
             <permanenceofoutput>3</permanenceofoutput>
 
             <nperms>10000</nperms>
+            <outputmode>searchlight</outputmode>
             
             <inputstreams>
                 <stream>pilab_data_rdms_mean</stream>
