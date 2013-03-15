@@ -1,4 +1,4 @@
-% Make a movie of an epi time series
+% Make movie of an epi time series
 % [aap,resp]=aamod_movie(aap,task,subj)
 % J Carlin 20120911
 
@@ -26,8 +26,10 @@ switch task
             end
         end
         subjpath = aas_getsubjpath(aap,subj);
-        outfile = fullfile(subjpath,'diagnostic_aamod_movie.avi');
-        volumes2movie(V,outfile,aap.tasklist.currenttask.settings.fps);
+        outfile = fullfile(subjpath,'diagnostic_aamod_movie_axial.avi');
+        volumes2movie(V,outfile,aap.tasklist.currenttask.settings.fps,'axial');
+        outfile = fullfile(subjpath,'diagnostic_aamod_movie_saggital.avi');
+        volumes2movie(V,outfile,aap.tasklist.currenttask.settings.fps,'saggital');
     case 'checkrequirements'
         
     otherwise
