@@ -21,10 +21,6 @@ switch task
         SPM = loadbetter(spmpath);
         frameperiod = SPM.xY.RT;
         % get mask - memory problems otherwise
-        % TO TEST: I suspect we'll now have to tweak the thresholds for
-        % detecting out of brain voxels etc.
-        % TODO: might make more sense to just load epivol and make an
-        % epivol2glmdenoise module.
         mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
         % first mask is the brain mask
         V = spm_vol(mpath(1,:));
@@ -35,6 +31,18 @@ switch task
         % converts and gets rid of NaN / 0 voxels.
         [epi,design,dur,mask,names] = spm2glmdenoise(SPM,mask,...
           ts.ignorelabels,strcmp(ts.hrfmodel,'assumeconvolved'));
+
+        % optional low pass filter
+        if ~isempty(ts.K)
+            fprintf('low pass filtering data\n')
+            for r = 1:length(epi)
+                % NB in GLMdenoise format epi time is in columns rather than in
+                % rows
+                epi{r} = single(sgolayfilt(double(epi{r}),ts.K,ts.F,[],2));
+                % BUT design matrix still has time in rows...
+                design{r} = single(sgolayfilt(double(design{r}),ts.K,ts.F,[],1));
+            end
+        end
 
         % Kendrick's empirical HRFs look very noisy for short stimuli (<3
         % s) and don't work at all for duration 0 (impulse response). In
@@ -70,6 +78,14 @@ switch task
         % threshold
         results.bright = results.meanvol(:) > prctile(results.meanvol,...
           results.inputs.opt.brainthresh(1) * results.inputs.opt.brainthresh(2));
+
+        % split off very large and fairly irrelevant field in results to
+        % prevent ridiculously big MAT files
+        models = results.models;
+        results.models = [];
+        outpath_models = fullfile(outdir,'results_models.mat');
+        save(outpath_models,'models','-v7.3');
+        aap=aas_desc_outputs(aap,subj,'glmdenoise_results_models',outpath_models);
 
         % save and describe standard outputs
         outpath_results = fullfile(outdir,'results.mat');

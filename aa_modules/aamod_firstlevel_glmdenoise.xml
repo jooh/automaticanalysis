@@ -13,6 +13,8 @@
             <ignorelabels>
                 <item></item>
             </ignorelabels>
+            <K></K>
+            <F></F>
             <hrfmodel>optimize</hrfmodel>
             <hrfknobs></hrfknobs>
             <opt>
@@ -42,6 +44,7 @@
             </inputstreams>
             <outputstreams>
                 <stream>epiBETmask</stream>
+                <stream>glmdenoise_results_models</stream>
                 <stream>glmdenoise_results</stream>
                 <stream>glmdenoise_epi</stream>
                 <stream>glmdenoise_diagnostic_r2</stream>
