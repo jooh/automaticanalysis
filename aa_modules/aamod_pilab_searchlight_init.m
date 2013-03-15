@@ -74,7 +74,8 @@ switch task
         vol.data2file(diagnostic_r,outpath_r);
 
         % describe outputs
-        aap=aas_desc_outputs(aap,subj,'pilab_searchlight_spheres',...
+        % (now treat searchlights like any ROI)
+        aap=aas_desc_outputs(aap,subj,'pilab_rois',...
             outpath_spheres);
         aap=aas_desc_outputs(aap,subj,'pilab_searchlight_radius',...
             outpath_r);
