@@ -13,6 +13,7 @@ switch task
         
     case 'doit'
         spmpath = aas_getfiles_bystream(aap,subj,'firstlevel_spm');
+        load(spmpath);
         if strcmp(aap.tasklist.currenttask.settings.maxdegree,...
                 'adaptive')
             % use Kay rule for setting n polynomials based on run
@@ -22,7 +23,6 @@ switch task
             % just read off parameter
             getdeg = @(n) aap.tasklist.currenttask.settings.maxdegree;
         end
-        load(spmpath);
         for sess = 1:length(SPM.Sess);
             nvol = SPM.nscan(sess);
             deg = getdeg(nvol);
