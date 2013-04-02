@@ -25,9 +25,12 @@ switch (aap.directory_conventions.fslshell)
     case 'csh'
         cmd=['csh -c "' fslsetup  fslcmd '"'];
         [s w]=aas_shell(fslcmd);
-end;
+    otherwise
+        error('unknown fslshell setting: %s',...
+            aap.directory_conventions.fslshell);
+end
 
 % Display error if there was one
 if (s)
     aas_log(aap,false,sprintf('Error running %s, which was %s',cmd,w));
-end;
+end
