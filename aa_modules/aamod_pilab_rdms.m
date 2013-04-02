@@ -1,6 +1,8 @@
-% generate RDMs for each searchlight in the volume's mask
-% [aap,resp]=aamod_pilab_searchlight_rdms(aap,task,subj)
-function [aap,resp]=aamod_pilab_searchlight_rdms(aap,task,subj)
+% generate RDMs for each ROI (whether it's a set of searchlights or ROIs).
+% Generalised version of aamod_pilab_searchlight_rdms.
+%
+% [aap,resp]=aamod_pilab_rdms(aap,task,subj)
+function [aap,resp]=aamod_pilab_rdms(aap,task,subj)
 
 resp='';
 
@@ -10,10 +12,14 @@ switch task
         vpath = aas_getfiles_bystream(aap,subj,'pilab_volume');
         vol = loadbetter(vpath);
 
-        % get searchlights
-        spherepath = aas_getfiles_bystream(aap,subj,...
-            'pilab_searchlight_spheres');
-        spheres = loadbetter(spherepath);
+        % get ROIs / spheres
+        roipath = aas_getfiles_bystream(aap,subj,...
+            'pilab_rois');
+        rois = loadbetter(roipath);
+        % support logical indexing of continuous ROIs
+        if isnumeric(rois.data)
+            rois.data = rois.data ~= 0;
+        end
 
         % check that parfor is available
         if ~matlabpool('size')
@@ -28,45 +34,35 @@ switch task
         assert(~isempty(vol.desc.samples.nunique.labels),...
           'input vol must have defined labels');
         npairs = nchoosek(vol.desc.samples.nunique.labels,2);
-        data = NaN([npairs vol.nfeatures vol.desc.samples.nunique.chunks]);
+        % npairs by nrois by nchunks
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         outpaths_sessrdms = [];
 
         % run
         assert(vol.desc.samples.nunique.chunks>0,...
           'vol must have defined chunks in meta.samples');
+        sumdata = zeros([npairs rois.nsamples]);
         for sess = 1:vol.desc.samples.nunique.chunks
             % copying here saves memory per worker in parfor
             sessvol = vol(vol.meta.samples.chunks==sess,:);
-            sessdata = data(:,:,sess);
-            fprintf('running searchlight %d of %d...\n',sess,...
+
+            fprintf('running rois for session %d of %d...\n',sess,...
               vol.desc.samples.nunique.chunks);
             tic;
-            parfor n = 1:vol.nfeatures
-                % skip empty spheres (these come out as NaN)
-                if ~any(spheres.data(n,:))
-                    continue
-                end
-                % pull data direct rather than make instance for speed
-                sphdata = sessvol.data(:,spheres.data(n,:));
-                sessdata(:,n) = pdist(sphdata,...
-                    aap.tasklist.currenttask.settings.distancemetric);
-            end
-            fprintf('finished in %s.\n',seconds2str(toc));
-            % RDMs
-            data(:,:,sess) = sessdata;
-            % make a volume instance
-            sessdisvol = MriVolume(sessdata,vol);
+            sessdisvol = roidata2rdmvol(rois,sessvol,...
+                aap.tasklist.currenttask.settings.distancemetric);
+            sumdata = sumdata + sessdisvol.data;
             outpath_sessdata = fullfile(pidir,sprintf(...
-                'searchlight_rdms_session%02d.mat',sess));
+                'rdms_session%02d.mat',sess));
             save(outpath_sessdata,'sessdisvol');
             outpaths_sessrdms = [outpaths_sessrdms; outpath_sessdata];
         end
 
         % make average RDM across sessions and save
-        meandata = mean(data,3);
-        disvol = MriVolume(meandata,vol);
-        outpath_mean = fullfile(pidir,'searchlight_rdms_mean.mat');
+        disvol = MriVolume(sumdata/vol.desc.samples.nunique.chunks,...
+            sessdisvol,'metafeatures',struct(...
+                'names',{rois.meta.samples.names}));
+        outpath_mean = fullfile(pidir,'rdms_mean.mat');
         save(outpath_mean,'disvol');
 
         % describe outputs
