@@ -26,12 +26,19 @@ function count = cprintf(style,format,varargin)
 %
 %       'Black','Cyan','Magenta','Blue','Green','Red','Yellow','White'
 %
-%    Note: styles beginning with '-' will be underlined. For example:
+%    STYLE beginning with '-' or '_' will be underlined. For example:
 %          '-Blue' is underlined blue, like 'Hyperlinks';
-%          '-Comments' is underlined green etc.
+%          '_Comments' is underlined green etc.
 %
-%    STYLE also accepts a regular Matlab RGB vector, that can be negated
-%    for underlining. For example: -[0,1,1] means underlined cyan.
+%    STYLE beginning with '*' will be bold (R2011b+ only). For example:
+%          '*Blue' is bold blue;
+%          '*Comments' is bold green etc.
+%    Note: Matlab does not currently support both bold and underline,
+%          only one of them can be used in a single cprintf command. But of
+%          course bold and underline can be mixed by using separate commands.
+%
+%    STYLE also accepts a regular Matlab RGB vector, that can be underlined
+%    and bolded: -[0,1,1] means underlined cyan, '*[1,0,0]' is bold red.
 %
 %    STYLE is case-insensitive and accepts unique partial strings just
 %    like handle property names.
@@ -42,13 +49,14 @@ function count = cprintf(style,format,varargin)
 %    cprintf;   % displays the demo
 %    cprintf('text',   'regular black text');
 %    cprintf('hyper',  'followed %s','by');
-%    cprintf('k',      '%d colored', 4);
+%    cprintf('key',    '%d colored', 4);
 %    cprintf('-comment','& underlined');
 %    cprintf('err',    'elements\n');
 %    cprintf('cyan',   'cyan');
-%    cprintf('-green', 'underlined green');
+%    cprintf('_green', 'underlined green');
 %    cprintf(-[1,0,1], 'underlined magenta');
 %    cprintf([1,0.5,0],'and multi-\nline orange\n');
+%    cprintf('*blue',  'and *bold* (R2011b+ only)\n');
 %    cprintf('string');  % same as fprintf('string') and cprintf('text','string')
 %
 % Bugs and suggestions:
@@ -84,7 +92,11 @@ function count = cprintf(style,format,varargin)
 %       only affect the first line. Single-line styles work as expected.
 %       R14 also appends a single space after underlined segments.
 %
+%    6. Bold style is only supported on R2011b+, and cannot also be underlined.
+%
 % Change log:
+%    2012-08-09: Graceful degradation support for deployed (compiled) and non-desktop applications; minor bug fixes
+%    2012-08-06: Fixes for R2012b; added bold style; accept RGB string (non-numeric) style
 %    2011-11-27: Fixes for R2011b
 %    2011-08-29: Fix by Danilo (FEX comment) for non-default text colors
 %    2011-03-04: Performance improvement
@@ -100,7 +112,7 @@ function count = cprintf(style,format,varargin)
 % referenced and attributed as such. The original author maintains the right to be solely associated with this work.
 
 % Programmed and Copyright by Yair M. Altman: altmany(at)gmail.com
-% $Revision: 1.05 $  $Date: 2011/11/27 21:06:28 $
+% $Revision: 1.08 $  $Date: 2012/10/17 21:41:09 $
 
   persistent majorVersion minorVersion
   if isempty(majorVersion)
@@ -128,89 +140,114 @@ function count = cprintf(style,format,varargin)
   %error(nargchk(2, inf, nargin, 'struct'));
   %str = sprintf(format,varargin{:});
 
-  % Get the normalized style name and underlining flag
-  [underlineFlag, style] = processStyleInfo(style);
+  % In compiled mode
+  try useDesktop = usejava('desktop'); catch, useDesktop = false; end
+  if isdeployed | ~useDesktop %#ok<OR2> - for Matlab 6 compatibility
+      % do not display any formatting - use simple fprintf()
+      % See: http://undocumentedmatlab.com/blog/bold-color-text-in-the-command-window/#comment-103035
+      % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/1390a26e7ef4aa4d
+      % Also see: https://mail.google.com/mail/u/0/?ui=2&shva=1#all/13a6ed3223333b21
+      count1 = fprintf(format,varargin{:});
+  else
+      % Else (Matlab desktop mode)
+      % Get the normalized style name and underlining flag
+      [underlineFlag, boldFlag, style] = processStyleInfo(style);
 
-  % Set hyperlinking, if so requested
-  if underlineFlag
-      format = ['<a href="">' format '</a>'];
-      
-      % Matlab 7.1 R14 (possibly a few newer versions as well?)
-      % have a bug in rendering consecutive hyperlinks
-      % This is fixed by appending a single non-linked space
-      if majorVersion < 7 || minorVersion <= 1
-          format(end+1) = ' ';
-      end
-  end
+      % Set hyperlinking, if so requested
+      if underlineFlag
+          format = ['<a href="">' format '</a>'];
 
-  % Get the current CW position
-  cmdWinDoc = com.mathworks.mde.cmdwin.CmdWinDocument.getInstance;
-  lastPos = cmdWinDoc.getLength;
-
-  % If not beginning of line
-  bolFlag = 0;  %#ok
-  %if docElement.getEndOffset - docElement.getStartOffset > 1
-      % Display a hyperlink element in order to force element separation
-      % (otherwise adjacent elements on the same line will be merged)
-      if majorVersion<7 || minorVersion<13
-          if ~underlineFlag
-              fprintf('<a href=""> </a>');  %fprintf('<a href=""> </a>\b');
-          else
-              fprintf(' ');  %fprintf(' \b');
+          % Matlab 7.1 R14 (possibly a few newer versions as well?)
+          % have a bug in rendering consecutive hyperlinks
+          % This is fixed by appending a single non-linked space
+          if majorVersion < 7 || (majorVersion==7 && minorVersion <= 1)
+              format(end+1) = ' ';
           end
       end
-      %drawnow;
-      bolFlag = 1;
-  %end
 
-  % Get a handle to the Command Window component
-  mde = com.mathworks.mde.desk.MLDesktop.getInstance;
-  cw = mde.getClient('Command Window');
-  xCmdWndView = cw.getComponent(0).getViewport.getComponent(0);
-
-  % Store the CW background color as a special color pref
-  % This way, if the CW bg color changes (via File/Preferences), 
-  % it will also affect existing rendered strs
-  com.mathworks.services.Prefs.setColorPref('CW_BG_Color',xCmdWndView.getBackground);
-
-  % Display the text in the Command Window
-  count1 = fprintf(2,format,varargin{:});
-  %awtinvoke(cmdWinDoc,'remove',lastPos,1);   % TODO: find out how to remove the extra '_'
-  drawnow;
-  docElement = cmdWinDoc.getParagraphElement(lastPos+1);
-  if majorVersion<7 || minorVersion<13
-      if bolFlag && ~underlineFlag
-          % Set the leading hyperlink space character ('_') to the bg color, effectively hiding it
-          % Note: old Matlab versions have a bug in hyperlinks that need to be accounted for...
-          %disp(' '); dumpElement(docElement)
-          setElementStyle(docElement,'CW_BG_Color',1+underlineFlag,majorVersion,minorVersion); %+getUrlsFix(docElement));
-          %disp(' '); dumpElement(docElement)
-          el(end+1) = handle(docElement);
+      % Set bold, if requested and supported (R2011b+)
+      if boldFlag
+          if (majorVersion > 7 || minorVersion >= 13)
+              format = ['<strong>' format '</strong>'];
+          else
+              boldFlag = 0;
+          end
       end
 
-      % Fix a problem with some hidden hyperlinks becoming unhidden...
-      fixHyperlink(docElement);
-      %dumpElement(docElement);
+      % Get the current CW position
+      cmdWinDoc = com.mathworks.mde.cmdwin.CmdWinDocument.getInstance;
+      lastPos = cmdWinDoc.getLength;
+
+      % If not beginning of line
+      bolFlag = 0;  %#ok
+      %if docElement.getEndOffset - docElement.getStartOffset > 1
+          % Display a hyperlink element in order to force element separation
+          % (otherwise adjacent elements on the same line will be merged)
+          if majorVersion<7 || (majorVersion==7 && minorVersion<13)
+              if ~underlineFlag
+                  fprintf('<a href=""> </a>');  %fprintf('<a href=""> </a>\b');
+              elseif format(end)~=10  % if no newline at end
+                  fprintf(' ');  %fprintf(' \b');
+              end
+          end
+          %drawnow;
+          bolFlag = 1;
+      %end
+
+      % Get a handle to the Command Window component
+      mde = com.mathworks.mde.desk.MLDesktop.getInstance;
+      cw = mde.getClient('Command Window');
+      xCmdWndView = cw.getComponent(0).getViewport.getComponent(0);
+
+      % Store the CW background color as a special color pref
+      % This way, if the CW bg color changes (via File/Preferences), 
+      % it will also affect existing rendered strs
+      com.mathworks.services.Prefs.setColorPref('CW_BG_Color',xCmdWndView.getBackground);
+
+      % Display the text in the Command Window
+      count1 = fprintf(2,format,varargin{:});
+
+      %awtinvoke(cmdWinDoc,'remove',lastPos,1);   % TODO: find out how to remove the extra '_'
+      drawnow;  % this is necessary for the following to work properly (refer to Evgeny Pr in FEX comment 16/1/2011)
+      docElement = cmdWinDoc.getParagraphElement(lastPos+1);
+      if majorVersion<7 || (majorVersion==7 && minorVersion<13)
+          if bolFlag && ~underlineFlag
+              % Set the leading hyperlink space character ('_') to the bg color, effectively hiding it
+              % Note: old Matlab versions have a bug in hyperlinks that need to be accounted for...
+              %disp(' '); dumpElement(docElement)
+              setElementStyle(docElement,'CW_BG_Color',1+underlineFlag,majorVersion,minorVersion); %+getUrlsFix(docElement));
+              %disp(' '); dumpElement(docElement)
+              el(end+1) = handle(docElement);  %#ok used in debug only
+          end
+
+          % Fix a problem with some hidden hyperlinks becoming unhidden...
+          fixHyperlink(docElement);
+          %dumpElement(docElement);
+      end
+
+      % Get the Document Element(s) corresponding to the latest fprintf operation
+      while docElement.getStartOffset < cmdWinDoc.getLength
+          % Set the element style according to the current style
+          %disp(' '); dumpElement(docElement)
+          specialFlag = underlineFlag | boldFlag;
+          setElementStyle(docElement,style,specialFlag,majorVersion,minorVersion);
+          %disp(' '); dumpElement(docElement)
+          docElement2 = cmdWinDoc.getParagraphElement(docElement.getEndOffset+1);
+          if isequal(docElement,docElement2),  break;  end
+          docElement = docElement2;
+          %disp(' '); dumpElement(docElement)
+      end
+
+      % Force a Command-Window repaint
+      % Note: this is important in case the rendered str was not '\n'-terminated
+      xCmdWndView.repaint;
+
+      % The following is for debug use only:
+      el(end+1) = handle(docElement);  %#ok used in debug only
+      %elementStart  = docElement.getStartOffset;
+      %elementLength = docElement.getEndOffset - elementStart;
+      %txt = cmdWinDoc.getText(elementStart,elementLength);
   end
-
-  % Get the Document Element(s) corresponding to the latest fprintf operation
-  while docElement.getStartOffset < cmdWinDoc.getLength
-      % Set the element style according to the current style
-      setElementStyle(docElement,style,underlineFlag,majorVersion,minorVersion);
-      docElement2 = cmdWinDoc.getParagraphElement(docElement.getEndOffset+1);
-      if isequal(docElement,docElement2),  break;  end
-      docElement = docElement2;
-  end
-
-  % Force a Command-Window repaint
-  % Note: this is important in case the rendered str was not '\n'-terminated
-  xCmdWndView.repaint;
-
-  % The following is for debug use only:
-  el(end+1) = handle(docElement);  %#ok used in debug only
-  %elementStart = docElement.getStartOffset;
-  %elementLength = docElement.getEndOffset - elementStart;
-  %txt = cmdWinDoc.getText(elementStart,elementLength);
 
   if nargout
       count = count1;
@@ -218,8 +255,38 @@ function count = cprintf(style,format,varargin)
   return;  % debug breakpoint
 
 % Process the requested style information
-function [underlineFlag,style] = processStyleInfo(style)
+function [underlineFlag,boldFlag,style] = processStyleInfo(style)
   underlineFlag = 0;
+  boldFlag = 0;
+
+  % First, strip out the underline/bold markers
+  if ischar(style)
+      % Styles containing '-' or '_' should be underlined (using a no-target hyperlink hack)
+      %if style(1)=='-'
+      underlineIdx = (style=='-') | (style=='_');
+      if any(underlineIdx)
+          underlineFlag = 1;
+          %style = style(2:end);
+          style = style(~underlineIdx);
+      end
+
+      % Check for bold style (only if not underlined)
+      boldIdx = (style=='*');
+      if any(boldIdx)
+          boldFlag = 1;
+          style = style(~boldIdx);
+      end
+      if underlineFlag && boldFlag
+          warning('YMA:cprintf:BoldUnderline','Matlab does not support both bold & underline')
+      end
+
+      % Check if the remaining style sting is a numeric vector
+      %styleNum = str2num(style); %#ok<ST2NM>  % not good because style='text' is evaled!
+      %if ~isempty(styleNum)
+      if any(style==' ' | style==',' | style==';')
+          style = str2num(style); %#ok<ST2NM>
+      end
+  end
 
   % Style = valid matlab RGB vector
   if isnumeric(style) && length(style)==3 && all(style<=1) && all(abs(style)>=0)
@@ -234,12 +301,6 @@ function [underlineFlag,style] = processStyleInfo(style)
 
   % Style name
   else
-      % Styles starting with '-' should be underlined (using a no-target hyperlink hack)
-      if style(1)=='-'
-          underlineFlag = 1;
-          style = style(2:end);
-      end
-
       % Try case-insensitive partial/full match with the accepted style names
       validStyles = {'Text','Keywords','Comments','Strings','UnterminatedStrings','SystemCommands','Errors', ...
                      'Black','Cyan','Magenta','Blue','Green','Red','Yellow','White', ...
@@ -277,7 +338,7 @@ function [underlineFlag,style] = processStyleInfo(style)
 
 % Convert a Matlab RGB vector into a known style name (e.g., '[255,37,0]')
 function styleName = getColorStyle(rgb)
-  intColor = int32(round(rgb*255));
+  intColor = int32(rgb*255);
   javaColor = java.awt.Color(intColor(1), intColor(2), intColor(3));
   styleName = sprintf('[%d,%d,%d]',intColor);
   com.mathworks.services.Prefs.setColorPref(styleName,javaColor);
@@ -322,10 +383,10 @@ function fixHyperlink(docElement)
   end
 
 % Set an element to a particular style (color)
-function setElementStyle(docElement,style,hyperlinkFlag, majorVersion,minorVersion)
+function setElementStyle(docElement,style,specialFlag, majorVersion,minorVersion)
   %global tokens links urls urlTargets  % for debug only
   global oldStyles
-  if nargin<3,  hyperlinkFlag=0;  end
+  if nargin<3,  specialFlag=0;  end
   % Set the last Element token to the requested style:
   % Colors:
   tokens = docElement.getAttribute('SyntaxTokens');
@@ -334,20 +395,20 @@ function setElementStyle(docElement,style,hyperlinkFlag, majorVersion,minorVersi
       oldStyles{end+1} = styles.cell;
 
       % Correct edge case problem
-      extraInd = double(majorVersion>=7 && minorVersion>=13);  % =0 for R2011a-, =1 for R2011b+
-%{
+      extraInd = double(majorVersion>7 || (majorVersion==7 && minorVersion>=13));  % =0 for R2011a-, =1 for R2011b+
+      %{
       if ~strcmp('CWLink',char(styles(end-hyperlinkFlag))) && ...
           strcmp('CWLink',char(styles(end-hyperlinkFlag-1)))
          extraInd = 0;%1;
       end
-%}
-      %hyperlinkFlag = ~isempty(strmatch('CWLink',tokens(2)));
-      %hyperlinkFlag = 0 + any(cellfun(@(c)(~isempty(c)&&strcmp(c,'CWLink')),tokens(2).cell));
+      hyperlinkFlag = ~isempty(strmatch('CWLink',tokens(2)));
+      hyperlinkFlag = 0 + any(cellfun(@(c)(~isempty(c)&&strcmp(c,'CWLink')),tokens(2).cell));
+      %}
 
       styles(end-extraInd) = java.lang.String('');
-      styles(end-extraInd-hyperlinkFlag) = java.lang.String(style);  %#ok apparently unused but in reality used by Java
+      styles(end-extraInd-specialFlag) = java.lang.String(style);  %#ok apparently unused but in reality used by Java
       if extraInd
-          styles(end-hyperlinkFlag) = java.lang.String(style);
+          styles(end-specialFlag) = java.lang.String(style);
       end
 
       oldStyles{end} = [oldStyles{end} styles.cell];
@@ -356,27 +417,46 @@ function setElementStyle(docElement,style,hyperlinkFlag, majorVersion,minorVersi
   end
   
   % Underlines (hyperlinks):
+  %{
   links = docElement.getAttribute('LinkStartTokens');
   if isempty(links)
       %docElement.addAttribute('LinkStartTokens',repmat(int32(-1),length(tokens(2)),1));
   else
       %TODO: remove hyperlink by setting the value to -1
   end
-  
+  %}
+
   % Correct empty URLs to be un-hyperlinkable (only underlined)
-  urls  = docElement.getAttribute('HtmlLink');
-  if isempty(urls),  return;  end
-  urlTargets = urls(2);
-  for urlIdx = 1 : length(urlTargets)
-      try
-          if urlTargets(urlIdx).length < 1
-              urlTargets(urlIdx) = [];  % '' => []
+  urls = docElement.getAttribute('HtmlLink');
+  if ~isempty(urls)
+      urlTargets = urls(2);
+      for urlIdx = 1 : length(urlTargets)
+          try
+              if urlTargets(urlIdx).length < 1
+                  urlTargets(urlIdx) = [];  % '' => []
+              end
+          catch
+              % never mind...
+              a=1;  %#ok used for debug breakpoint...
           end
-      catch
-          % never mind...
-          a=1;  %#ok used for debug breakpoint...
       end
   end
+  
+  % Bold: (currently unused because we cannot modify this immutable int32 numeric array)
+  %{
+  try
+      %hasBold = docElement.isDefined('BoldStartTokens');
+      bolds = docElement.getAttribute('BoldStartTokens');
+      if ~isempty(bolds)
+          %docElement.addAttribute('BoldStartTokens',repmat(int32(1),length(bolds),1));
+      end
+  catch
+      % never mind - ignore...
+      a=1;  %#ok used for debug breakpoint...
+  end
+  %}
+  
+  return;  % debug breakpoint
 
 % Display information about element(s)
 function dumpElement(docElements)
@@ -388,10 +468,13 @@ function dumpElement(docElements)
       docElement = docElements(elementIdx);
       if ~isjava(docElement),  docElement = docElement.java;  end
       %docElement.dump(java.lang.System.out,1)
+      disp(' ');
+      disp(docElement)
       tokens = docElement.getAttribute('SyntaxTokens');
       if isempty(tokens),  continue;  end
       links = docElement.getAttribute('LinkStartTokens');
       urls  = docElement.getAttribute('HtmlLink');
+      try bolds = docElement.getAttribute('BoldStartTokens'); catch, bolds = []; end
       txt = {};
       tokenLengths = tokens(1);
       for tokenIdx = 1 : length(tokenLengths)-1
@@ -407,7 +490,11 @@ function dumpElement(docElements)
       %docElement.uiinspect
       txt = strrep(txt',sprintf('\n'),'\n');
       try
-          data = [tokens(2).cell m2c(tokens(1)) m2c(links) m2c(urls(1)) cell(urls(2)) txt];
+          data = [tokens(2).cell m2c(tokens(1)) m2c(links) m2c(urls(1)) cell(urls(2)) m2c(bolds) txt];
+          if elementIdx==1
+              disp('    SyntaxTokens(2,1) - LinkStartTokens - HtmlLink(1,2) - BoldStartTokens - txt');
+              disp('    ==============================================================================');
+          end
       catch
           try
               data = [tokens(2).cell m2c(tokens(1)) m2c(links) txt];
@@ -421,8 +508,6 @@ function dumpElement(docElements)
               end
           end
       end
-      disp(' ');
-      disp(docElement)
       disp(data)
   end
 
@@ -435,20 +520,26 @@ function cells = m2c(data)
 function showDemo(majorVersion,minorVersion)
   fprintf('cprintf displays formatted text in the Command Window.\n\n');
   fprintf('Syntax: count = cprintf(style,format,...);  click <a href="matlab:help cprintf">here</a> for details.\n\n');
+  url = 'http://UndocumentedMatlab.com/blog/cprintf/';
+  fprintf(['Technical description: <a href="' url '">' url '</a>\n\n']);
   fprintf('Demo:\n\n');
+  boldFlag = majorVersion>7 || (majorVersion==7 && minorVersion>=13);
   s = ['cprintf(''text'',    ''regular black text'');' 10 ...
        'cprintf(''hyper'',   ''followed %s'',''by'');' 10 ...
-       'cprintf(''k'',       ''%d colored'',4);' 10 ...
+       'cprintf(''key'',     ''%d colored'',' num2str(4+boldFlag) ');' 10 ...
        'cprintf(''-comment'',''& underlined'');' 10 ...
        'cprintf(''err'',     ''elements:\n'');' 10 ...
        'cprintf(''cyan'',    ''cyan'');' 10 ...
-       'cprintf(''-green'',  ''underlined green'');' 10 ...
+       'cprintf(''_green'',  ''underlined green'');' 10 ...
        'cprintf(-[1,0,1],  ''underlined magenta'');' 10 ...
        'cprintf([1,0.5,0], ''and multi-\nline orange\n'');' 10];
-   if majorVersion>=7 && minorVersion>=13
+   if boldFlag
        % In R2011b+ the internal bug that causes the need for an extra space
        % is apparently fixed, so we must insert the sparator spaces manually...
+       % On the other hand, 2011b enables *bold* format
+       s = [s 'cprintf(''*blue'',   ''and *bold* (R2011b+ only)\n'');' 10];
        s = strrep(s, ''')',' '')');
+       s = strrep(s, ''',5)',' '',5)');
        s = strrep(s, '\n ','\n');
    end
    disp(s);
