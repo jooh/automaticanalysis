@@ -20,6 +20,8 @@
                 <stream>fieldmap</stream>
             </outputstreams>
             
+            <fieldmap2session desc='optional vector of indices defining which fieldmaps should be used with which sessions'></fieldmap2session>
+            <nimages desc='number of fieldmap images (typically 3: mag, phase 1, phase 2)'>3</nimages>
             <te1 desc='short TE'
             ></te1>
             <te2 desc='long TE'
@@ -36,7 +38,6 @@
             >1</match>
             <writeunwarpedEPI desc='Write unwarped EPI?'
             >0</writeunwarpedEPI>
-            
         </currenttask>
     </tasklist>
 </aap>

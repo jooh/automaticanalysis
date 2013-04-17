@@ -53,28 +53,34 @@ switch task
             [aap dicom_files_src]=aas_listdicomfiles(aap,subj,fieldseries(seriesind));
             
             % Now copy files to this module's directory
-            aas_makedir(aap,fullfile(fieldpath, fieldfolds{seriesind}));
+            % (support multiple fieldmap acquisitions)
+            ffold = fieldfolds{1+rem(1+seriesind,2)};
+            % fieldmap toolbox takes a directory as input so must ensure
+            % each session/ffold combo has its own dir
+            outdir = fullfile(fieldpath,sprintf('%d_%s',...
+                fieldseries(seriesind),ffold));
+            aas_makedir(aap,outdir);
             outstream={};
             switch(aap.directory_conventions.remotefilesystem)
                 case 'none'
                     for ind=1:length(dicom_files_src)
                         [success,msg,msgid] = copyfile(deblank(...
-                            dicom_files_src{ind}),fullfile(fieldpath, fieldfolds{seriesind}));
+                            dicom_files_src{ind}),outdir);
                         % allow copyfile failures due to permissions issues
                         % (e.g. if copying from networked system)
                         assert(success || strfind(msg,'chflags'),...
                             'copyfile failed!')
                         [pth nme ext]=fileparts(dicom_files_src{ind});
-                        outstream{ind}=fullfile(fullfile(fieldpath, fieldfolds{seriesind}),[nme ext]);
+                        outstream{ind}=fullfile(outdir,[nme ext]);
                     end;
                 case 's3'
                     s3fles={};
                     for ind=1:length(dicom_files_src)
                         [pth nme ext]=fileparts(dicom_files_src{ind});
                         s3fles=[s3fles [nme ext]];
-                        outstream{ind}=fullfile(fullfile(fieldpath, fieldfolds{seriesind}),s3fles{ind});
+                        outstream{ind}=fullfile(outdir,s3fles{ind});
                     end;
-                    s3_copyfrom_filelist(aap,fullfile(fieldpath, fieldfolds{seriesind}),s3fles,aaworker.bucketfordicom,pth);
+                    s3_copyfrom_filelist(aap,outdir,s3fles,aaworker.bucketfordicom,pth);
             end;
             out=[out outstream];
         end;
