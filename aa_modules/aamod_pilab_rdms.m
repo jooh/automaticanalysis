@@ -16,10 +16,6 @@ switch task
         roipath = aas_getfiles_bystream(aap,subj,...
             'pilab_rois');
         rois = loadbetter(roipath);
-        % support logical indexing of continuous ROIs
-        if isnumeric(rois.data)
-            rois.data = rois.data ~= 0;
-        end
 
         % check that parfor is available
         if ~matlabpool('size')
