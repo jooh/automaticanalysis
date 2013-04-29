@@ -37,7 +37,10 @@ switch task
         % includes many voxels will also be included as a voxel in many
         % other searchlights. But this does not hold for nvox-based mapping
         % (?).
-        spheres = false(vol.nfeatures,vol.nfeatures);
+
+        % new sparse formulation - store radius information directly in
+        % roivol instance.
+        spheres = sparse(vol.nfeatures,vol.nfeatures);
         diagnostic_r = NaN([1 vol.nfeatures]);
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
 
@@ -46,16 +49,19 @@ switch task
         tic;
         parfor n = 1:vol.nfeatures
             % get sphere index
-            sp = false(1,vol.nfeatures);
-            sp(sl.mapinds(n)) = true;
+            % (some extra dribbling is necessary here to avoid confusing
+            % parfor)
+            sp = sparse(1,vol.nfeatures);
+            inds = sl.mapinds(n);
+            sp(inds) = sl.distances(inds);
             spheres(n,:) = sp;
             diagnostic_r(n) = sl.radius;
         end
         fprintf('finished in %s.\n',seconds2str(toc));
         % number of voxels in each sphere
-        diagnostic_nsphere = sum(spheres,2)';
+        diagnostic_nsphere = full(sum(spheres,2)');
         % number of spheres that sampled each voxel
-        diagnostic_nsampled = sum(spheres,1);
+        diagnostic_nsampled = full(sum(spheres,1));
 
         % save spheres
         % now as volume 
