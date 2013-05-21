@@ -80,12 +80,23 @@ switch task
         % generate separate estimates for each split
         datcell = cell(nsplit,1);
         for s = 1:nsplit
+            fprintf('fitting split %d of %d...\n',s,nsplit);
             % split-specific data
             splitind = split==usplit(s);
             splitepi = epivol.selectbymeta('chunks',...
                 epivol.desc.samples.unique.chunks(splitind));
             splitdesign = designvol.selectbymeta('chunks',...
                 designvol.desc.samples.unique.chunks(splitind));
+
+            % now mask out any NaN features
+            nanmask = ~any(isnan(splitepi.data),1);
+            % if you haven't NaNed out all volumes for a given feature
+            % something is likely broken
+            assert(all(all(isnan(splitepi.data(:,~nanmask)))),'inconsistent NaN mask detected');
+            if ~all(nanmask)
+                fprintf('removed %d NaN features from analysis.\n',sum(~nanmask));
+                splitepi = splitepi(:,nanmask);
+            end
             % implement some kind of glm
             glm = vol2glm(splitdesign,splitepi,ts.glmclass,...
                 ts.covariatedeg,ts.glmvarargs{:});
@@ -120,10 +131,22 @@ switch task
                 end
             end
 
+            % re-introduce the NaN'ed out feature. This is necessary to
+            % avoid having different number of features and masks for
+            % different runs. NaN features then get removed again in e.g.
+            % roidata2rdmvol.
+            if ~all(nanmask)
+                nanmat = repmat(nanmask,[ncon 1]);
+                estemp = NaN(size(nanmat));
+                estemp(nanmat) = estimates;
+                estemp(~nanmat) = NaN;
+                estimates = estemp;
+            end
+
             % construct a volume with estimates for this split. Now, the
             % chunk becomes the split (whereas before it was probably the
             % run or sub-run)
-            datcell{s} = MriVolume(estimates,splitepi,'metasamples',...
+            datcell{s} = MriVolume(estimates,epivol,'metasamples',...
                 struct('chunks',ones(ncon,1)*usplit(s)','labels',...
                 {splitdesign.desc.features.unique.labels(coninds)'}));
         end
