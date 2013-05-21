@@ -54,9 +54,11 @@ switch task
                         fullfile(aas_getsubjpath(aap,subj), aap.directory_conventions.fieldmapsdirname), ...
                         sprintf('^vdm.*session%d.nii$',sess));
                 end
+                vdmpath = fullfile(aas_getsubjpath(aap,subj), aap.directory_conventions.fieldmapsdirname, EPIimg);
+                assert(exist(vdmpath,'file')>0,'no VDM found!');
                 jobs{1}.spatial{1}.realignunwarp.data(sess).pmscan = ...
-                    cellstr(fullfile(aas_getsubjpath(aap,subj), aap.directory_conventions.fieldmapsdirname, EPIimg));
-                fprintf('\nFound a VDM fieldmap\n')
+                    cellstr(vdmpath);
+                fprintf('\nFound a VDM fieldmap: %s\n',vdmpath);
             catch
                 jobs{1}.spatial{1}.realignunwarp.data(sess).pmscan = ...
                     [];
