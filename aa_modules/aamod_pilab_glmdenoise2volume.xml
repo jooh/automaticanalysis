@@ -12,6 +12,14 @@
 
             <tmap>0</tmap>
             <minr2>-Inf</minr2>
+            <maskbybright>1</maskbybright>
+            <maskbymean>0</maskbymean>
+            <!-- mask out bad voxels within each split, ie, do feature
+                 selection inside each split as well as across splits -->
+            <nanmask>1</nanmask>
+            <!-- combine error estimates across conditions before t mapping
+                 -->
+            <poolerrors>1</poolerrors>
             <ignorelabels>
                 <item></item>
             </ignorelabels>
