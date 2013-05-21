@@ -17,6 +17,7 @@
             <F></F>
             <hrfmodel>optimize</hrfmodel>
             <hrfknobs></hrfknobs>
+            <split></split>
             <opt>
                 <extraregressors></extraregressors>
                 <maxpolydeg></maxpolydeg>

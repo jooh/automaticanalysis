@@ -44,6 +44,16 @@ switch task
             end
         end
 
+        % configure split
+        if isempty(ts.split)
+            % just one global split
+            split = ones(1,nchunks);
+        elseif ischar(ts.split)
+            split = eval(ts.split);
+        end
+        usplit = unique(split);
+        nsplit = length(usplit);
+
         % Kendrick's empirical HRFs look very noisy for short stimuli (<3
         % s) and don't work at all for duration 0 (impulse response). In
         % any case they are extremely similar to the spm_hrf (reassuring!).
@@ -64,72 +74,77 @@ switch task
             ts.opt.brainmask = mask;
         end
 
-        % fit GLMdenoise model
         subdir = aas_getsubjpath(aap,subj);
         outdir = fullfile(subdir,'glmdenoise');
         mkdirifneeded(outdir);
-        figdir = fullfile(outdir,'diagnostic_figures');
-        mkdirifneeded(figdir);
-        [results,denoisedepi] = GLMdenoisedata(design,epi,dur,frameperiod,...
-            ts.hrfmodel,ts.hrfknobs,ts.opt,figdir);
-        % add names field
-        results.regnames = names;
-        % recreate 'bright' logical mask marking voxel exceeding intensity
-        % threshold
-        results.bright = results.meanvol(:) > prctile(results.meanvol,...
-          results.inputs.opt.brainthresh(1) * results.inputs.opt.brainthresh(2));
 
-        % split off very large and fairly irrelevant field in results to
-        % prevent ridiculously big MAT files
-        models = results.models;
-        results.models = [];
-        outpath_models = fullfile(outdir,'results_models.mat');
-        save(outpath_models,'models','-v7.3');
+        % fields to write out as diagnostic niftis
+        diagnostics = struct('field',{'R2','SNR','noisepool','bright'},...
+            'paths',repmat({cell(nsplit,1)},[1 4]));
+        ndia = length(diagnostics);
+
+        % run glmdenoise separately on each split
+        outpath_models = cell(nsplit,1);
+        outpath_results = cell(nsplit,1);
+        outpath_epi = cell(nsplit,1);
+        for sp = 1:nsplit
+            fprintf('glmdenoise split %d of %d...\n',sp,nsplit);
+            sessoutdir = fullfile(outdir,sprintf('split%02d',sp));
+            mkdirifneeded(sessoutdir);
+            figdir = fullfile(sessoutdir,'diagnostic_figures');
+            mkdirifneeded(figdir);
+            sessinds = find(split==usplit(sp));
+            [results,denoisedepi] = GLMdenoisedata(design(sessinds),...
+                epi(sessinds),dur,frameperiod,ts.hrfmodel,ts.hrfknobs,...
+                ts.opt,figdir);
+            % add names field
+            results.regnames = names;
+            % recreate 'bright' logical mask marking voxel exceeding intensity
+            % threshold
+            results.bright = results.meanvol(:) > (prctile(results.meanvol,...
+              results.inputs.opt.brainthresh(1)) * ...
+                results.inputs.opt.brainthresh(2));
+            % split off very large and fairly irrelevant field in results to
+            % prevent ridiculously big MAT files
+            models = results.models;
+            results.models = [];
+            outpath_models{sp} = fullfile(sessoutdir,'results_models.mat');
+            save(outpath_models{sp},'models','-v7.3');
+            % results struct
+            outpath_results{sp} = fullfile(sessoutdir,'results.mat');
+            % need 7.3 flag since this may be >2GB
+            save(outpath_results{sp},'results','-v7.3');
+            % denoised EPIs
+            outpath_epi{sp} = fullfile(sessoutdir,'denoisedepi.mat');
+            save(outpath_epi{sp},'denoisedepi','-v7.3');
+            % write out diagnostic volumes
+            for dia = 1:ndia
+                diastr = diagnostics(dia).field;
+                temp = double(mask);
+                temp(mask) = results.(diastr);
+                [diagnostics(dia).paths{sp},V.fname] = deal(...
+                    fullfile(sessoutdir,[diastr '.nii']));
+                V.dt = [spm_type('float32') spm_platform('bigend')];
+                spm_write_vol(V,temp);
+            end
+        end
+
+        % describe outputs - one per split
         aap=aas_desc_outputs(aap,subj,'glmdenoise_results_models',outpath_models);
-
-        % save and describe standard outputs
-        outpath_results = fullfile(outdir,'results.mat');
-        % need 7.3 flag since this may be >2GB
-        save(outpath_results,'results','-v7.3');
         aap=aas_desc_outputs(aap,subj,'glmdenoise_results',outpath_results);
-        outpath_epi = fullfile(outdir,'denoisedepi.mat');
-        save(outpath_epi,'denoisedepi','-v7.3');
         aap=aas_desc_outputs(aap,subj,'glmdenoise_epi',outpath_epi);
 
-        % update mask
+        % describe diagnostics
+        for dia = 1:ndia
+            aap=aas_desc_outputs(aap,subj,['glmdenoise_diagnostic_' ...
+                lower(diagnostics(dia).field)],diagnostics(dia).paths);
+        end
+
+        % update global mask
         V.fname = mpath(1,:);
         spm_write_vol(V,mask);
         aap=aas_desc_outputs(aap,subj,'epiBETmask',mpath);
 
-        % also write out a few diagnostic volumes
-        r2 = double(mask);
-        r2(mask) = results.R2;
-        outpath = fullfile(outdir,'R2.nii');
-        V.fname = outpath;
-        V.dt = [spm_type('float32') spm_platform('bigend')];
-        spm_write_vol(V,r2);
-        aap=aas_desc_outputs(aap,subj,'glmdenoise_diagnostic_r2',outpath);
-
-        snr = double(mask);
-        snr(mask) = results.SNR;
-        outpath = fullfile(outdir,'SNR.nii');
-        V.fname = outpath;
-        spm_write_vol(V,snr);
-        aap=aas_desc_outputs(aap,subj,'glmdenoise_diagnostic_snr',outpath);
-
-        noisepool = mask;
-        noisepool(mask) = results.noisepool;
-        outpath = fullfile(outdir,'noisepool.nii');
-        V.fname = outpath;
-        spm_write_vol(V,noisepool);
-        aap=aas_desc_outputs(aap,subj,'glmdenoise_diagnostic_noisepool',outpath);
-
-        bright = mask;
-        noisepool(mask) = results.bright;
-        outpath = fullfile(outdir,'bright.nii');
-        V.fname = outpath;
-        spm_write_vol(V,bright);
-        aap=aas_desc_outputs(aap,subj,'glmdenoise_diagnostic_noisepool',outpath);
     case 'checkrequirements'
         
     otherwise
