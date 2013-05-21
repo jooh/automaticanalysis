@@ -52,12 +52,18 @@ switch task
                 'rdms_session%02d.mat',sess));
             save(outpath_sessdata,'sessdisvol');
             outpaths_sessrdms = [outpaths_sessrdms; outpath_sessdata];
+            if sess==1
+                mfeatures = sessdisvol.meta.features;
+            end
+            if isfield(sessdisvol.meta.features,'nfeatures')
+                fn = sprintf('nfeatures_split%02d',sess);
+                mfeatures.(fn) = sessdisvol.meta.features.nfeatures;
+            end
         end
 
         % make average RDM across sessions and save
         disvol = MriVolume(sumdata/vol.desc.samples.nunique.chunks,...
-            sessdisvol,'metafeatures',struct(...
-                'names',{rois.meta.samples.names}));
+            sessdisvol,'metafeatures',mfeatures);
         outpath_mean = fullfile(pidir,'rdms_mean.mat');
         save(outpath_mean,'disvol');
 
