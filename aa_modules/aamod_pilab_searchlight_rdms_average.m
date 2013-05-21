@@ -42,7 +42,7 @@ switch task
                 sessrdms = loadbetter(sessrdmpath(s,:));
                 sessrdms.data = averagesearchlights(sessrdms.data,...
                     spheres.data);
-                save(sessrdmpath(s,:),'meanrdms');
+                save(sessrdmpath(s,:),'sessrdms');
             end
         end
         aap=aas_desc_outputs(aap,subj,'pilab_data_rdms_sess',...
