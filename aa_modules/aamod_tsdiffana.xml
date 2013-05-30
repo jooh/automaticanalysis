@@ -9,6 +9,9 @@
             </qsub>
             
             <permanenceofoutput>3</permanenceofoutput>
+            <!-- nb, if manual we read the threshold from spikethresh.mat
+                 in sessdir - or failing that bring up a crosshair -->
+            <spikethreshold desc='normalised variance threshold or manual'>Inf</spikethreshold>
             
             <inputstreams>
                 <stream>epi</stream>
@@ -16,6 +19,7 @@
             
             <outputstreams>
                 <stream>tsdiffana</stream>
+                <stream>spikes</stream>
             </outputstreams>
             
         </currenttask>
