@@ -55,6 +55,7 @@ switch task
         
         % This outputs last radius from recursive command...
         indxS = strfind(w, 'radius');
+        assert(~isempty(indxS),'fsl command failed: %s',w);
         indxS = indxS(end) + 7;
         indxE = strfind(w(indxS:end), ' mm');
         indxE = indxE(1) - 2;

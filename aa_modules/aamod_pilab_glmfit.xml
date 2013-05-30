@@ -9,7 +9,8 @@
             </qsub>
             
             <permanenceofoutput>3</permanenceofoutput>
-            <targetname>face</targetname>
+            <targetname></targetname>
+            <ignorename></ignorename>
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
             <covariatedeg>adaptive</covariatedeg>
