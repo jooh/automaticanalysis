@@ -66,10 +66,23 @@ switch task
         end
 
         % find correct labels
-        coninds = findStrInArray(designvol.desc.features.unique.labels,...
-            ts.targetname)';
-        assert(~isempty(coninds),'found no labels matching %s',...
-            ts.targetname);
+        nlabels = length(designvol.desc.features.unique.labels);
+        if isempty(ts.targetname)
+            coninds = 1:nlabels;
+        else
+            coninds = findStrInArray(designvol.desc.features.unique.labels,...
+                ts.targetname);
+        end
+        
+        if ~isempty(ts.ignorename)
+            ignoreinds = findStrInArray(designvol.desc.features.unique.labels,...
+                ts.ignorename);
+            coninds = setdiff(coninds,ignoreinds);
+        end
+       
+        assert(~isempty(coninds),...
+            'found no labels matching targetname/ignorename %s/%s',...
+            ts.targetname,ts.ignorename);
         ncon = length(coninds);
 
         % empty cells don't get read properly
