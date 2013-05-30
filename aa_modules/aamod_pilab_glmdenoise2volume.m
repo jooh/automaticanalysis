@@ -32,6 +32,7 @@ switch task
                 else
                     se = results.modelse{2};
                 end
+                assert(~all(se(:)==0),'bad standard errors - no bootstrapping?');
                 estimates = (results.modelmd{2} ./ se)';
             else
                 estimates = results.modelmd{2}';
