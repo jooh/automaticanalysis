@@ -42,7 +42,14 @@ switch task
             if ~isempty(ts.ignorelabels)
                 assert(issorted(results.regnames),...
                     'names must be sorted to ignore labels');
-                [validnames,coninds] = setdiff(results.regnames,ts.ignorelabels);
+                lastwarn('');
+                % experimental untested fix
+                [validnames,coninds] = setdiff(results.regnames,...
+                    ts.ignorelabels,'stable');
+                [b,id] = lastwarn;
+                assert(~isequal(id,...
+                    'MATLAB:CELL:SETDIFF:RowsFlagIgnored'),...
+                    'bad setdiff behavior: old Matlab version?');
                 estimates = estimates(coninds,:);
             else
                 validnames = results.regnames;
