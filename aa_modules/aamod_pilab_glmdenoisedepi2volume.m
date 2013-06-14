@@ -83,6 +83,60 @@ switch task
                 results.inputs.tr,'metasamples',struct('chunks',chunks,...
                 'superchunks',superchunks));
             % designvol for this split
+            design = results.inputs.design;
+            if ~strcmp(results.inputs.hrfmodel,'assumeconvolved')
+                % need to convolve design matrix - TODO
+                error('not yet implemented!')
+            end
+
+            extraregs = cell(1,length(design));
+            denspec = results.inputs.opt.denoisespec{1};
+            assert(length(results.inputs.opt.denoisespec)==1,...
+                'only one denoisespec supported');
+            if isequal(denspec(1),'0')
+                % EPIs have had signal removed
+                error('not supported!');
+            end
+            if isequal(denspec(2),'0')
+                % EPIs have had polynomial detrend
+                fprintf('projecting out trend polynomials from design\n');
+                for r = 1:length(design)
+                    nvol = size(design{r},1);
+                    extraregs{r} = cat(2,extraregs{r},...
+                        constructpolynomialmatrix(nvol,...
+                        0:results.inputs.opt.maxpolydeg(r)));
+                end
+            end
+            if isequal(denspec(3),'0')
+                % EPIs have had extraregressors removed
+                fprintf('projecting out extra regressors from design\n');
+                for r = 1:length(design)
+                    extraregs{r} = cat(2,extraregs{r},...
+                        results.inputs.opt.extraregressors{r});
+                end
+            else
+                assert(isequal(results.inputs.opt.extraregressors{:})&&...
+                    isempty(results.inputs.opt.extraregressors{1}),...
+                    'EPIs must have extraregressors regressed out');
+            end
+            if isequal(denspec(4),'0')
+                % EPIs have been denoised - design matrix needs this too
+                fprintf('projecting out noise PCs from design\n');
+                for r = 1:length(design)
+                    extraregs{r} = cat(2,extraregs{r},...
+                        results.pcregressors{r}(:,1:results.pcnum));
+                end
+            end
+            if isequal(denspec(5),'0')
+                % EPIs have had residuals removed
+                error('not supported')
+            end
+            % project if necessary
+            if ~isempty(extraregs{1})
+                for r = 1:length(design)
+                    design{r} = projectionmatrix(extraregs{r}) * design{r};
+                end
+            end
             tempdes = BaseVolume(vertcat(results.inputs.design{:}),...
                 'metafeatures',struct('labels',{results.regnames}),...
                 'metasamples',struct('chunks',chunks,'superchunks',...
@@ -111,7 +165,7 @@ switch task
         masknafter = length(maskinds);
         nremoved = masknbefore - masknafter;
         if nremoved>0
-            fprintf('removed %d bad features (%.2f%% of total)\n',...
+            fprintf('removed %d bad features from full volume (%.2f%% of total)\n',...
               nremoved,100 * nremoved / masknbefore);
         end
         % save updated mask

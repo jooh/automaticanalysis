@@ -29,8 +29,13 @@ switch task
         % pass off to new independent function
         ts = aap.tasklist.currenttask.settings;
         % converts and gets rid of NaN / 0 voxels.
-        [epi,design,dur,mask,names] = spm2glmdenoise(SPM,mask,...
-          ts.ignorelabels,strcmp(ts.hrfmodel,'assumeconvolved'));
+        [epi,design,dur,mask,names,extras] = spm2glmdenoise(SPM,mask,...
+          ts.ignorelabels,strcmp(ts.hrfmodel,'assumeconvolved'),...
+            ts.includeextras);
+        % XML parsing probably interprets this as a number
+        if ~isempty(ts.opt.denoisespec) && ~ischar(ts.opt.denoisespec)
+            ts.opt.denoisespec = sprintf('%05d',ts.opt.denoisespec);
+        end
 
         % optional low pass filter
         if ~isempty(ts.K)
@@ -47,7 +52,7 @@ switch task
         % configure split
         if isempty(ts.split)
             % just one global split
-            split = ones(1,nchunks);
+            split = ones(1,length(epi));
         elseif ischar(ts.split)
             split = eval(ts.split);
         end
@@ -94,6 +99,9 @@ switch task
             figdir = fullfile(sessoutdir,'diagnostic_figures');
             mkdirifneeded(figdir);
             sessinds = find(split==usplit(sp));
+            if ts.includeextras
+                ts.opt.extraregressors = extras(sessinds);
+            end
             [results,denoisedepi] = GLMdenoisedata(design(sessinds),...
                 epi(sessinds),dur,frameperiod,ts.hrfmodel,ts.hrfknobs,...
                 ts.opt,figdir);

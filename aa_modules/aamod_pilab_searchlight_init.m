@@ -59,9 +59,12 @@ switch task
         end
         fprintf('finished in %s.\n',seconds2str(toc));
         % number of voxels in each sphere
-        diagnostic_nsphere = full(sum(spheres,2)');
+        sb = spheres;
+        % make sure sum operation below counts each sphere/voxel once
+        sb(sb~=0) = 1;
+        diagnostic_nsphere = full(sum(sb,2)');
         % number of spheres that sampled each voxel
-        diagnostic_nsampled = full(sum(spheres,1));
+        diagnostic_nsampled = full(sum(sb,1));
 
         % save spheres
         % now as volume 
