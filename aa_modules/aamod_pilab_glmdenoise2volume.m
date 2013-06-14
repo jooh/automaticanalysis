@@ -40,9 +40,9 @@ switch task
 
             % restrict to conditions of interest
             if ~isempty(ts.ignorelabels)
-                assert(issorted(results.regnames),...
-                    'names must be sorted to ignore labels');
-                lastwarn('');
+                %assert(issorted(results.regnames),...
+                %    'names must be sorted to ignore labels');
+                %lastwarn('');
                 % experimental untested fix
                 [validnames,coninds] = setdiff(results.regnames,...
                     ts.ignorelabels,'stable');
