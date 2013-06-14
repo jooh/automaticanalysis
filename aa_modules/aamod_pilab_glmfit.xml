@@ -10,7 +10,7 @@
             
             <permanenceofoutput>3</permanenceofoutput>
             <targetname></targetname>
-            <ignorename></ignorename>
+            <ignorelabels></ignorelabels>
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
             <covariatedeg>adaptive</covariatedeg>

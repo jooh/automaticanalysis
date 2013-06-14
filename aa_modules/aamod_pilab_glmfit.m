@@ -74,16 +74,17 @@ switch task
                 ts.targetname);
         end
         
-        if ~isempty(ts.ignorename)
+        if ~isempty(ts.ignorelabels)
             ignoreinds = findStrInArray(designvol.desc.features.unique.labels,...
-                ts.ignorename);
+                ts.ignorelabels);
             coninds = setdiff(coninds,ignoreinds);
         end
        
         assert(~isempty(coninds),...
-            'found no labels matching targetname/ignorename %s/%s',...
-            ts.targetname,ts.ignorename);
+            'found no labels matching targetname/ignorelabels %s/%s',...
+            ts.targetname,ts.ignorelabels);
         ncon = length(coninds);
+        fprintf('storing estimates for %d conditions\n',ncon);
 
         % empty cells don't get read properly
         if isempty(ts.glmvarargs)
@@ -106,8 +107,11 @@ switch task
             % if you haven't NaNed out all volumes for a given feature
             % something is likely broken
             assert(all(all(isnan(splitepi.data(:,~nanmask)))),'inconsistent NaN mask detected');
+            nnans = sum(~nanmask);
             if ~all(nanmask)
-                fprintf('removed %d NaN features from analysis.\n',sum(~nanmask));
+                fprintf(['removed %d NaN features from analysis ' ...
+                    '(%.2f%% of total).\n'],nnans,...
+                    100*(nnans/length(nanmask)));
                 splitepi = splitepi(:,nanmask);
             end
             % implement some kind of glm
