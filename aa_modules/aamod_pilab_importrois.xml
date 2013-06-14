@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='import roitools rois for pilab analysis' modality='MRI' >
+            <qsub>
+                <timeBase>1</timeBase>
+                <memoryBase>1</memoryBase>
+            </qsub>
+            <permanenceofoutput>1</permanenceofoutput>
+            <usesmoothrois>1</usesmoothrois>
+            <roiroot></roiroot>
+            <inputstreams>
+                <stream>pilab_volume</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_rois</stream>
+            </outputstreams>
+        </currenttask>
+    </tasklist>
+</aap>
