@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='regularised RSA for data-predictor RDM comparison' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <nboot>1000</nboot>
+            <ylims>0 1</ylims>
+            <!-- OLS only -->
+            <ktotry>0</ktotry>
+            <outputmode>searchlight</outputmode>
+            <eachmodelalone>0</eachmodelalone>
+            <models>
+                <item>
+                    <name>full</name>
+                    <rdminds>all</rdminds>
+                </item>
+            </models>
+            
+            <inputstreams>
+                <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_rsapredictors</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_rsaresult</stream>
+                <stream>pilab_bootdist_r2</stream>
+                <stream>pilab_bootdist_estimate</stream>
+                <stream>pilab_r2</stream>
+                <stream>pilab_estimates</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
