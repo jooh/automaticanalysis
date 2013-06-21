@@ -38,6 +38,9 @@ switch task
         assert(vol.desc.samples.nunique.chunks>0,...
           'vol must have defined chunks in meta.samples');
         sumdata = zeros([npairs rois.nsamples]);
+        % track NaN features - may appear in different runs if nan masking
+        nanmask = false([vol.desc.samples.nunique.chunks rois.nsamples]);
+        sessdisvolcell = cell(vol.desc.samples.nunique.chunks,1);
         for sess = 1:vol.desc.samples.nunique.chunks
             % copying here saves memory per worker in parfor
             sessvol = vol(vol.meta.samples.chunks==sess,:);
@@ -45,25 +48,43 @@ switch task
             fprintf('running rois for session %d of %d...\n',sess,...
               vol.desc.samples.nunique.chunks);
             tic;
-            sessdisvol = roidata2rdmvol(rois,sessvol,...
+            sessdisvolcell{sess} = roidata2rdmvol(rois,sessvol,...
                 aap.tasklist.currenttask.settings.distancemetric);
-            sumdata = sumdata + sessdisvol.data;
-            outpath_sessdata = fullfile(pidir,sprintf(...
-                'rdms_session%02d.mat',sess));
-            save(outpath_sessdata,'sessdisvol');
-            outpaths_sessrdms = [outpaths_sessrdms; outpath_sessdata];
+            nanmask(sess,:) = any(isnan(sessdisvolcell{sess}.data),1);
+
+            sumdata = sumdata + sessdisvolcell{sess}.data;
+
             if sess==1
-                mfeatures = sessdisvol.meta.features;
+                mfeatures = sessdisvolcell{sess}.meta.features;
             end
-            if isfield(sessdisvol.meta.features,'nfeatures')
+            if isfield(sessdisvolcell{sess}.meta.features,'nfeatures')
                 fn = sprintf('nfeatures_split%02d',sess);
-                mfeatures.(fn) = sessdisvol.meta.features.nfeatures;
+                mfeatures.(fn) = sessdisvolcell{sess}.meta.features.nfeatures;
             end
         end
-
+        % now remove any nan features from all sessdisvols
+        anynan = any(nanmask,1);
+        if any(anynan)
+            nnans = sum(anynan);
+            fprintf(['removed %d NaN ROIs from analysis ' ...
+                '(%.2f%% of total).\n'],nnans,...
+                100*(nnans/length(anynan)));
+        end
+        sessdisvolcell = cellfun(@(dv)dv(:,~anynan),sessdisvolcell,...
+            'uniformoutput',false);
+        % and from sums
+        sumdata(:,anynan) = [];
+        % write out sessions
+        for sess = 1:vol.desc.samples.nunique.chunks
+            outpath_sessdata = fullfile(pidir,sprintf(...
+                'rdms_session%02d.mat',sess));
+            sessdisvol = sessdisvolcell{sess};
+            save(outpath_sessdata,'sessdisvol');
+            outpaths_sessrdms = [outpaths_sessrdms; outpath_sessdata];
+        end
         % make average RDM across sessions and save
         disvol = MriVolume(sumdata/vol.desc.samples.nunique.chunks,...
-            sessdisvol,'metafeatures',mfeatures);
+            sessdisvolcell{1},'metafeatures',mfeatures);
         outpath_mean = fullfile(pidir,'rdms_mean.mat');
         save(outpath_mean,'disvol');
 

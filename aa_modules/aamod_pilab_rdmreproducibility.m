@@ -1,7 +1,7 @@
-% compare each pilab_data_rdms_mean to each predictor in
-% pilab_rsapredictors using permutation testing.
-% [aap,resp]=aamod_pilab_rsapermtest(aap,task,subj)
-function [aap,resp]=aamod_pilab_rsapermtest(aap,task,subj)
+% get the mean spearman rho for each leave-one-out split of the session
+% RDMs.
+% [aap,resp]=aamod_pilab_rdmreproducibility(aap,task,subj)
+function [aap,resp]=aamod_pilab_rdmreproducibility(aap,task,subj)
 
 resp='';
 
