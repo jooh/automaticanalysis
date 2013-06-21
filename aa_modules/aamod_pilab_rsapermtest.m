@@ -33,9 +33,9 @@ switch task
         % pre-allocate depending on run mode
         switch aap.tasklist.currenttask.settings.outputmode
             case 'searchlight'
-                rpaths = cell(npredictors,1);
-                ppaths = cell(npredictors,1);
-                pfwepaths = cell(npredictors,1);
+                rpaths = {};
+                ppaths = {};
+                pfwepaths = {};
             case 'roi'
                 % one output spanning all ROIs / predictors
                 rpaths = fullfile(resdir,'roi_r.mat');
@@ -58,7 +58,7 @@ switch task
                     aap.tasklist.currenttask.settings.outputmode);
         end
         % null dists are too big to go in one mat
-        nulldistpaths = cell(npredictors,1);
+        nulldistpaths = {};
         figdir = fullfile(resdir,'figures');
         mkdirifneeded(figdir);
 
@@ -70,9 +70,13 @@ switch task
             [r,p,nulldists] = rsapermtest(predictors(pre),...
                 disvol.data,aap.tasklist.currenttask.settings.nperms);
             fprintf('finished in %s. ',seconds2str(toc));
-            % obtain Nichols / Holmes-style FWE-corrected p values
-            pfwe = maxstatpfwe(nulldists);
-            fprintf('Min p(FWE) = %.2f\n',min(pfwe(:)));
+            if isnan(p)
+                pfwe = NaN(size(p));
+            else
+                % obtain Nichols / Holmes-style FWE-corrected p values
+                pfwe = maxstatpfwe(nulldists);
+                fprintf('Min p(FWE) = %.2f\n',min(pfwe(:)));
+            end
             % save data depending on mode
             switch aap.tasklist.currenttask.settings.outputmode
                 case 'searchlight'
@@ -81,17 +85,19 @@ switch task
                     rout = fullfile(resdir,sprintf('%s_r.nii',...
                         predictors(pre).name));
                     disvol.data2file(r,rout);
-                    rpaths{pre} = rout;
-                    % log10 p map
-                    pout = fullfile(resdir,sprintf('%s_-log10p.nii',...
-                        predictors(pre).name));
-                    disvol.data2file(-log10(p),pout);
-                    ppaths{pre} = pout;
-                    % FWE-corrected p map
-                    pfweout = fullfile(resdir,sprintf('%s_-log10pFWE.nii',...
-                        predictors(pre).name));
-                    disvol.data2file(-log10(pfwe),pfweout);
-                    pfwepaths{pre} = pfweout;
+                    rpaths{end+1} = rout;
+                    if ~isnan(p)
+                        % log10 p map
+                        pout = fullfile(resdir,sprintf('%s_-log10p.nii',...
+                            predictors(pre).name));
+                        disvol.data2file(-log10(p),pout);
+                        ppaths{end+1} = pout;
+                        % FWE-corrected p map
+                        pfweout = fullfile(resdir,sprintf('%s_-log10pFWE.nii',...
+                            predictors(pre).name));
+                        disvol.data2file(-log10(pfwe),pfweout);
+                        pfwepaths{end+1} = pfweout;
+                    end
                     % diagnostic figure
                     F = figure;
                     imagesc(makeimagestack(disvol.data2mat(r),[0 .5],1),...
@@ -175,7 +181,7 @@ switch task
             % for mysterious reasons Matlab cannot save this in any older
             % version
             save(nullout,'nullvol','-v7');
-            nulldistpaths{pre} = nullout;
+            nulldistpaths{end+1} = nullout;
         end
         % describe outputs
         aap=aas_desc_outputs(aap,subj,'pilab_r',...
