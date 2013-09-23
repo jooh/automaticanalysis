@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='visualise group ROI RDMs' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <maxn>200</maxn>
+            <alphacolor></alphacolor>
+            <nrows>2</nrows>
+            <cmap></cmap>
+            <mdstimsize></mdstimsize>
+
+            <inputstreams>
+                <stream>pilab_data_rdms_group_mean</stream>
+                <stream>pilab_stimuli</stream>
+            </inputstreams>
+            <outputstreams>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>

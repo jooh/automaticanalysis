@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='compute group average RDMs for pilab Volume' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <outputmode>searchlight</outputmode>
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <inputstreams>
+                <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_data_rdms_mean</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_data_rdms_group_sess</stream>
+                <stream>pilab_data_rdms_group_mean</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
