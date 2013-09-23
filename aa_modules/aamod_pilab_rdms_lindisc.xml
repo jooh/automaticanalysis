@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='compute linear discriminant-based RDMs for pilab Volume' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <!-- parameter for splitvol -->
+            <split></split>
+            <!-- parameters for roidata2rdmvol_lindisc -->
+            <sgolayK></sgolayK>
+            <sgolayF></sgolayF>
+            <!-- (goes to split parameter) -->
+            <cvsplit></cvsplit>
+            <covariatedeg>adaptive</covariatedeg>
+            <targetlabels></targetlabels>
+            <ignorelabels></ignorelabels>
+            <glmclass>CovGLM</glmclass>
+            <glmvarargs>
+                <item></item>
+            </glmvarargs>
+            <crossvalidate>0</crossvalidate>
+            <sterrunits>1</sterrunits>
+
+            <split></split>
+            <!-- parameters for this AA module -->
+            <!-- the gist of all this is -->
+            <!-- LDAt: crossvalidate=1, sterrunits=1 -->
+            <!-- Mahalonobis distance: crossvalidate=0, sterrunits=0 -->
+            <!-- 'whitened Euclidean': crossvalidate=0, sterrunits=1
+                 (default option) -->
+            <!-- 'Mahalanobis classifier': crossvalidate=1, sterrunits=0
+                 -->
+            
+            <inputstreams>
+                <stream>pilab_epi</stream>
+                <stream>pilab_design</stream>
+                <stream>pilab_rois</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_data_rdms_mean</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
