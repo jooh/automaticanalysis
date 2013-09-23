@@ -42,25 +42,14 @@ switch task
         nanmask = false([vol.desc.samples.nunique.chunks rois.nsamples]);
         sessdisvolcell = cell(vol.desc.samples.nunique.chunks,1);
         for sess = 1:vol.desc.samples.nunique.chunks
-            % copying here saves memory per worker in parfor
-            sessvol = vol(vol.meta.samples.chunks==sess,:);
-
             fprintf('running rois for session %d of %d...\n',sess,...
               vol.desc.samples.nunique.chunks);
-            tic;
-            sessdisvolcell{sess} = roidata2rdmvol(rois,sessvol,...
+            sessdisvolcell{sess} = roidata2rdmvol(rois,vol(...
+                vol.meta.samples.chunks==sess,:),...
                 aap.tasklist.currenttask.settings.distancemetric);
             nanmask(sess,:) = any(isnan(sessdisvolcell{sess}.data),1);
 
             sumdata = sumdata + sessdisvolcell{sess}.data;
-
-            if sess==1
-                mfeatures = sessdisvolcell{sess}.meta.features;
-            end
-            if isfield(sessdisvolcell{sess}.meta.features,'nfeatures')
-                fn = sprintf('nfeatures_split%02d',sess);
-                mfeatures.(fn) = sessdisvolcell{sess}.meta.features.nfeatures;
-            end
         end
         % now remove any nan features from all sessdisvols
         anynan = any(nanmask,1);
@@ -74,6 +63,16 @@ switch task
             'uniformoutput',false);
         % and from sums
         sumdata(:,anynan) = [];
+        % extract meta features for mean rdm vol (needs to be after main
+        % loop to avoid nan ROIs)
+        mfeatures = sessdisvolcell{1}.meta.features;
+        for sess = 1:vol.desc.samples.nunique.chunks
+            if isfield(sessdisvolcell{sess}.meta.features,'nfeatures')
+                fn = sprintf('nfeatures_split%02d',sess);
+                mfeatures.(fn) = sessdisvolcell{sess}.meta.features.nfeatures;
+            end
+        end
+
         % write out sessions
         for sess = 1:vol.desc.samples.nunique.chunks
             outpath_sessdata = fullfile(pidir,sprintf(...
