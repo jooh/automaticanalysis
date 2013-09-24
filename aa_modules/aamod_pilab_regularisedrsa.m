@@ -115,7 +115,7 @@ switch task
                     trainind = ~testind;
                     % tune regularisation with crossvalidation on the
                     % training runs
-                    splitk(sp,:) = bootglm(trainind).crossvalidateparameter(...
+                    splitk(sp,:) = bootglm(trainind).crossvalidateproperty(...
                         'k',ts.ktotry);
                     % assign winning k to entire dataset
                     [bootglm.k] = deal(splitk(sp,:));

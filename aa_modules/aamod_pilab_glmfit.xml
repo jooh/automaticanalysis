@@ -7,9 +7,10 @@
                 <timeBase>0.5</timeBase>
                 <memoryBase>0.3</memoryBase>
             </qsub>
-            
             <permanenceofoutput>3</permanenceofoutput>
-            <targetname></targetname>
+
+            <!-- parameters for vol2glm_batch -->
+            <targetlabels></targetlabels>
             <ignorelabels></ignorelabels>
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
@@ -19,8 +20,11 @@
             <glmvarargs>
                 <item></item>
             </glmvarargs>
+
+            <!-- parameters specific to this AA module -->
             <nboot>0</nboot>
             <tmap>1</tmap>
+
             <inputstreams>
                 <stream>pilab_epi</stream>
                 <stream>pilab_design</stream>

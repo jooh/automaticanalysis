@@ -1,20 +1,20 @@
-% Visualise a disvol.
-% [aap,resp]=aamod_pilab_rdmvisualisation(aap,task,subj)
-function [aap,resp]=aamod_pilab_rdmvisualisation(aap,task,subj)
+% Visualise a group disvol.
+% [aap,resp]=aamod_pilab_rdmvisualisation_group(aap,task)
+function [aap,resp]=aamod_pilab_rdmvisualisation_group(aap,task)
 
 resp='';
 
 switch task
     case 'doit'
         % get mean data RDM
-        vpath = aas_getfiles_bystream(aap,subj,'pilab_data_rdms_mean');
+        vpath = aas_getfiles_bystream(aap,'pilab_data_rdms_group_mean');
         disvol = loadbetter(vpath);
-        % get stimuli
-        spath = aas_getfiles_bystream(aap,subj,'pilab_stimuli');
+        % get stimuli (NB, we use subject 1's stimuli as an example)
+        spath = aas_getfiles_bystream(aap,1,'pilab_stimuli');
         stimuli = loadbetter(spath);
         
         % prepare output dirs
-        pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
+        pidir = fullfile(aas_getstudypath(aap),'pilab');
         resdir = fullfile(pidir,'results');
         mkdirifneeded(resdir);
         figdir = fullfile(resdir,'figures');
