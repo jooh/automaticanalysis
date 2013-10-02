@@ -12,7 +12,7 @@
             <collapseruns>0</collapseruns>
 
             <inputstreams>
-                <stream>freesurfer_gmmask</stream>
+                <stream>epiBETmask</stream>
                 <!-- NB, we get volumes out of the (modified) SPM, not from
                      epi stream -->
                 <stream>firstlevel_spm</stream>

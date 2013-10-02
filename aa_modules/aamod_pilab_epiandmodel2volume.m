@@ -17,10 +17,13 @@ switch task
     case 'report'
         
     case 'doit'
-        % gm mask
-        mpath = aas_getfiles_bystream(aap,subj,'freesurfer_gmmask');
-        % (epi is second mask)
-        mask = mpath(2,:);
+        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        % first mask is the brain mask
+        V = spm_vol(mpath(1,:));
+        mask = spm_read_vols(V) > 0;
+
+        % TODO - consider using spm2glmdenoise function here. Basically the
+        % same functionality, a lot more tested.
 
         % model
         spmpath = aas_getfiles_bystream(aap,subj,'firstlevel_spm');
@@ -61,7 +64,7 @@ switch task
             fprintf(...
                 'removed %d zero/nan features from epivol and mask\n',...
                 sum(iszero));
-            aap=aas_desc_outputs(aap,subj,'freesurfer_gmmask',mpath);
+            aap=aas_desc_outputs(aap,subj,'epiBETmask',mpath);
             % and update the volume instance
             epivol = epivol(:,~iszero);
         else
