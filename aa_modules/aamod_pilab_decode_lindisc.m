@@ -14,6 +14,15 @@ switch task
         epivol = loadbetter(epipath);
         ts = aap.tasklist.currenttask.settings;
 
+        [~,~,ext] = fileparts(ts.contrastpath);
+        if strcmp(lower(ext),'.mat')
+            % load
+            contrasts = loadbetter(ts.contrastpath);
+        else
+            % assume script that returns the needed struct
+            contrasts = feval(ts.contrastpath);
+        end
+
         % split the data into cell arrays
         [designcell,epicell] = splitvol(ts.split,designvol,epivol);
 
@@ -36,34 +45,43 @@ switch task
         sumdata = [];
         nsplit = length(designcell);
         nanmask = false([nsplit rois.nsamples]);
-        splitres = cell(nsplit,1);
-        splitnull = splitres;
-        splitboot = splitres;
+
+        if ischar(ts.cvsplit)
+            ts.cvsplit = eval(ts.cvsplit);
+        end
 
         % run the beast
         for sp = 1:nsplit
             fprintf('running rois for split %d of %d...\n',sp,nsplit);
-            % cart off to new function
-            [splitres{sp},splitnull{sp},splitboot{sp}] = ...
-                roidata_lindisc(rois,...
-                designcell{sp},epicell{sp},...
-                'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,'split',...
-                ts.cvsplit,'covariatedeg',ts.covariatedeg,...
-                'targetlabels',ts.targetlabels,...
-                'ignorelabels',ts.ignorelabels,'glmclass',ts.glmclass,...
-                'glmvarargs',ts.glmvarargs,'sterrunits',ts.sterrunits,...
-                'crossvalidate',ts.crossvalidate);
-            nanmask(sp,:) = arrayfun(@(st)isempty(st.contrasts(1).t),...
-                splitres{sp},'uniformoutput',true);
+            % TODO - still need to crop n or re-do spm2vol convert to match
+            % across runs (or just disable boot/perm tests for now)
+            [splitres(sp),splitnull(sp),splitboot(sp)] = ...
+                roidata_lindisc(rois,designcell{sp},epicell{sp},...
+                contrasts,'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,...
+                'split',ts.cvsplit,'covariatedeg',ts.covariatedeg,...
+                'targetlabels',ts.targetlabels,'ignorelabels',...
+                ts.ignorelabels,'glmclass',ts.glmclass,'glmvarargs',...
+                ts.glmvarargs,'nperm',ts.nperm,'nboot',ts.nboot);
+            nanmask(sp,:) = any(isnan(splitres(sp).t),1);
         end % sp 1:nsplit
 
         % remove any nan rois from all splits
         anynan = any(nanmask,1);
         if any(anynan)
             for sp = 1:nsplit
-                splitres{sp} = splitres{sp}(~anynan);
-                splitnull{sp} = splitnull{sp}(~anynan);
-                splitboot{sp} = splitboot{sp}(~anynan);
+                for fi = {'cols_roi','t','medianboot','medianste',...
+                        'ppara','pperm','nfeatures'}
+                    fstr = fi{1};
+                    if isfield(splitres,fstr)
+                        splitres(sp).(fstr)(:,anynan,:) = [];
+                    end
+                    if isfield(splitnull,fstr)
+                        splitnull(sp).(fstr)(:,anynan,:) = [];
+                    end
+                    if isfield(splitboot,fstr)
+                        splitboot(sp).(fstr)(:,anynan,:) = [];
+                    end
+                end
             end
             nnans = sum(anynan);
             fprintf(['removed %d NaN ROIs from analysis ' ...
@@ -72,50 +90,62 @@ switch task
         end
 
         % make mean result across splits
-        meanres = splitres{1};
-        for r = 1:length(splitres{sp})
-            for c = 1:length(splitres{sp}(r))
-                % what we want is a) average any numbers encountered, b)
-                % ignore any strings
-                alldata = cellfun(@(c)c(r).contrasts(c).t,splitres,...
-                    'uniformoutput',true);
-                meanres(r).contrasts(c).t = mean(alldata);
-            end
-        end
+        meanres = collapsestruct(splitres);
+        meannull = collapsestruct(splitnull);
+        meanboot = collapsestruct(splitboot);
+        % recompute p and boot stats based on distribution of means
+        meanres.p_mean = permpvalue(meannull.t);
+        [meanres.medianboot_mean,meanres.medianste_mean] = bootprctile(...
+            meanboot.t);
 
-        splitdisvolcell = cellfun(@(dv)dv(:,~anynan),splitdisvolcell,...
-            'uniformoutput',false);
-        % and from sums
-        sumdata(:,anynan) = [];
+        % write out mean results
+        % res
+        outpath_meandata = fullfile(pidir,'decoder_t_mean.mat');
+        save(outpath_meandata,'meanres');
+        aap=aas_desc_outputs(aap,subj,'pilab_decoder_t_mean',...
+            outpath_meandata);
+        % nulldist
+        outpath_meannull = fullfile(pidir,'decoder_nulldist_mean.mat');
+        save(outpath_meannull,'meannull');
+        aap=aas_desc_outputs(aap,subj,'pilab_decoder_nulldist_mean',...
+            outpath_meannull);
+        % bootdist
+        outpath_meanboot = fullfile(pidir,'decoder_bootdist_mean.mat');
+        save(outpath_meanboot,'meanboot');
+        aap=aas_desc_outputs(aap,subj,'pilab_decoder_bootdist_mean',...
+            outpath_meanboot);
 
-        % extract meta features for mean rdm vol (needs to be after main
-        % loop to avoid nan ROIs) and write out
-        outpaths_sessrdms = [];
-        mfeatures = splitdisvolcell{1}.meta.features;
+        % write out session results
+        outpaths_splitres = [];
+        outpaths_splitnull = [];
+        outpaths_splitboot = [];
         for sp = 1:nsplit
-            if isfield(splitdisvolcell{sp}.meta.features,'nfeatures')
-                fn = sprintf('nfeatures_split%02d',sp);
-                mfeatures.(fn) = ...
-                    splitdisvolcell{sp}.meta.features.nfeatures;
-            end
+            % res
             outpath_sessdata = fullfile(pidir,sprintf(...
-                'rdms_split%02d.mat',sp));
-            sessdisvol = splitdisvolcell{sp};
-            save(outpath_sessdata,'sessdisvol');
-            outpaths_sessrdms = [outpaths_sessrdms; outpath_sessdata];
+                'decoder_t_split%02d.mat',sp));
+            res = splitres(sp);
+            save(outpath_sessdata,'res');
+            outpaths_splitres = [outpaths_splitres; outpath_sessdata];
+            % nulldist
+            outpath_nulldata = fullfile(pidir,sprintf(...
+                'decoder_nulldist_split%02d.mat',sp));
+            nulldist = splitnull(sp);
+            save(outpath_nulldata,'nulldist');
+            outpaths_splitnull = [outpaths_splitnull; outpath_nulldata];
+            % bootdist
+            outpath_bootdata = fullfile(pidir,sprintf(...
+                'decoder_bootdist_split%02d.mat',sp));
+            bootdist = splitboot(sp);
+            save(outpath_bootdata,'bootdist');
+            outpaths_splitboot = [outpaths_splitboot; outpath_bootdata];
         end
+        aap=aas_desc_outputs(aap,subj,'pilab_decoder_t_sess',...
+            outpaths_splitres);
+        aap=aas_desc_outputs(aap,subj,'pilab_decoder_nulldist_sess',...
+            outpaths_splitnull);
+        aap=aas_desc_outputs(aap,subj,'pilab_decoder_bootdist_sess',...
+            outpaths_splitboot);
 
-        % make average RDM across sessions and save
-        disvol = MriVolume(sumdata/nsplit,splitdisvolcell{1},...
-            'metafeatures',mfeatures);
-        outpath_mean = fullfile(pidir,'rdms_mean.mat');
-        save(outpath_mean,'disvol');
-
-        % describe outputs
-        aap=aas_desc_outputs(aap,subj,'pilab_data_rdms_sess',...
-            outpaths_sessrdms);
-        aap=aas_desc_outputs(aap,subj,'pilab_data_rdms_mean',...
-            outpath_mean);
     case 'checkrequirements'
         
     otherwise
