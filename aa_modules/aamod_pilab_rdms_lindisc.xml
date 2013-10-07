@@ -25,16 +25,6 @@
             </glmvarargs>
             <crossvalidate>0</crossvalidate>
             <sterrunits>1</sterrunits>
-
-            <split></split>
-            <!-- parameters for this AA module -->
-            <!-- the gist of all this is -->
-            <!-- LDAt: crossvalidate=1, sterrunits=1 -->
-            <!-- Mahalonobis distance: crossvalidate=0, sterrunits=0 -->
-            <!-- 'whitened Euclidean': crossvalidate=0, sterrunits=1
-                 (default option) -->
-            <!-- 'Mahalanobis classifier': crossvalidate=1, sterrunits=0
-                 -->
             
             <inputstreams>
                 <stream>pilab_epi</stream>
