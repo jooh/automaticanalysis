@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>
     <tasklist>
-        <currenttask domain='subject' desc='compute linear discriminant-based RDMs for pilab Volume' modality='MRI'>
+        <currenttask domain='subject' desc='linear discriminant-based decoding for pilab Volume' modality='MRI'>
             
             <qsub>
                 <timeBase>0.5</timeBase>
@@ -9,12 +9,10 @@
             </qsub>
             <permanenceofoutput>3</permanenceofoutput>
 
-            <!-- parameter for splitvol -->
+            <!-- parameters for roidata_lindisc -->
             <split></split>
-            <!-- parameters for roidata2rdmvol_lindisc -->
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
-            <!-- (goes to split parameter) -->
             <cvsplit></cvsplit>
             <covariatedeg>adaptive</covariatedeg>
             <targetlabels></targetlabels>
@@ -23,8 +21,10 @@
             <glmvarargs>
                 <item></item>
             </glmvarargs>
-            <crossvalidate>0</crossvalidate>
-            <sterrunits>1</sterrunits>
+
+            <nperm>1</nperm>
+            <nboot>0</nboot>
+            <contrastpath></contrastpath>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
@@ -32,8 +32,12 @@
                 <stream>pilab_rois</stream>
             </inputstreams>
             <outputstreams>
-                <stream>pilab_data_rdms_sess</stream>
-                <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_decoder_t_sess</stream>
+                <stream>pilab_decoder_t_mean</stream>
+                <stream>pilab_decoder_nulldist_sess</stream>
+                <stream>pilab_decoder_nulldist_mean</stream>
+                <stream>pilab_decoder_bootdist_sess</stream>
+                <stream>pilab_decoder_bootdist_mean</stream>
             </outputstreams>
             
         </currenttask>
