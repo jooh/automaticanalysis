@@ -259,6 +259,7 @@ else
                 fns=fns{1};
                 fns_dest=cell(length(fns),1);
                 fns_dest_full=cell(length(fns),1);
+                fns_dest_dir = cell(length(fns),1);
                 for ind=1:length(fns)
                     % Check to see whether a filename with this name has
                     % already been loaded. If so, add unique suffix
@@ -274,6 +275,11 @@ else
                         suffix=suffix+1;
                     end;
                     
+                    % parent dir for each file
+                    fns_dest_dir{ind} = fullfile(dest,fileparts(fns_dest{ind}));
+                    if ~exist(fns_dest_dir{ind},'dir')
+                        mkdir(fns_dest_dir{ind});
+                    end
                     % Create full path
                     fns_dest_full{ind}=fullfile(dest,fns_dest{ind});
                 end;
@@ -304,28 +310,34 @@ else
                 if (~reloadfiles)
                     aas_log(aap,false,sprintf(' retrieve stream %s [checksum match, not recopied] from %s to %s',streamname,src,dest),aap.gui_controls.colours.inputstreams);
                 else
-                    aas_log(aap,false,sprintf(' retrieve stream %s from %s to %s',streamname,src,dest),aap.gui_controls.colours.inputstreams);
+                    aas_log(aap,false,sprintf(' retrieve %d files: stream %s from %s to %s',length(fns),streamname,src,dest),aap.gui_controls.colours.inputstreams);
                     
                     fclose(fid);
                     oldpth='';
                     % Get read to write the stream file
                     fid_inp=fopen(inputstreamdesc,'w');
                     fprintf(fid,'MD5\t%s\t%s\n',md5,datecheck_md5_recalc);
-                    
-                    for ind=1:length(fns)
-                        % Copy file
-                        [pth nme ext]=fileparts(fns_dest_full{ind});
-                        newpth=pth;
-                        if (~strcmp(oldpth,newpth))
-                            aas_makedir(aap,newpth);
-                            oldpth=newpth;
-                        end;
-                        cmd=['cd ' src '; rsync -t ' fns{ind} ' ' fns_dest_full{ind}];
-                        aas_shell(cmd);
-                        
+
+                    % rsync is A LOT faster if you just give it a
+                    % single command. Here at CBU I (Johan) get about a
+                    % 20-fold speed improvement with this approach when
+                    % copying large sets of files.
+                    tic;
+                    % it's necessary to write out a separate list of file
+                    % names due to the md5 junk in the main src/dest files
+                    tempfiles = fullfile(dest,'fullpaths.txt');
+                    tempfid = fopen(tempfiles,'w');
+                    for ind = 1:length(fns)
+                        fprintf(tempfid,'%s\n',fullfile(fns{ind}));
                         % Write to stream file
                         fprintf(fid_inp,'%s\n',fns_dest{ind});
-                    end;
+                    end
+                    fclose(tempfid);
+                    cmd = sprintf('rsync -t --files-from=%s %s %s',...
+                        tempfiles,src,dest);
+                    aas_shell(cmd);
+                    fprintf('done. Copy speed: %.3f files / second\n',...
+                        length(fns) / toc);
                     if isempty(fns)
                         aas_log(aap,false,sprintf('No inputs in stream %s',streamname));
                     end;
