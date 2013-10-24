@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='permutation test for data-predictor RDM comparison' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <!-- arguments for roidata_rsa -->
+            <rsaclass>RankRSA</rsaclass>
+            <rsaclassargs>
+                <item></item>
+            </rsaclassargs>
+            <splitrsaclass>SplitRankRSA</splitrsaclass>
+            <splitrsaclassargs>
+                <item></item>
+            </splitrsaclassargs>
+            <nperm>1</nperm>
+            <nboot>0</nboot>
+
+            <!-- arguments used here -->
+            <outputmode>roi</outputmode>
+            <!-- gets feval'ed on data and model. Useful for e.g. dropping
+                 precision to single. One could also imagine using gpuArray
+                 here. -->
+            <setclass></setclass>
+            
+            <inputstreams>
+                <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_rsapredictors</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_rsa_r</stream>
+                <stream>pilab_rsa_nulldist</stream>
+                <stream>pilab_rsa_bootdist</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
