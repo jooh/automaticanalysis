@@ -53,17 +53,37 @@ switch task
         % run the beast
         for sp = 1:nsplit
             fprintf('running rois for split %d of %d...\n',sp,nsplit);
-            % TODO - still need to crop n or re-do spm2vol convert to match
-            % across runs (or just disable boot/perm tests for now)
+            % check for nans
+            nanmask = ~any(isnan(epicell{sp}.data),1);
+            if ~all(nanmask)
+                epicell{sp} = epicell{sp}(:,nanmask);
+            end
+            % intersect rois and designvol
+            allok = epicell{sp}.mask & rois.mask;
+            if ~isequal(allok,epicell{sp}.mask)
+                epicell{sp} = epicell{sp}(:,epicell{sp}.linind2featind(...
+                    find(allok)));
+            end
+            if ~isequal(allok,rois.mask)
+                rois = rois(:,rois.linind2featind(find(allok)));
+            end
             [splitres(sp),splitnull(sp),splitboot(sp)] = ...
                 roidata_lindisc(rois,designcell{sp},epicell{sp},...
                 contrasts,'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,...
                 'split',ts.cvsplit,'covariatedeg',ts.covariatedeg,...
                 'targetlabels',ts.targetlabels,'ignorelabels',...
                 ts.ignorelabels,'glmclass',ts.glmclass,'glmvarargs',...
-                ts.glmvarargs,'nperm',ts.nperm,'nboot',ts.nboot);
+                ts.glmvarargs,'nperm',ts.nperm,'nboot',ts.nboot,...
+                'usegpu',ts.usegpu);
             nanmask(sp,:) = any(isnan(splitres(sp).t),1);
         end % sp 1:nsplit
+
+        if ts.usegpu
+            splitres = gather(splitres);
+            splitnull = gather(splitnull);
+            splitboot = gather(splitboot);
+            nanmask = gather(nanmask);
+        end
 
         % remove any nan rois from all splits
         anynan = any(nanmask,1);
