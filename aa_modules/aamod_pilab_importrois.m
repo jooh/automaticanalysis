@@ -21,12 +21,13 @@ switch task
         roivol = loadbetter(fullfile(roidir,target));
 
         % intersect ROI with pilab mask
-        pipath = aas_getfiles_bystream(aap,subj,'pilab_volume');
-        pivol = loadbetter(pipath);
-        goodinds = find(roivol.mask & pivol.mask);
-        roivol = roivol(:,goodinds);
+        %pipath = aas_getfiles_bystream(aap,subj,'pilab_volume');
+        %pivol = loadbetter(pipath);
+        %goodinds = find(roivol.mask & pivol.mask);
+        %roivol = roivol(:,goodinds);
 
-        pidir = fileparts(pipath);
+        pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
+        mkdirifneeded(pidir);
         outpath = fullfile(pidir,'pilab_rois.mat');
         save(outpath,'roivol');
         aap = aas_desc_outputs(aap,subj,'pilab_rois',outpath);
