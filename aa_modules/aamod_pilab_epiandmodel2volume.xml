@@ -9,7 +9,9 @@
             </qsub>
             
             <permanenceofoutput>3</permanenceofoutput>
-            <collapseruns>0</collapseruns>
+
+            <maskbybright>0</maskbybright>
+            <brainthresh>99 .5</brainthresh>
 
             <inputstreams>
                 <stream>epiBETmask</stream>
@@ -20,7 +22,7 @@
             <outputstreams>
                 <stream>pilab_epi</stream>
                 <stream>pilab_design</stream>
-                <stream>freesurfer_gmmask</stream>
+                <stream>epiBETmask</stream>
             </outputstreams>
             
         </currenttask>
