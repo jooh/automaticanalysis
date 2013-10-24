@@ -23,22 +23,28 @@ switch task
             contrasts = feval(ts.contrastpath);
         end
 
-        % split the data into cell arrays
-        [designcell,epicell] = splitvol(ts.split,designvol,epivol);
-
         % get ROIs / spheres
         roipath = aas_getfiles_bystream(aap,subj,...
             'pilab_rois');
         rois = loadbetter(roipath);
 
-        % check that parfor is available
-        if ~matlabpool('size')
-            try
-                matlabpool;
-            catch
-                warning('no matlabpool available')
-            end
+        if ~isempty(ts.setclass)
+            fprintf('setting data to %s\n',ts.setclass);
+            epivol.data = feval(ts.setclass,epivol.data);
+            designvol.data = feval(ts.setclass,designvol.data);
+            contrasts = structdata2class(contrasts,ts.setclass);
         end
+
+        % make sure we have the same ROIs and voxels across splits
+        [rois,epivol] = intersectvols(rois,epivol);
+        % now that the ROIs and voxels are in register this should reduce
+        % memory use considerably
+        validvox = any(rois.data~=0,1);
+        rois = rois(:,validvox);
+        epivol = epivol(:,validvox);
+
+        % split the data into cell arrays
+        [designcell,epicell] = splitvol(ts.split,designvol,epivol);
 
         % prepare output
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
@@ -53,20 +59,7 @@ switch task
         % run the beast
         for sp = 1:nsplit
             fprintf('running rois for split %d of %d...\n',sp,nsplit);
-            % check for nans
-            nanmask = ~any(isnan(epicell{sp}.data),1);
-            if ~all(nanmask)
-                epicell{sp} = epicell{sp}(:,nanmask);
-            end
-            % intersect rois and designvol
-            allok = epicell{sp}.mask & rois.mask;
-            if ~isequal(allok,epicell{sp}.mask)
-                epicell{sp} = epicell{sp}(:,epicell{sp}.linind2featind(...
-                    find(allok)));
-            end
-            if ~isequal(allok,rois.mask)
-                rois = rois(:,rois.linind2featind(find(allok)));
-            end
+            tic;
             [splitres(sp),splitnull(sp),splitboot(sp)] = ...
                 roidata_lindisc(rois,designcell{sp},epicell{sp},...
                 contrasts,'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,...
@@ -75,18 +68,21 @@ switch task
                 ts.ignorelabels,'glmclass',ts.glmclass,'glmvarargs',...
                 ts.glmvarargs,'nperm',ts.nperm,'nboot',ts.nboot,...
                 'usegpu',ts.usegpu);
-            nanmask(sp,:) = any(isnan(splitres(sp).t),1);
+            fprintf('finished in %s.\n',seconds2str(toc));
+            % don't think this is necessary anymore
+            % nanmask(sp,:) = any(isnan(splitres(sp).t),1);
         end % sp 1:nsplit
 
         if ts.usegpu
             splitres = gather(splitres);
             splitnull = gather(splitnull);
             splitboot = gather(splitboot);
-            nanmask = gather(nanmask);
+            % nanmask = gather(nanmask);
         end
 
         % remove any nan rois from all splits
-        anynan = any(nanmask,1);
+        % also redundant?
+        anynan = false; % any(nanmask,1);
         if any(anynan)
             for sp = 1:nsplit
                 for fi = {'cols_roi','t','medianboot','medianste',...
