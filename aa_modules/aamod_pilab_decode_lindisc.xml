@@ -21,6 +21,7 @@
             <glmvarargs>
                 <item></item>
             </glmvarargs>
+            <usegpu>0</usegpu>
 
             <nperm>1</nperm>
             <nboot>0</nboot>
