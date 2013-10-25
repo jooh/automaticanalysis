@@ -1,7 +1,7 @@
-% group analysis of discriminant results.
+% group analysis of rsa results.
 %
-% [aap,resp]=aamod_pilab_decode_lindisc_rfx(aap,task)
-function [aap,resp]=aamod_pilab_decode_lindisc_rfx(aap,task)
+% [aap,resp]=aamod_pilab_rsa_rfx(aap,task)
+function [aap,resp]=aamod_pilab_rsa_rfx(aap,task)
 
 resp='';
 
@@ -17,18 +17,21 @@ switch task
         % just load all the results in one go
         for s = 1:nsub
             subres(s) = loadbetter(aas_getfiles_bystream(aap,s,...
-                'pilab_decoder_t_mean'));
+                'pilab_rsa_r'));
         end
         names = {aap.acq_details.subjects.mriname};
         [subres.name] = names{:};
 
+        fprintf('running roidata_rfx with %d subjects \n',nsub);
+        tic;
         meanres = roidata_rfx(subres,'nperm',ts.nperm,'nboot',ts.nboot,...
-            'targetfield','t');
+            'targetfield','r','transfun','atanh');
+        fprintf('finished in %s.\n',seconds2str(toc));
 
         % save and describe
-        outpath = fullfile(pidir,'decoder_t_rfx.mat');
+        outpath = fullfile(pidir,'rsa_r_rfx.mat');
         save(outpath,'meanres');
-        aap=aas_desc_outputs(aap,'pilab_decoder_t_rfx',outpath);
+        aap=aas_desc_outputs(aap,'pilab_rsa_r_rfx',outpath);
 
     case 'checkrequirements'
         

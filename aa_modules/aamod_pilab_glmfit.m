@@ -14,12 +14,16 @@ switch task
         epivol = loadbetter(epipath);
         ts = aap.tasklist.currenttask.settings;
 
-        [glmcell,nancell] = vol2glm_batch(designvol,epivol,...
-            'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,'split',[],...
+        % NB the semantics of this new organisation is quite different. I
+        % think we used to allow regressors of no interest in the GLM. Now
+        % these are removed before the GLM instance is created.
+        [glmcell,nancell,predictornames] = vol2glm_batch(designvol,epivol,...
+            'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,'split',ts.split,...
             'covariatedeg',ts.covariatedeg,'targetlabels',...
             ts.targetlabels,'ignorelabels',ts.ignorelabels,...
             'glmclass',ts.glmclass,'glmvarargs',ts.glmvarargs);
         nsplit = length(glmcell);
+        ncon = glmcell{1}(1).npredictors;
 
         % generate separate estimates for each split
         datcell = cell(nsplit,1);
@@ -36,25 +40,19 @@ switch task
                     estimates = estimates ./ sterrs;
                 end
                 % restrict to conditions of interest
-                estimates = estimates(coninds,:);
+                %estimates = estimates(coninds,:);
             else
                 % parametric estimates
                 if ts.tmap
                     % compute T contrast for each condition of interest v
                     % baseline
-                    labelinds = splitdesign.desc.features.inds.labels;
                     estimates = NaN([ncon glm(1).nfeatures]);
-                    % TODO - this can now be vectorised
-                    regs = zeros(1,glm(1).npredictors);
-                    for t = 1:ncon
-                        cv = regs;
-                        cv(labelinds==coninds(t)) = 1;
-                        estimates(t,:) = glm.tmap(cv);
-                    end
+                    cmat = eye(ncon);
+                    estimates = glm.tmap(cmat);
                 else
                     % just get parameter estimate (ie, mean)
                     estimates = glm.fit;
-                    estimates = estimates(coninds,:);
+                    %estimates = estimates(coninds,:);
                 end
             end
 
@@ -74,8 +72,8 @@ switch task
             % chunk becomes the split (whereas before it was probably the
             % run or sub-run)
             datcell{s} = MriVolume(estimates,epivol,'metasamples',...
-                struct('chunks',ones(ncon,1)*usplit(s)','labels',...
-                {splitdesign.desc.features.unique.labels(coninds)'}));
+                struct('chunks',ones(ncon,1)*s,'labels',...
+                {predictornames'}));
         end
 
         % finally, make a big vol

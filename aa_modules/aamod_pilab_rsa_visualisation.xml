@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='visualise rsa result' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <!-- path to custom plot function in addition to plot_lindisc
+                 -->
+            <pluginpath></pluginpath>
+
+            <!-- arguments for plot_lindisc -->
+            <mtarget>r</mtarget>
+            <errtarget></errtarget>
+            <ptarget>pperm</ptarget>
+            <mlabel>r</mlabel>
+            <errlabel></errlabel>
+            <pthresh>.05</pthresh>
+            
+            <inputstreams>
+                <stream>pilab_rsa_r</stream>
+            </inputstreams>
+            <outputstreams>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>

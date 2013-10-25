@@ -10,7 +10,6 @@
             <permanenceofoutput>3</permanenceofoutput>
 
             <!-- parameters for roidata_lindisc -->
-            <split></split>
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
             <cvsplit></cvsplit>
@@ -21,10 +20,14 @@
             <glmvarargs>
                 <item></item>
             </glmvarargs>
-
+            <usegpu>0</usegpu>
             <nperm>1</nperm>
             <nboot>0</nboot>
             <contrastpath></contrastpath>
+
+            <!-- used here -->
+            <setclass></setclass>
+            <split></split>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
