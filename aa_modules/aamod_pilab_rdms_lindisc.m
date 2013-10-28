@@ -16,6 +16,11 @@ switch task
         epivol = loadbetter(epipath);
         ts = aap.tasklist.currenttask.settings;
 
+        % get ROIs / spheres
+        roipath = aas_getfiles_bystream(aap,subj,...
+            'pilab_rois');
+        rois = loadbetter(roipath);
+
         % make sure we have the same ROIs and voxels across splits
         [rois,epivol] = intersectvols(rois,epivol);
         % now that the ROIs and voxels are in register this should reduce
@@ -26,11 +31,6 @@ switch task
 
         % split the data into cell arrays
         [designcell,epicell] = splitvol(ts.split,designvol,epivol);
-
-        % get ROIs / spheres
-        roipath = aas_getfiles_bystream(aap,subj,...
-            'pilab_rois');
-        rois = loadbetter(roipath);
 
         % check that parfor is available
         if ~matlabpool('size')
