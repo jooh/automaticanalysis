@@ -16,6 +16,14 @@ switch task
         epivol = loadbetter(epipath);
         ts = aap.tasklist.currenttask.settings;
 
+        % make sure we have the same ROIs and voxels across splits
+        [rois,epivol] = intersectvols(rois,epivol);
+        % now that the ROIs and voxels are in register this should reduce
+        % memory use considerably
+        validvox = any(rois.data~=0,1);
+        rois = rois(:,validvox);
+        epivol = epivol(:,validvox);
+
         % split the data into cell arrays
         [designcell,epicell] = splitvol(ts.split,designvol,epivol);
 
