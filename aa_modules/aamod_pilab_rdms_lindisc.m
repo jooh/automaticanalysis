@@ -16,13 +16,28 @@ switch task
         epivol = loadbetter(epipath);
         ts = aap.tasklist.currenttask.settings;
 
-        % split the data into cell arrays
-        [designcell,epicell] = splitvol(ts.split,designvol,epivol);
-
         % get ROIs / spheres
         roipath = aas_getfiles_bystream(aap,subj,...
             'pilab_rois');
         rois = loadbetter(roipath);
+
+        if ~isempty(ts.setclass)
+            fprintf('setting data to %s\n',ts.setclass);
+            epivol.data = feval(ts.setclass,epivol.data);
+            designvol.data = feval(ts.setclass,designvol.data);
+            rois.data = feval(ts.setclass,rois.data);
+        end
+
+        % make sure we have the same ROIs and voxels across splits
+        [rois,epivol] = intersectvols(rois,epivol);
+        % now that the ROIs and voxels are in register this should reduce
+        % memory use considerably
+        validvox = any(rois.data~=0,1);
+        rois = rois(:,validvox);
+        epivol = epivol(:,validvox);
+
+        % split the data into cell arrays
+        [designcell,epicell] = splitvol(ts.split,designvol,epivol);
 
         % check that parfor is available
         if ~matlabpool('size')
@@ -40,12 +55,12 @@ switch task
         % nan masking - nans should only really happen here if you enter
         % empty ROIs
         nsplit = length(designcell);
-        nanmask = false([nsplit rois.nsamples]);
         splitdiscvolcell = cell(nsplit,1);
 
         % run the beast
         for sp = 1:nsplit
             fprintf('running rois for split %d of %d...\n',sp,nsplit);
+            tic;
             % cart off to new function
             splitdisvolcell{sp} = roidata2rdmvol_lindisc(rois,...
                 designcell{sp},epicell{sp},...
@@ -54,27 +69,15 @@ switch task
                 'targetlabels',ts.targetlabels,...
                 'ignorelabels',ts.ignorelabels,'glmclass',ts.glmclass,...
                 'glmvarargs',ts.glmvarargs,'sterrunits',ts.sterrunits,...
-                'crossvalidate',ts.crossvalidate);
-            nanmask(sp,:) = any(isnan(splitdisvolcell{sp}.data),1);
+                'crossvalidate',ts.crossvalidate,'minvoxeln',...
+                ts.minvoxeln);
+            fprintf('finished in %s\n',seconds2str(toc));
             if isempty(sumdata)
                 sumdata = splitdisvolcell{sp}.data;
             else
                 sumdata = sumdata + splitdisvolcell{sp}.data;
             end
         end % sp 1:nsplit
-
-        % remove any nan features from all splits
-        anynan = any(nanmask,1);
-        if any(anynan)
-            nnans = sum(anynan);
-            fprintf(['removed %d NaN ROIs from analysis ' ...
-                '(%.2f%% of total).\n'],nnans,...
-                100*(nnans/length(anynan)));
-        end
-        splitdisvolcell = cellfun(@(dv)dv(:,~anynan),splitdisvolcell,...
-            'uniformoutput',false);
-        % and from sums
-        sumdata(:,anynan) = [];
 
         % extract meta features for mean rdm vol (needs to be after main
         % loop to avoid nan ROIs) and write out

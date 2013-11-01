@@ -50,7 +50,6 @@ switch task
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         sumdata = [];
         nsplit = length(designcell);
-        nanmask = false([nsplit rois.nsamples]);
 
         if ischar(ts.cvsplit)
             ts.cvsplit = eval(ts.cvsplit);
@@ -69,40 +68,12 @@ switch task
                 ts.glmvarargs,'nperm',ts.nperm,'nboot',ts.nboot,...
                 'usegpu',ts.usegpu);
             fprintf('finished in %s.\n',seconds2str(toc));
-            % don't think this is necessary anymore
-            % nanmask(sp,:) = any(isnan(splitres(sp).t),1);
         end % sp 1:nsplit
 
         if ts.usegpu
             splitres = gather(splitres);
             splitnull = gather(splitnull);
             splitboot = gather(splitboot);
-            % nanmask = gather(nanmask);
-        end
-
-        % remove any nan rois from all splits
-        % also redundant?
-        anynan = false; % any(nanmask,1);
-        if any(anynan)
-            for sp = 1:nsplit
-                for fi = {'cols_roi','t','medianboot','medianste',...
-                        'ppara','pperm','nfeatures'}
-                    fstr = fi{1};
-                    if isfield(splitres,fstr)
-                        splitres(sp).(fstr)(:,anynan,:) = [];
-                    end
-                    if isfield(splitnull,fstr)
-                        splitnull(sp).(fstr)(:,anynan,:) = [];
-                    end
-                    if isfield(splitboot,fstr)
-                        splitboot(sp).(fstr)(:,anynan,:) = [];
-                    end
-                end
-            end
-            nnans = sum(anynan);
-            fprintf(['removed %d NaN ROIs from analysis ' ...
-                '(%.2f%% of total).\n'],nnans,...
-                100*(nnans/length(anynan)));
         end
 
         % make mean result across splits

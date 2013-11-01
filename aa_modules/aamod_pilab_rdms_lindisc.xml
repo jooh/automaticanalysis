@@ -25,6 +25,10 @@
             </glmvarargs>
             <crossvalidate>0</crossvalidate>
             <sterrunits>1</sterrunits>
+
+            <!-- used here-->
+            <setclass></setclass>
+            <minvoxeln>0</minvoxeln>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
