@@ -8,13 +8,20 @@ resp='';
 switch task
     case 'doit'
         % get data
-        vpath = aas_getfiles_bystream(aap,subj,'pilab_volume');
-        vol = load(vpath);
-        vol = vol.vol;
+        % vpath = aas_getfiles_bystream(aap,subj,'pilab_volume');
+        % sl.vol = load(vpath);
+        % sl.vol = sl.vol.sl.vol;
+        
+        % load mask
+        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        
+        %V = spm_vol(mpath(1,:));
+        %mask = spm_read_vols(V) > 0;
 
         % configure searchlight
         ts = aap.tasklist.currenttask.settings;
-        sl = Searchlight(vol,ts.searchlighttype,ts.searchlightparameter);
+        sl = Searchlight(mpath(1,:),ts.searchlighttype,...
+            ts.searchlightparameter);
 
         % check that parfor is available
         if ~matlabpool('size')
@@ -40,18 +47,19 @@ switch task
 
         % new sparse formulation - store radius information directly in
         % roivol instance.
-        spheres = sparse(vol.nfeatures,vol.nfeatures);
-        diagnostic_r = NaN([1 vol.nfeatures]);
+        spheres = sparse(sl.vol.nfeatures,sl.vol.nfeatures);
+        diagnostic_r = NaN([1 sl.vol.nfeatures]);
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
+        mkdirifneeded(pidir);
 
         % run
-        fprintf('mapping %d searchlights...\n',vol.nfeatures);
+        fprintf('mapping %d searchlights...\n',sl.vol.nfeatures);
         tic;
-        parfor n = 1:vol.nfeatures
+        parfor n = 1:sl.vol.nfeatures
             % get sphere index
             % (some extra dribbling is necessary here to avoid confusing
             % parfor)
-            sp = sparse(1,vol.nfeatures);
+            sp = sparse(1,sl.vol.nfeatures);
             inds = sl.mapinds(n);
             sp(inds) = sl.distances(inds);
             spheres(n,:) = sp;
@@ -68,19 +76,19 @@ switch task
 
         % save spheres
         % now as volume 
-        maskvol = MriVolume(spheres,vol);
+        maskvol = MriVolume(spheres,sl.vol);
         outpath_spheres = fullfile(pidir,'searchlight_spheres.mat');
         save(outpath_spheres,'maskvol');
 
         % save niftis of diagnostics
         outpath_n = fullfile(pidir,...
             'diagnostic_searchlight_nvoxpersphere.nii');
-        vol.data2file(diagnostic_nsphere,outpath_n);
+        sl.vol.data2file(diagnostic_nsphere,outpath_n);
         outpath_s = fullfile(pidir,...
             'diagnostic_searchlight_nspherepervox.nii');
-        vol.data2file(diagnostic_nsampled,outpath_s);
+        sl.vol.data2file(diagnostic_nsampled,outpath_s);
         outpath_r = fullfile(pidir,'diagnostic_searchlight_radius.nii');
-        vol.data2file(diagnostic_r,outpath_r);
+        sl.vol.data2file(diagnostic_r,outpath_r);
 
         % describe outputs
         % (now treat searchlights like any ROI)

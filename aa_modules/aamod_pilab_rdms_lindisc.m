@@ -27,7 +27,6 @@ switch task
             designvol.data = feval(ts.setclass,designvol.data);
             rois.data = feval(ts.setclass,rois.data);
         end
-
         % make sure we have the same ROIs and voxels across splits
         [rois,epivol] = intersectvols(rois,epivol);
         % now that the ROIs and voxels are in register this should reduce
