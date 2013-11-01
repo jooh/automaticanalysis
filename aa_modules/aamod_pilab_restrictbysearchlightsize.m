@@ -17,6 +17,11 @@ switch task
         xyz_n = spm_read_vols(spm_vol(spath));
         rpath = aas_getfiles_bystream(aap,subj,'pilab_searchlight_radius');
         xyz_r = spm_read_vols(spm_vol(rpath));
+                % and spheres...
+        spath = aas_getfiles_bystream(aap,subj,...
+            'pilab_rois');
+        spheres = loadbetter(spath);
+        vol = spheres.vol;
         % intersect to generate new mask
         ts = aap.tasklist.currenttask.settings;
         mask = vol.mask;
@@ -26,15 +31,6 @@ switch task
         ngone = vol.nfeatures-sum(mask(:)>0);
         fprintf('eliminated %d features (%.2f%% of total)\n',...
           ngone,100*(ngone/vol.nfeatures));
-        % update the volume
-        goodind = vol.linind2featind(find(mask));
-        vol = vol(:,goodind);
-        save(vpath,'vol')
-        aap = aas_desc_outputs(aap,subj,'pilab_volume',vpath);
-        % and spheres...
-        spath = aas_getfiles_bystream(aap,subj,...
-            'pilab_rois');
-        spheres = loadbetter(spath);
         spheres = spheres(goodind,goodind);
         save(spath,'spheres');
         aap = aas_desc_outputs(aap,subj,'pilab_rois',spath);

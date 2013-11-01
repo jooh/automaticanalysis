@@ -14,7 +14,6 @@
             <minradius>0</minradius>
             <maxradius>50</maxradius>
             <inputstreams>
-                <stream>pilab_volume</stream>
                 <stream>pilab_rois</stream>
                 <stream>pilab_searchlight_radius</stream>
                 <stream>pilab_searchlight_nvox</stream>
@@ -22,18 +21,11 @@
             </inputstreams>
             
             <outputstreams>
-                <stream>pilab_volume</stream>
                 <stream>pilab_rois</stream>
                 <stream>pilab_searchlight_radius</stream>
                 <stream>pilab_searchlight_nvox</stream>
                 <stream>pilab_searchlight_nspheres</stream>
             </outputstreams>
-
-            <!-- Diagnostic videos? Verbosity? -->
-            <diagnostic desc='Do we display diagnostic videos?'
-            >0</diagnostic>
-            <verbose desc='Do we display Freesurfer output?'
-            >1</verbose>
             
         </currenttask>
     </tasklist>
