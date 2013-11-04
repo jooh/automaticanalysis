@@ -29,6 +29,7 @@
             <!-- used here-->
             <setclass></setclass>
             <minvoxeln>0</minvoxeln>
+            <batchsize>5000</batchsize>
             
             <inputstreams>
                 <stream>pilab_epi</stream>

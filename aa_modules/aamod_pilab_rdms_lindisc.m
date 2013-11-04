@@ -25,7 +25,6 @@ switch task
             fprintf('setting data to %s\n',ts.setclass);
             epivol.data = feval(ts.setclass,epivol.data);
             designvol.data = feval(ts.setclass,designvol.data);
-            rois.data = feval(ts.setclass,rois.data);
         end
         % make sure we have the same ROIs and voxels across splits
         [rois,epivol] = intersectvols(rois,epivol);
@@ -35,8 +34,11 @@ switch task
         rois = rois(:,validvox);
         epivol = epivol(:,validvox);
 
-        % split the data into cell arrays
-        [designcell,epicell] = splitvol(ts.split,designvol,epivol);
+        % split the data into appropriately pre-processed cell arrays
+        [designcell,epicell] = splitvol_batch(ts.split,designvol,epivol,...
+            'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,...
+                'targetlabels',ts.targetlabels,...
+                'ignorelabels',ts.ignorelabels);
 
         % check that parfor is available
         if ~matlabpool('size')
@@ -56,6 +58,22 @@ switch task
         nsplit = length(designcell);
         splitdiscvolcell = cell(nsplit,1);
 
+        if strcmp(ts.covariatedeg,'adaptive')
+            ts.covariatedeg = vol2covdeg(epivol);
+        end
+
+        if ~iscell(ts.glmvarargs)
+            if isempty(ts.glmvarargs)
+                ts.glmvarargs = {};
+            else
+                ts.glmvarargs = {ts.glmvarargs};
+            end
+        end
+
+        if ~isempty(ts.covariatedeg)
+            ts.glmvarargs = [{ts.covariatedeg} ts.glmvarargs];
+        end
+
         % run the beast
         for sp = 1:nsplit
             fprintf('running rois for split %d of %d...\n',sp,nsplit);
@@ -63,13 +81,11 @@ switch task
             % cart off to new function
             splitdisvolcell{sp} = roidata2rdmvol_lindisc(rois,...
                 designcell{sp},epicell{sp},...
-                'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,'split',...
-                ts.cvsplit,'covariatedeg',ts.covariatedeg,...
-                'targetlabels',ts.targetlabels,...
-                'ignorelabels',ts.ignorelabels,'glmclass',ts.glmclass,...
+                'split',ts.cvsplit,...
+                'glmclass',ts.glmclass,...
                 'glmvarargs',ts.glmvarargs,'sterrunits',ts.sterrunits,...
                 'crossvalidate',ts.crossvalidate,'minvoxeln',...
-                ts.minvoxeln);
+                ts.minvoxeln,'batchsize',ts.batchsize);
             fprintf('finished in %s\n',seconds2str(toc));
             if isempty(sumdata)
                 sumdata = splitdisvolcell{sp}.data;
