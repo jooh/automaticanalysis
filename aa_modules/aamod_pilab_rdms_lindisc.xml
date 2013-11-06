@@ -11,15 +11,9 @@
 
             <!-- parameter for splitvol -->
             <split></split>
-            <!-- parameters for roidata2rdmvol_lindisc -->
-            <sgolayK></sgolayK>
-            <sgolayF></sgolayF>
             <!-- (goes to split parameter) -->
             <cvsplit></cvsplit>
-            <covariatedeg>adaptive</covariatedeg>
-            <targetlabels></targetlabels>
-            <ignorelabels></ignorelabels>
-            <glmclass>CovGLM</glmclass>
+            <glmclass>GLM</glmclass>
             <glmvarargs>
                 <item></item>
             </glmvarargs>
@@ -27,7 +21,6 @@
             <sterrunits>1</sterrunits>
 
             <!-- used here-->
-            <setclass></setclass>
             <minvoxeln>0</minvoxeln>
             <batchsize>5000</batchsize>
             

@@ -10,7 +10,7 @@
             <permanenceofoutput>3</permanenceofoutput>
 
             <!-- trend removal -->
-            <covariatedeg>adaptive</covariatedeg>
+            <covariatedeg></covariatedeg>
             <medianfilter></medianfilter>
             <sgdetrend></sgdetrend>
             <sgolayK></sgolayK>

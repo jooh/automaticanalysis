@@ -35,10 +35,8 @@ switch task
         epivol = epivol(:,validvox);
 
         % split the data into appropriately pre-processed cell arrays
-        [designcell,epicell] = splitvol_batch(ts.split,designvol,epivol,...
-            'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,...
-                'targetlabels',ts.targetlabels,...
-                'ignorelabels',ts.ignorelabels);
+        % (now skip preprocessing - we assume this has already happened)
+        [designcell,epicell] = splitvol(ts.split,designvol,epivol);
 
         % check that parfor is available
         if ~matlabpool('size')
@@ -58,20 +56,12 @@ switch task
         nsplit = length(designcell);
         splitdiscvolcell = cell(nsplit,1);
 
-        if strcmp(ts.covariatedeg,'adaptive')
-            ts.covariatedeg = vol2covdeg(epivol);
-        end
-
         if ~iscell(ts.glmvarargs)
             if isempty(ts.glmvarargs)
                 ts.glmvarargs = {};
             else
                 ts.glmvarargs = {ts.glmvarargs};
             end
-        end
-
-        if ~isempty(ts.covariatedeg)
-            ts.glmvarargs = [{ts.covariatedeg} ts.glmvarargs];
         end
 
         % run the beast

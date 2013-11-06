@@ -10,23 +10,16 @@
             <permanenceofoutput>3</permanenceofoutput>
 
             <!-- parameters for roidata_lindisc -->
-            <sgolayK></sgolayK>
-            <sgolayF></sgolayF>
             <cvsplit></cvsplit>
-            <covariatedeg>adaptive</covariatedeg>
-            <targetlabels></targetlabels>
-            <ignorelabels></ignorelabels>
-            <glmclass>CovGLM</glmclass>
+            <glmclass>GLM</glmclass>
             <glmvarargs>
                 <item></item>
             </glmvarargs>
-            <usegpu>0</usegpu>
             <nperm>1</nperm>
             <nboot>0</nboot>
             <contrastpath></contrastpath>
 
             <!-- used here -->
-            <setclass></setclass>
             <split></split>
             
             <inputstreams>

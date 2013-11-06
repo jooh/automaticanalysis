@@ -17,19 +17,20 @@ switch task
         % NB the semantics of this new organisation is quite different. I
         % think we used to allow regressors of no interest in the GLM. Now
         % these are removed before the GLM instance is created.
-        [glmcell,nancell,predictornames] = vol2glm_batch(designvol,epivol,...
-            'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,'split',ts.split,...
-            'covariatedeg',ts.covariatedeg,'targetlabels',...
-            ts.targetlabels,'ignorelabels',ts.ignorelabels,...
-            'glmclass',ts.glmclass,'glmvarargs',ts.glmvarargs);
-        nsplit = length(glmcell);
-        ncon = glmcell{1}(1).npredictors;
+        predictornames = designvol.meta.features.labels;
+        [epicell,designcell] = splitvol(ts.split,epivol,designvol);
+        nsplit = length(epicell);
+        ncon = designvol.nfeatures;
 
         % generate separate estimates for each split
         datcell = cell(nsplit,1);
         for s = 1:nsplit
-            glm = glmcell{s};
-            nanmask = nancell{s};
+            nanmask = ~any(isnan(epicell{s}.data),1);
+            if ~all(nanmask)
+                epicell{s} = epicell{s}(:,nanmask);
+            end
+            glm = vol2glm(designcell{s},epicell{s},ts.glmclass,...
+                ts.glmvarargs{:});
 
             % use bootstrap or plain tmapped estimates?
             if ~isempty(ts.nboot) && ts.nboot > 0

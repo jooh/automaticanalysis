@@ -54,7 +54,7 @@ switch task
                     designvol.data(chunkind,:) = ...
                         designvol.data(chunkind,:) - ...
                         covariates(chunkind,:) * ...
-                        (covariates(chunkind,:) \ epivol.data(chunkind,:));
+                        (covariates(chunkind,:) \ designvol.data(chunkind,:));
                 end
             end
         end
@@ -67,14 +67,14 @@ switch task
         % first high-pass trend removal
         if ~isempty(ts.covariatedeg)
             fprintf('polynomial detrend (degree=%.0f)\n',ts.covariatedeg);
-            processchunks(epivol,'polydetrend',ts.covariatedeg);
-            processchunks(designvol,'polydetrend',ts.covariatedeg);
+            filterbychunk(epivol,'polydetrend',ts.covariatedeg);
+            filterbychunk(designvol,'polydetrend',ts.covariatedeg);
         end
 
         if ~isempty(ts.medianfilter)
             fprintf('median filter (n=%.0f)\n',ts.medianfilter);
-            medianfilter(epivol,ts.medianfilter);
-            medianfilter(designvol,ts.medianfilter);
+            filterbychunk(epivol,'medianfilter',ts.medianfilter);
+            filterbychunk(designvol,'medianfilter',ts.medianfilter);
         end
 
         if ts.sgdetrend
@@ -86,8 +86,8 @@ switch task
 
         if ts.zscore
             fprintf('Z-scoring samples\n')
-            zscore(epivol);
-            zscore(designvol);
+            filterbychunk(epivol,'zscore',[],1);
+            filterbychunk(designvol,'zscore',[],1);
         end
 
         % output

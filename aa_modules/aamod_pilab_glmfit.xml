@@ -9,14 +9,8 @@
             </qsub>
             <permanenceofoutput>3</permanenceofoutput>
 
-            <!-- parameters for vol2glm_batch -->
-            <targetlabels></targetlabels>
-            <ignorelabels></ignorelabels>
-            <sgolayK></sgolayK>
-            <sgolayF></sgolayF>
-            <covariatedeg>adaptive</covariatedeg>
             <split></split>
-            <glmclass>CovGLM</glmclass>
+            <glmclass>GLM</glmclass>
             <glmvarargs>
                 <item></item>
             </glmvarargs>

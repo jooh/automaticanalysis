@@ -21,19 +21,13 @@ switch task
         else
             % assume script that returns the needed struct
             contrasts = feval(ts.contrastpath);
+            contrasts = structdata2class(contrasts,class(epivol.data));
         end
 
         % get ROIs / spheres
         roipath = aas_getfiles_bystream(aap,subj,...
             'pilab_rois');
         rois = loadbetter(roipath);
-
-        if ~isempty(ts.setclass)
-            fprintf('setting data to %s\n',ts.setclass);
-            epivol.data = feval(ts.setclass,epivol.data);
-            designvol.data = feval(ts.setclass,designvol.data);
-            contrasts = structdata2class(contrasts,ts.setclass);
-        end
 
         % make sure we have the same ROIs and voxels across splits
         [rois,epivol] = intersectvols(rois,epivol);
@@ -61,20 +55,11 @@ switch task
             tic;
             [splitres(sp),splitnull(sp),splitboot(sp)] = ...
                 roidata_lindisc(rois,designcell{sp},epicell{sp},...
-                contrasts,'sgolayK',ts.sgolayK,'sgolayF',ts.sgolayF,...
-                'split',ts.cvsplit,'covariatedeg',ts.covariatedeg,...
-                'targetlabels',ts.targetlabels,'ignorelabels',...
-                ts.ignorelabels,'glmclass',ts.glmclass,'glmvarargs',...
-                ts.glmvarargs,'nperm',ts.nperm,'nboot',ts.nboot,...
-                'usegpu',ts.usegpu);
+                contrasts,'split',ts.cvsplit,'glmclass',ts.glmclass,...
+                'glmvarargs',ts.glmvarargs,'nperm',ts.nperm,...
+                'nboot',ts.nboot);
             fprintf('finished in %s.\n',seconds2str(toc));
         end % sp 1:nsplit
-
-        if ts.usegpu
-            splitres = gather(splitres);
-            splitnull = gather(splitnull);
-            splitboot = gather(splitboot);
-        end
 
         % make mean result across splits
         meanres = collapsestruct(splitres);
