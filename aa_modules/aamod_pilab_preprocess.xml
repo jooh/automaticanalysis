@@ -12,7 +12,7 @@
             <!-- trend removal -->
             <covariatedeg></covariatedeg>
             <medianfilter></medianfilter>
-            <sgdetrend></sgdetrend>
+            <sgdetrend>0</sgdetrend>
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
             <zscore>0</zscore>

@@ -20,45 +20,6 @@ switch task
             designvol.data = feval(ts.setclass,designvol.data);
         end
 
-        % maybe deal with covariates
-        nlabels = length(designvol.desc.features.unique.labels);
-        if isempty(ts.targetlabels)
-            coninds = 1:nlabels;
-        else
-            coninds = find(strcmp(designvol.desc.features.unique.labels,...
-                ts.targetlabels));
-        end
-        if ~isempty(ts.ignorelabels)
-            ignoreinds = find(strcmp(designvol.desc.features.unique.labels,...
-                ts.ignorelabels));
-            coninds = setdiff(coninds,ignoreinds,'stable');
-        end
-        assert(~isempty(coninds),...
-            'found no labels matching targetlabels/ignorelabels %s/%s',...
-            targetlabels,ignorelabels);
-        if ~isequal(coninds,1:nlabels)
-            covariates = designvol.data(:,ignoreinds);
-            designvol = designvol(:,coninds);
-            % project out bad cons
-            if ~isempty(ignoreinds)
-                for c = 1:epivol.desc.samples.nunique.chunks
-                    chunkind = epivol.meta.samples.chunks == ...
-                        epivol.desc.samples.unique.chunks(c);
-                    assert(isequal(chunkind,...
-                        designvol.meta.samples.chunks == ...
-                        designvol.desc.samples.unique.chunks(c)),...
-                        'mismatched chunks in epivol and designvol');
-                    epivol.data(chunkind,:) = epivol.data(chunkind,:) - ...
-                        covariates(chunkind,:) * ...
-                        (covariates(chunkind,:) \ epivol.data(chunkind,:));
-                    designvol.data(chunkind,:) = ...
-                        designvol.data(chunkind,:) - ...
-                        covariates(chunkind,:) * ...
-                        (covariates(chunkind,:) \ designvol.data(chunkind,:));
-                end
-            end
-        end
-
         % de-trend config
         if strcmp(ts.covariatedeg,'adaptive')
             ts.covariatedeg = vol2covdeg(epivol);
@@ -71,7 +32,7 @@ switch task
             filterbychunk(designvol,'polydetrend',ts.covariatedeg);
         end
 
-        if ~isempty(ts.medianfilter)
+        if ~isempty(ts.medianfilter) && ts.medianfilter
             fprintf('median filter (n=%.0f)\n',ts.medianfilter);
             filterbychunk(epivol,'medianfilter',ts.medianfilter);
             filterbychunk(designvol,'medianfilter',ts.medianfilter);
@@ -90,7 +51,47 @@ switch task
             filterbychunk(designvol,'zscore',[],1);
         end
 
+        % maybe deal with covariates
+        nlabels = length(designvol.desc.features.unique.labels);
+        if isempty(ts.targetlabels)
+            coninds = 1:nlabels;
+        else
+            coninds = find(strcmp(designvol.desc.features.unique.labels,...
+                ts.targetlabels));
+        end
+        if ~isempty(ts.ignorelabels)
+            ignoreinds = find(strcmp(designvol.desc.features.unique.labels,...
+                ts.ignorelabels));
+            coninds = setdiff(coninds,ignoreinds,'stable');
+        end
+        assert(~isempty(coninds),...
+            'found no labels matching targetlabels/ignorelabels %s/%s',...
+            ts.targetlabels,ts.ignorelabels);
+        if ~isequal(coninds,1:nlabels)
+            covariates = designvol.data(:,ignoreinds);
+            designvol = designvol(:,coninds);
+            % project out bad cons
+            if ~isempty(ignoreinds)
+                fprintf('projecting out %d covariates\n',...
+                    size(covariates,2));
+                for c = 1:epivol.desc.samples.nunique.chunks
+                    chunkind = epivol.meta.samples.chunks == ...
+                        epivol.desc.samples.unique.chunks(c);
+                    assert(isequal(chunkind,...
+                        designvol.meta.samples.chunks == ...
+                        designvol.desc.samples.unique.chunks(c)),...
+                        'mismatched chunks in epivol and designvol');
+                    epivol.data(chunkind,:) = projectout(...
+                        epivol.data(chunkind,:),covariates(chunkind,:));
+                    designvol.data(chunkind,:) = projectout(...
+                        designvol.data(chunkind,:),covariates(chunkind,:));
+                end
+            end
+        end
+
+
         % output
+        fprintf('saving...\n');
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         out = fullfile(pidir,'epivol.mat');
         save(out,'epivol','-v7.3');
@@ -98,12 +99,6 @@ switch task
         outdesign = fullfile(pidir,'designvol.mat');
         save(outdesign,'designvol','-v7.3');
         aap=aas_desc_outputs(aap,subj,'pilab_design',outdesign);
-
-        % describe outputs
-        aap=aas_desc_outputs(aap,subj,'pilab_data_rdms_sess',...
-            outpaths_sessrdms);
-        aap=aas_desc_outputs(aap,subj,'pilab_data_rdms_mean',...
-            outpath_mean);
     case 'checkrequirements'
         
     otherwise
