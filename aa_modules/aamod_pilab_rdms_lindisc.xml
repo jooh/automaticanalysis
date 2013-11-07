@@ -22,7 +22,7 @@
 
             <!-- used here-->
             <minvoxeln>0</minvoxeln>
-            <batchsize>5000</batchsize>
+            <batchsize>10000</batchsize>
             <setclass></setclass>
             
             <inputstreams>
