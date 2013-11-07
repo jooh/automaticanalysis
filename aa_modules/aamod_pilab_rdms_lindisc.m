@@ -67,7 +67,6 @@ switch task
         % run the beast
         for sp = 1:nsplit
             fprintf('running rois for split %d of %d...\n',sp,nsplit);
-            tic;
             % cart off to new function
             splitdisvolcell{sp} = roidata2rdmvol_lindisc(rois,...
                 designcell{sp},epicell{sp},...
@@ -76,7 +75,6 @@ switch task
                 'glmvarargs',ts.glmvarargs,'sterrunits',ts.sterrunits,...
                 'crossvalidate',ts.crossvalidate,'minvoxeln',...
                 ts.minvoxeln,'batchsize',ts.batchsize);
-            fprintf('finished in %s\n',seconds2str(toc));
             if isempty(sumdata)
                 sumdata = splitdisvolcell{sp}.data;
             else
