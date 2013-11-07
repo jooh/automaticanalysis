@@ -22,6 +22,13 @@ switch task
         nsplit = length(epicell);
         ncon = designvol.nfeatures;
 
+        if isempty(ts.glmvarargs)
+            ts.glmvarargs = {};
+        end
+        if ~iscell(ts.glmvarargs)
+            ts.glmvarargs = {ts.glmvarargs};
+        end
+
         % generate separate estimates for each split
         datcell = cell(nsplit,1);
         for s = 1:nsplit
