@@ -18,12 +18,17 @@ if (iserr)
     try
         logitem(aap,'\n\n**** automatic analysis failed - see reason and line numbers below\n','red');
         
-        if ~isempty(aap.options.email)
-            % In case the server is broken...
-            try
-                aas_finishedMail(aap.options.email, aap.acq_details.root, msg)
-            catch
+        try
+            if ~isempty(aap.options.email)
+                % In case the server is broken...
+                try
+                    aas_finishedMail(aap.options.email, aap.acq_details.root, msg)
+                catch
+                end
             end
+        catch
+            % this function does not always receive a valid aap input so
+            % you will raise lots of exceptions here
         end
     catch
         error('internal aa error fatal -1');
