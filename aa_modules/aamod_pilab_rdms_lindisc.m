@@ -63,6 +63,8 @@ switch task
                 ts.glmvarargs = {ts.glmvarargs};
             end
         end
+        % track NaN features - may appear in different runs if nan masking
+        nanmask = false([nsplit rois.nsamples]);
 
         % run the beast
         for sp = 1:nsplit
@@ -80,7 +82,20 @@ switch task
             else
                 sumdata = sumdata + splitdisvolcell{sp}.data;
             end
+            nanmask(sp,:) = any(isnan(splitdisvolcell{sp}.data),1);
         end % sp 1:nsplit
+        % remove any nan features from all sessdisvols
+        anynan = any(nanmask,1);
+        if any(anynan)
+            nnans = sum(anynan);
+            fprintf(['removed %d NaN ROIs from analysis ' ...
+                '(%.2f%% of total).\n'],nnans,...
+                100*(nnans/length(anynan)));
+        end
+        splitdisvolcell = cellfun(@(dv)dv(:,~anynan),splitdisvolcell,...
+            'uniformoutput',false);
+        % and from sums
+        sumdata(:,anynan) = [];
 
         % extract meta features for mean rdm vol (needs to be after main
         % loop to avoid nan ROIs) and write out
