@@ -63,6 +63,11 @@ switch task
                 ts.glmvarargs = {ts.glmvarargs};
             end
         end
+
+        if ischar(ts.cvsplit)
+            ts.cvsplit = eval(ts.cvsplit);
+        end
+
         % track NaN features - may appear in different runs if nan masking
         nanmask = false([nsplit rois.nsamples]);
 

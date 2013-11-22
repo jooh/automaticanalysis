@@ -49,6 +49,14 @@ switch task
             ts.cvsplit = eval(ts.cvsplit);
         end
 
+        if ~iscell(ts.glmvarargs)
+            if isempty(ts.glmvarargs)
+                ts.glmvarargs = {};
+            else
+                ts.glmvarargs = {ts.glmvarargs};
+            end
+        end
+
         % run the beast
         for sp = 1:nsplit
             fprintf('running rois for split %d of %d...\n',sp,nsplit);
