@@ -26,11 +26,11 @@
 
             <inputstreams>
                 <stream>glmdenoise_results</stream>
-                <stream>epiBETmask</stream>
+                <stream>pilab_mask</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_volume</stream>
-                <stream>epiBETmask</stream>
+                <stream>pilab_mask</stream>
             </outputstreams>
             
         </currenttask>

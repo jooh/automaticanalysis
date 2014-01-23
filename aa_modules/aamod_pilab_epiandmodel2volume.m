@@ -17,9 +17,8 @@ switch task
     case 'report'
         
     case 'doit'
-        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
-        % first mask is the brain mask
-        V = spm_vol(mpath(1,:));
+        mpath = aas_getfiles_bystream(aap,subj,'pilab_mask');
+        V = spm_vol(mpath);
         orgmask = spm_read_vols(V) ~= 0;
         
         % model
@@ -58,7 +57,7 @@ switch task
         aap=aas_desc_outputs(aap,subj,'pilab_design',outpath_design);
         % the updated mask
         spm_write_vol(V,mask);
-        aap=aas_desc_outputs(aap,subj,'epiBETmask',mpath);
+        aap=aas_desc_outputs(aap,subj,'pilab_mask',mpath);
 
     case 'checkrequirements'
         

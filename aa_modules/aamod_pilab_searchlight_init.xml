@@ -14,7 +14,7 @@
             <searchlightparameter>100</searchlightparameter>
             
             <inputstreams>
-                <stream>epiBETmask</stream>
+                <stream>pilab_mask</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_rois</stream>

@@ -14,7 +14,7 @@ switch task
         nsplit = size(glpath,1);
 
         % load mask
-        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        mpath = aas_getfiles_bystream(aap,subj,'pilab_mask');
         V = spm_vol(mpath(1,:));
         mask = spm_read_vols(V) > 0;
 
@@ -113,7 +113,7 @@ switch task
         % save updated mask
         V.fname = mpath(1,:);
         spm_write_vol(V,mask);
-        aap=aas_desc_outputs(aap,subj,'epiBETmask',mpath);
+        aap=aas_desc_outputs(aap,subj,'pilab_mask',mpath);
 
         outdir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         mkdirifneeded(outdir);

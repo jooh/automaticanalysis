@@ -13,7 +13,7 @@ switch task
         % sl.vol = sl.vol.sl.vol;
         
         % load mask
-        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        mpath = aas_getfiles_bystream(aap,subj,'pilab_mask');
         
         %V = spm_vol(mpath(1,:));
         %mask = spm_read_vols(V) > 0;
