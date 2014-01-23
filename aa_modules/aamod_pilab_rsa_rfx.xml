@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>
     <tasklist>
-        <currenttask domain='study' desc='random effects group analysis of rsa results' modality='MRI'>
+        <currenttask domain='study' desc='rfx group analysis of rsa results' modality='MRI'>
             
             <qsub>
                 <timeBase>0.5</timeBase>

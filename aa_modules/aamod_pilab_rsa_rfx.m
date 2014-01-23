@@ -13,8 +13,6 @@ switch task
         mkdirifneeded(pidir);
         ts = aap.tasklist.currenttask.settings;
 
-        % TODO - outputmode. For now we assume ROI-based. 
-        % just load all the results in one go
         for s = 1:nsub
             subres(s) = loadbetter(aas_getfiles_bystream(aap,s,...
                 'pilab_rsa_r'));
