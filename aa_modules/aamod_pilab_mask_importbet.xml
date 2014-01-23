@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='Import BET mask as pilab mask' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <inputstreams>
+                <stream>epiBETmask</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_mask</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
