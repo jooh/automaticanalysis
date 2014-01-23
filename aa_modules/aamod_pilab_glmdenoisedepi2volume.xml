@@ -23,12 +23,12 @@
             <inputstreams>
                 <stream>glmdenoise_results</stream>
                 <stream>glmdenoise_epi</stream>
-                <stream>epiBETmask</stream>
+                <stream>pilab_mask</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_epi</stream>
                 <stream>pilab_design</stream>
-                <stream>epiBETmask</stream>
+                <stream>pilab_mask</stream>
             </outputstreams>
         </currenttask>
     </tasklist>

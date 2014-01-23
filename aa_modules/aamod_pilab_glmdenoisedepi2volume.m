@@ -25,7 +25,7 @@ switch task
         epipath = aas_getfiles_bystream(aap,subj,'glmdenoise_epi');
         
         % mask (mainly used so we preserve header in EPI)
-        mpath = aas_getfiles_bystream(aap,subj,'epiBETmask');
+        mpath = aas_getfiles_bystream(aap,subj,'pilab_mask');
         V = spm_vol(mpath(1,:));
         mask = spm_read_vols(V) > 0;
 
@@ -151,9 +151,17 @@ switch task
             % update offset (to make unique chunks across splits)
             offset = max(chunks);
         end
-        % remove hopeless cases - features that are bad across all splits
         badmat = vertcat(badinds{:});
-        goodfeatures = ~all(badmat,1);
+        if ts.nanmask
+            % save memory by removing hopeless cases - features that are
+            % bad across all splits.
+            goodfeatures = ~all(badmat,1);
+        else
+            % remove any feature that fails any test in any split
+            % (important to get rid of features that may be unreliable
+            % across splits)
+            goodfeatures = ~any(badmat,1);
+        end
         epivol = epivol(:,goodfeatures);
 
         % update mask
@@ -171,7 +179,7 @@ switch task
         % save updated mask
         V.fname = mpath(1,:);
         spm_write_vol(V,mask);
-        aap=aas_desc_outputs(aap,subj,'epiBETmask',mpath);
+        aap=aas_desc_outputs(aap,subj,'pilab_mask',mpath);
         
         % save epi
         outdir = fullfile(aas_getsubjpath(aap,subj),'pilab');
