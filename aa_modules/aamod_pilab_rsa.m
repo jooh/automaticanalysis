@@ -12,12 +12,14 @@ switch task
         disvol = loadbetter(vpath);
 
         % predictor RDMs
+        ts = aap.tasklist.currenttask.settings;
         predictpath = aas_getfiles_bystream(aap,subj,...
             'pilab_rsapredictors');
         predictors = loadbetter(predictpath);
+        predictors(ts.removepredictorinds) = [];
         ncon = length(predictors);
 
-        ts = aap.tasklist.currenttask.settings;
+
         % this is a bit hacky but sometimes it is advantageous to drop the
         % precision before carting off to roidata_rsa
         if ~isempty(ts.setclass)
