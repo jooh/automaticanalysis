@@ -34,16 +34,14 @@ switch task
 
         % output matrix - each row provides logical indices into a
         % searchlight
-        % (this is matlab's perverse way of initialising an empty logical
-        % array)
         % NB! This matrix will be symmetrical for radius-based mapping.
         % This is because if a voxel x1 is outside a searchlight centered
-        % on x2, then a a searchlight on x1 necessarily doesn't include x1,
+        % on x2, then a searchlight on x1 necessarily doesn't include x1,
         % and conversely. So the distribution of nvoxels == the
         % distribution of nsamples or intuitively, a searchlight that
         % includes many voxels will also be included as a voxel in many
-        % other searchlights. But this does not hold for nvox-based mapping
-        % (?).
+        % other searchlights. But this does not hold for nvox-based
+        % mapping.
 
         % new sparse formulation - store radius information directly in
         % roivol instance.
