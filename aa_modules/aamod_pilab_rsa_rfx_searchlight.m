@@ -30,7 +30,7 @@ switch task
         tic;
         [meanres,nulldist,bootdist] = roidata_rfx(subres,'nperm',...
             ts.nperm,'nboot',ts.nboot,...
-            'targetfield','r','transfun','atanh','assumeregister',true);
+            'targetfield','r','transfun',ts.transfun,'assumeregister',true);
         fprintf('finished in %s.\n',seconds2str(toc));
 
         % save mats
