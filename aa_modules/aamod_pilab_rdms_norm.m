@@ -58,14 +58,33 @@ function normdisvol = dumptodiskandnorm(disvol,segpath,outdir,mask)
 
 % first dump each dissimilarity to disk
 filenames = cell(disvol.nsamples,1);
-for d = 1:disvol.nsamples
+inds = disvol.linind;
+V = disvol.header;
+datamat = disvol.data;
+
+fprintf('dumping %d dissimilarities to disk...',disvol.nsamples);
+tic;
+parfor d = 1:disvol.nsamples
     filenames{d} = fullfile(outdir,sprintf('dissimilarity_%04d.nii',d));
-    data2file(disvol,disvol.data(d,:),filenames{d});
+    vol = zeros(V.dim);
+    vol(inds) = datamat(d,:);
+    outV = V;
+    outV.fname = filenames{d};
+    spm_write_vol(outV,vol);
 end
+fprintf('finished in %s\n',seconds2str(toc));
+
+
 VI = spm_vol(char(filenames));
 % normalise in memory (spm_write_sn doesn't return all headers unless you
 % wrap it in arrayfun like this)
-VO = arrayfun(@(v)spm_write_sn(v,segpath),VI);
+fprintf('normalising dissimilarities...');
+tic;
+parfor v = 1:length(VI)
+    VO(v) = spm_write_sn(VI(v),segpath);
+end
+fprintf('finished in %s\n',seconds2str(toc));
+% VO = arrayfun(@(v)spm_write_sn(v,segpath),VI);
 % extract data in 4D matrix form
 dat = {VO.dat};
 dat = cat(4,dat{:});
