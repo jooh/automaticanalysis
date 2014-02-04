@@ -31,8 +31,14 @@ switch task
         % now that the ROIs and voxels are in register this should reduce
         % memory use considerably
         validvox = any(rois.data~=0,1);
-        rois = rois(:,validvox);
-        epivol = epivol(:,validvox);
+        % at the moment we assume this for detecting searchlight maps. So
+        % need to crash if this is not met
+        if rois.nsamples == rois.nfeatures
+            assert(all(validvox),'unused voxels in searchlight map');
+        else
+            rois = rois(:,validvox);
+            epivol = epivol(:,validvox);
+        end
 
         % split the data into appropriately pre-processed cell arrays
         % (now skip preprocessing - we assume this has already happened)
