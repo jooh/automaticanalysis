@@ -69,6 +69,10 @@ switch task
         
         for n=1:length(flSPM{1}.SPM.xCon)
             conname=flSPM{1}.SPM.xCon(n).name;
+            if strcmp(flSPM{1}.SPM.xCon(n).STAT,'F')
+                fprintf('skipping F contrast %d: %s\n',n,conname);
+                continue;
+            end
             % take out characters that don't go well in filenames...
             conname(conname==':')=[];
             conname(conname==' ')=[];
