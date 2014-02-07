@@ -66,14 +66,9 @@ fprintf('dumping %d dissimilarities to disk...',disvol.nsamples);
 tic;
 parfor d = 1:disvol.nsamples
     filenames{d} = fullfile(outdir,sprintf('dissimilarity_%04d.nii',d));
-    vol = zeros(V.dim);
-    vol(inds) = datamat(d,:);
-    outV = V;
-    outV.fname = filenames{d};
-    spm_write_vol(outV,vol);
+    datavec2nifti(datamat(d,:),inds,filenames{d},V);
 end
 fprintf('finished in %s\n',seconds2str(toc));
-
 
 VI = spm_vol(char(filenames));
 % normalise in memory (spm_write_sn doesn't return all headers unless you
