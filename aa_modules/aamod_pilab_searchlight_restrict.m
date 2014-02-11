@@ -9,9 +9,6 @@ switch task
     case 'report'
         
     case 'doit'
-        % get volume
-        vpath = aas_getfiles_bystream(aap,subj,'pilab_volume');
-        vol = loadbetter(vpath);
         % searchlight diagnostic
         spath = aas_getfiles_bystream(aap,subj,'pilab_searchlight_nvox');
         xyz_n = spm_read_vols(spm_vol(spath));
@@ -21,22 +18,23 @@ switch task
         spath = aas_getfiles_bystream(aap,subj,...
             'pilab_rois');
         spheres = loadbetter(spath);
-        vol = spheres.vol;
         % intersect to generate new mask
         ts = aap.tasklist.currenttask.settings;
-        mask = vol.mask;
+        mask = spheres.mask;
         % pilab mask
         mpath = aas_getfiles_bystream(aap,subj,'pilab_searchlight_nvox');
         mV = spm_vol(mpath);
-        mxyz = spm_read_vols(mV);
+        mxyz = spm_read_vols(mV) ~= 0;
         assert(isequal(mxyz,mask),...
             'mismatched pilab_mask and searchlight mask')
         mask = (mask>0) & (xyz_r >= ts.minradius) & ...
             (xyz_r <= ts.maxradius) & (xyz_n >= ts.minvox) & ...
             (xyz_n <= ts.maxvox);
-        ngone = vol.nfeatures-sum(mask(:)>0);
+        ngone = spheres.nfeatures-sum(mask(:));
         fprintf('eliminated %d features (%.2f%% of total)\n',...
-          ngone,100*(ngone/vol.nfeatures));
+          ngone,100*(ngone/spheres.nfeatures));
+        mind = find(mask);
+        goodind = ismember(spheres.linind,mind);
         spheres = spheres(goodind,goodind);
         save(spath,'spheres');
         aap = aas_desc_outputs(aap,subj,'pilab_rois',spath);
