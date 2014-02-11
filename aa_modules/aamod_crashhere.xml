@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='crash!' modality='MRI' >
+            <fps>8</fps>
+            <inputstreams>
+                <!-- light input to crash fast -->
+                <stream>epi_dicom_header</stream>
+            </inputstreams>
+            <outputstreams>
+            </outputstreams>
+        </currenttask>
+    </tasklist>
+</aap>
