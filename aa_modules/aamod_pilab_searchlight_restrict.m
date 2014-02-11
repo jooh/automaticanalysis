@@ -25,6 +25,12 @@ switch task
         % intersect to generate new mask
         ts = aap.tasklist.currenttask.settings;
         mask = vol.mask;
+        % pilab mask
+        mpath = aas_getfiles_bystream(aap,subj,'pilab_searchlight_nvox');
+        mV = spm_vol(mpath);
+        mxyz = spm_read_vols(mV);
+        assert(isequal(mxyz,mask),...
+            'mismatched pilab_mask and searchlight mask')
         mask = (mask>0) & (xyz_r >= ts.minradius) & ...
             (xyz_r <= ts.maxradius) & (xyz_n >= ts.minvox) & ...
             (xyz_n <= ts.maxvox);
@@ -34,6 +40,8 @@ switch task
         spheres = spheres(goodind,goodind);
         save(spath,'spheres');
         aap = aas_desc_outputs(aap,subj,'pilab_rois',spath);
+        spm_write_vol(mV,mask);
+        aap = aas_desc_outputs(aap,subj,'pilab_mask',mpath);
         % aaand diagnostics
         for dia = {'nvox','radius','nspheres'}
             streamname = ['pilab_searchlight_' dia{1}];

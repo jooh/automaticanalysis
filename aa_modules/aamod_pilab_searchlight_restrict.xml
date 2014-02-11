@@ -18,6 +18,7 @@
                 <stream>pilab_searchlight_radius</stream>
                 <stream>pilab_searchlight_nvox</stream>
                 <stream>pilab_searchlight_nspheres</stream>
+                <stream>pilab_mask</stream>
             </inputstreams>
             
             <outputstreams>
@@ -25,6 +26,7 @@
                 <stream>pilab_searchlight_radius</stream>
                 <stream>pilab_searchlight_nvox</stream>
                 <stream>pilab_searchlight_nspheres</stream>
+                <stream>pilab_mask</stream>
             </outputstreams>
             
         </currenttask>
