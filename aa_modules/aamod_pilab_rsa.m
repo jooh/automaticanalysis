@@ -19,7 +19,6 @@ switch task
         predictors(ts.removepredictorinds) = [];
         ncon = length(predictors);
 
-
         % this is a bit hacky but sometimes it is advantageous to drop the
         % precision before carting off to roidata_rsa
         if ~isempty(ts.setclass)
