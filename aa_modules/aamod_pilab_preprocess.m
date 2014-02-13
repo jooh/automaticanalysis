@@ -14,12 +14,6 @@ switch task
         epivol = loadbetter(epipath);
         ts = aap.tasklist.currenttask.settings;
 
-        if ~isempty(ts.setclass)
-            fprintf('setting data to %s\n',ts.setclass);
-            epivol.data = feval(ts.setclass,epivol.data);
-            designvol.data = feval(ts.setclass,designvol.data);
-        end
-
         % de-trend config
         if strcmp(ts.covariatedeg,'adaptive')
             ts.covariatedeg = vol2covdeg(epivol);
@@ -41,6 +35,9 @@ switch task
         if ts.sgdetrend
             fprintf('Savitzky-Golay detrend (k=%.0f,f=%.0f)\n',...
                 ts.sgolayK,ts.sgolayF);
+            % insure double
+            epivol.data = double(epivol.data);
+            designvol.data = double(designvol.data);
             sgdetrend(epivol,ts.sgolayK,ts.sgolayF);
             sgdetrend(designvol,ts.sgolayK,ts.sgolayF);
         end
@@ -87,6 +84,13 @@ switch task
                         designvol.data(chunkind,:),covariates(chunkind,:));
                 end
             end
+        end
+
+        % now set class last - so maximal precision for pre-processing
+        if ~isempty(ts.setclass)
+            fprintf('setting data to %s\n',ts.setclass);
+            epivol.data = feval(ts.setclass,epivol.data);
+            designvol.data = feval(ts.setclass,designvol.data);
         end
 
 
