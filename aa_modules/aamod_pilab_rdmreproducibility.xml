@@ -12,13 +12,13 @@
 
             <outputmode>searchlight</outputmode>
             <ylims></ylims>
+            <maskfun></maskfun>
             
             <inputstreams>
                 <stream>pilab_data_rdms_sess</stream>
             </inputstreams>
             <outputstreams>
-                <stream>pilab_rdmrep_byroi</stream>
-                <stream>pilab_rdmrep_bysplit</stream>
+                <stream>pilab_rsa_r</stream>
             </outputstreams>
             
         </currenttask>

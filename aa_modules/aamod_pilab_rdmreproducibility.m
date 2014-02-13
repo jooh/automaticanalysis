@@ -16,9 +16,7 @@ switch task
         roinames = disvols{1}.meta.features.names;
         nroi = disvols{1}.nfeatures;
 
-        [rbyroi,rbysplit] = rdmreproducibility(disvols{:});
-
-        % make outputs
+        % prepare outputs
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         resdir = fullfile(pidir,'results');
         mkdirifneeded(resdir);
@@ -26,21 +24,57 @@ switch task
         mkdirifneeded(figdir);
 
         ts = aap.tasklist.currenttask.settings;
+        % TODO - support maskfun - re-do analysis with different
+        % dissimilarities masked out. Some hairy indexing of disvol rows
+        % required.
+
+        ndis = disvols{1}.nsamples;
+        ncon = npairs2n(ndis);
+        if isempty(ts.maskfun)
+            baserdm = ones(ncon,ncon);
+            baserdm(logical(eye(ncon))) = 0;
+            masks = struct('name','all','RDM',baserdm);
+        else
+            masks = feval(maskfun);
+            % input check
+            rdmat = asrdmvec(masks);
+            assert(numel(unique(rdmat(~isnan(rdmat))))==1,...
+                'rdms must be mean style (one level only)');
+        end
+        nmask = length(masks)
+        for m = 1:nmask
+            tic;
+            fprintf('running rdmreproducibility analysis %d of %d...',...
+                m,nmask);
+            % mask out the conditions of no interest
+            inds = ~isnan(asrdmvec(masks(m).RDM));
+            maskvols = cellfun(@(thisvol)thisvol(inds,:),disvols,...
+                'uniformoutput',false);
+            [rdmrep(m).rbyroi,rdmrep(m).rbysplit] = ...
+                rdmreproducibility(maskvols{:});
+            fprintf(' finished in %s\n',seconds2str(toc));
+        end
+
         switch ts.outputmode
             case 'searchlight'
-                % write out nifti
-                roiout = fullfile(resdir,'rdmrep.nii');
-                disvols{1}.data2file(rbyroi,roiout);
-                % make diagnostic figure
-                if isempty(ts.ylims)
-                    ts.ylims = [0 1];
+                for m = 1:nmask
+                    % write out nifti
+                    roiout{m} = fullfile(resdir,sprintf('rdmrep_%s.nii',...
+                        masks(m).name));
+                    disvols{1}.data2file(rdmrep(m).rbyroi,roiout{m});
+                    % make diagnostic figure
+                    if isempty(ts.ylims)
+                        ts.ylims = [0 1];
+                    end
+                    F = slicefigure(...
+                        disvols{1}.data2mat(rdmrep(m).rbyroi),ts.ylims,...
+                        'mean spearman rho');
+                    title('RDM reproducibility');
+                    printstandard(stripext(roiout{m}));
+                    close(F);
                 end
-                F = slicefigure(disvols{1}.data2mat(rbyroi),ts.ylims,...
-                    'mean spearman rho');
-                title('RDM reproducibility');
-                printstandard(fullfile(figdir,'rdmrep'));
-                close(F);
             case 'roi'
+                error('roi outputmode currently unsupported');
                 % just save mat
                 roiout = fullfile(resdir,'rdmrep.mat');
                 save(roiout,'rbyroi');
@@ -70,26 +104,27 @@ switch task
         % make split-based plot - same regardless of input data
         splitout = fullfile(resdir,'rdmrep_bysplit.mat');
         save(splitout,'rbysplit');
-        F = figure;
-        x = 1:nsplit;
-        B = bar(x,rbysplit,.6,'edgecolor','none','facecolor',[.6 .6 .6]);
-        ylabel('mean spearman rho')
-        if ~isempty(ts.ylims)
-            ylim(ts.ylims);
+        for m = 1:nmask
+            F = figure;
+            x = 1:nsplit;
+            B = bar(x,rdmrep(m).rbysplit,.6,'edgecolor','none',...
+                'facecolor',[.6 .6 .6]);
+            ylabel('mean spearman rho');
+            if ~isempty(ts.ylims)
+                ylim(ts.ylims);
+            end
+            set(gca,'xtick',x);
+            xlim([x(1)-1 1+x(end)]);
+            xlabel('split');
+            box off
+            printstandard(fullfile(figdir,sprintf('rdmrep_bysplit_%s',...
+                masks(m).name)));
+            close(F);
         end
-        set(gca,'xtick',x);
-        xlim([x(1)-1 1+x(end)]);
-        xlabel('split');
-        box off
-        printstandard(fullfile(figdir,'rdmrep_bysplit'));
-        close(F);
 
-        % describe outputs
-        aap=aas_desc_outputs(aap,subj,'pilab_rdmrep_byroi',roiout);
-        aap=aas_desc_outputs(aap,subj,'pilab_rdmrep_bysplit',splitout);
-
+        % describe output - now rsa_r so we can plug into rsa_rfx module
+        aap=aas_desc_outputs(aap,subj,'pilab_rsa_r',roiout);
     case 'checkrequirements'
-        
     otherwise
         aas_log(aap,1,sprintf('Unknown task %s',task));
 end
