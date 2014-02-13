@@ -22,6 +22,7 @@
             <nperm>1</nperm>
             <nboot>0</nboot>
             <removepredictorinds></removepredictorinds>
+            <predictorfun></predictorfun>
 
             <!-- arguments used here -->
             <outputmode>roi</outputmode>

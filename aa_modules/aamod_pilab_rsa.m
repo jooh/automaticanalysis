@@ -13,9 +13,15 @@ switch task
 
         % predictor RDMs
         ts = aap.tasklist.currenttask.settings;
-        predictpath = aas_getfiles_bystream(aap,subj,...
-            'pilab_rsapredictors');
-        predictors = loadbetter(predictpath);
+        if isempty(ts.predictorfun)
+            predictpath = aas_getfiles_bystream(aap,subj,...
+                'pilab_rsapredictors');
+            predictors = loadbetter(predictpath);
+        else
+            fprintf('using custom predictor RDMs from %s\n',...
+                ts.predictorfun);
+            predictors = feval(ts.predictorfun);
+        end
         predictors(ts.removepredictorinds) = [];
         ncon = length(predictors);
 
