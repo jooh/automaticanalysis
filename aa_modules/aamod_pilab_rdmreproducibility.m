@@ -35,13 +35,13 @@ switch task
             baserdm(logical(eye(ncon))) = 0;
             masks = struct('name','all','RDM',baserdm);
         else
-            masks = feval(maskfun);
+            masks = feval(ts.maskfun);
             % input check
             rdmat = asrdmvec(masks);
             assert(numel(unique(rdmat(~isnan(rdmat))))==1,...
                 'rdms must be mean style (one level only)');
         end
-        nmask = length(masks)
+        nmask = length(masks);
         for m = 1:nmask
             tic;
             fprintf('running rdmreproducibility analysis %d of %d...',...
@@ -50,7 +50,7 @@ switch task
             inds = ~isnan(asrdmvec(masks(m).RDM));
             maskvols = cellfun(@(thisvol)thisvol(inds,:),disvols,...
                 'uniformoutput',false);
-            [rdmrep(m).rbyroi,rdmrep(m).rbysplit] = ...
+            [rdmrep{m},rbysplit{m}] = ...
                 rdmreproducibility(maskvols{:});
             fprintf(' finished in %s\n',seconds2str(toc));
         end
@@ -61,13 +61,13 @@ switch task
                     % write out nifti
                     roiout{m} = fullfile(resdir,sprintf('rdmrep_%s.nii',...
                         masks(m).name));
-                    disvols{1}.data2file(rdmrep(m).rbyroi,roiout{m});
+                    disvols{1}.data2file(rdmrep{m},roiout{m});
                     % make diagnostic figure
                     if isempty(ts.ylims)
                         ts.ylims = [0 1];
                     end
                     F = slicefigure(...
-                        disvols{1}.data2mat(rdmrep(m).rbyroi),ts.ylims,...
+                        disvols{1}.data2mat(rdmrep{m}),ts.ylims,...
                         'mean spearman rho');
                     title('RDM reproducibility');
                     printstandard(stripext(roiout{m}));
@@ -77,7 +77,7 @@ switch task
                 error('roi outputmode currently unsupported');
                 % just save mat
                 roiout = fullfile(resdir,'rdmrep.mat');
-                save(roiout,'rbyroi');
+                save(roiout,'rdmrep');
                 % make bar graph 
                 F = figure;
                 x = 1:nroi;
@@ -107,7 +107,7 @@ switch task
         for m = 1:nmask
             F = figure;
             x = 1:nsplit;
-            B = bar(x,rdmrep(m).rbysplit,.6,'edgecolor','none',...
+            B = bar(x,rbysplit{m},.6,'edgecolor','none',...
                 'facecolor',[.6 .6 .6]);
             ylabel('mean spearman rho');
             if ~isempty(ts.ylims)
@@ -120,6 +120,7 @@ switch task
             printstandard(fullfile(figdir,sprintf('rdmrep_bysplit_%s',...
                 masks(m).name)));
             close(F);
+            drawnow;
         end
 
         % describe output - now rsa_r so we can plug into rsa_rfx module
