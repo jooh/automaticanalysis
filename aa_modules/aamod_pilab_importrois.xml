@@ -9,6 +9,7 @@
             <permanenceofoutput>1</permanenceofoutput>
             <usesmoothrois>1</usesmoothrois>
             <roiroot></roiroot>
+            <subdir></subdir>
             <outputstreams>
                 <stream>pilab_rois</stream>
             </outputstreams>

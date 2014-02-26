@@ -9,8 +9,11 @@ switch task
     case 'doit'
         % find subject name
         subname = aap.acq_details.subjects(subj).mriname;
-        roidir = fullfile(aap.tasklist.currenttask.settings.roiroot,...
-            subname);
+        ts = aap.tasklist.currenttask.settings;
+        roidir = fullfile(ts.roiroot,subname);
+        if ~isempty(ts.subdir)
+            roidir = fullfile(roidir,ts.subdir);
+        end
         assert(exist(roidir,'dir')~=0,'no roi dir found: %s',roidir);
 
         if aap.tasklist.currenttask.settings.usesmoothrois
@@ -18,13 +21,14 @@ switch task
         else
             target = 'roivol_unsm.mat';
         end
-        roivol = loadbetter(fullfile(roidir,target));
-
-        % intersect ROI with pilab mask
-        %pipath = aas_getfiles_bystream(aap,subj,'pilab_volume');
-        %pivol = loadbetter(pipath);
-        %goodinds = find(roivol.mask & pivol.mask);
-        %roivol = roivol(:,goodinds);
+        potvol = fullfile(roidir,target);
+        if exist(potvol,'file') ~= 0
+            fprintf('loading rois from roivol %s\n',potvol);
+            roivol = loadbetter(fullfile(roidir,target));
+        else
+            fprintf('loading rois from directory %s\n',roidir);
+            roivol = roidir2vol(roidir);
+        end
 
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         mkdirifneeded(pidir);
