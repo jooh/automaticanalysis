@@ -22,18 +22,6 @@ switch task
             'pilab_rois');
         rois = loadbetter(roipath);
 
-        % find roi masks
-        subname = aap.acq_details.subjects(subj).mriname;
-        roidir = fullfile(ts.roiroot,subname);
-        if ~isempty(ts.subdir)
-            roidir = fullfile(roidir,ts.subdir);
-        end
-        assert(exist(roidir,'dir')~=0,'no roi dir found: %s',roidir);
-        fprintf('loading rois from directory %s\n',roidir);
-        maskvol = roidir2vol(roidir);
-
-        % make sure we have the same masks, ROIs and voxels across splits
-        [rois,epivol,maskvol] = intersectvols(rois,epivol,maskvol);
 
         % parse input arguments
         if ~iscell(ts.glmvarargs)
@@ -75,21 +63,37 @@ switch task
         ncon = length(predictors);
         nsizes = length(ts.ns);
 
-        % for each mask
-        for mask = 1:maskvol.nsamples
-            maskname = maskvol.meta.samples.names{mask};
-            fprintf('\nrunning %s (%d of %d)...\n',maskname,mask,...
-                maskvol.nsamples);
-            maskind = maskvol.data(mask,:)~=0;
-            epimask = epivol(:,maskind);
-            roimask = rois(maskind,maskind);
+        % for each super-split (roi defining and testing split)
+        for super = 1:nsuper
+            fprintf('running super split %d of %d...\n',super,nsuper)
+            % figure out which data will be used to identify ROI and
+            % which to test
+            thissuper = usuper(super);
 
-            % for each super-split (roi defining and testing split)
-            for super = 1:nsuper
-                fprintf('running super split %d of %d...\n',super,nsuper)
-                % figure out which data will be used to identify ROI and
-                % which to test
-                thissuper = usuper(super);
+            % find roi masks (possibly split-specific)
+            roidir = fullfile(ts.roiroot,...
+                aap.acq_details.subjects(subj).mriname);
+            if ~isempty(ts.subdir)
+                if iscell(ts.subdir)
+                    roidir = fullfile(roidir,ts.subdir{super});
+                else
+                    roidir = fullfile(roidir,ts.subdir);
+                end
+            end
+            assert(exist(roidir,'dir')~=0,'no roi dir found: %s',roidir);
+            fprintf('loading rois from directory %s\n',roidir);
+            maskvol = roidir2vol(roidir);
+            % make sure we have the same masks, ROIs and voxels across splits
+            [rois,epivol,maskvol] = intersectvols(rois,epivol,maskvol);
+
+            % for each mask
+            for mask = 1:maskvol.nsamples
+                maskname = maskvol.meta.samples.names{mask};
+                fprintf('\nrunning %s (%d of %d)...\n',maskname,mask,...
+                    maskvol.nsamples);
+                maskind = maskvol.data(mask,:)~=0;
+                epimask = epivol(:,maskind);
+                roimask = rois(maskind,maskind);
 
                 fprintf('1. defining searchlight rois...\n')
                 % compute searchlight RDMs in training split (separately
@@ -162,11 +166,14 @@ switch task
                     'batchsize',ts.batchsize);
                 % clear for independence safety
                 clear epitest designtest testind testchunks
-            end % super = 1:nsuper
+            end % mask = 1:maskvol.nsamples 
 
-            % combine the splits into one disvol
+            fprintf('---------------------------------\n');
+        end % super = 1:nsuper
+
+        % combine the splits into one disvol
+        for mask = 1:maskvol.nsamples
             for super = 1:nsuper
-                % we need to get ROI
                 disdata{super} = splitdisvol{mask,super}.data;
                 disfeat(super) = splitdisvol{mask,super}.meta.features;
             end
@@ -175,9 +182,7 @@ switch task
             roimeta = collapsestruct(disfeat,@mean);
             maskdisvol{mask} = BaseVolume(meandis,...
                 'metafeatures',roimeta);
-            fprintf('---------------------------------\n');
-        end % mask = 1:maskvol.nsamples
-
+        end
         % collapse all the mask ROIs to one big volume
         % (here we may run into mask trouble)
         meandisvol = cat(2,maskdisvol{:});
