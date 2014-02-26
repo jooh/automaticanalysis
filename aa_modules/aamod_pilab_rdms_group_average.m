@@ -84,7 +84,7 @@ switch task
                         sesspaths(x,:)),1:nsess,'uniformoutput',false);
                 end
                 % get all the possible rois
-                allnames = cellfun(@(d)d.meta.features.names,...
+                allnames = cellfun(@(d)d.meta.features.names(:)',...
                     meanrdms_all,'uniformoutput',false);
                 allnames = cat(2,allnames{:});
                 % attempt to preserve original ROI order (this will only
