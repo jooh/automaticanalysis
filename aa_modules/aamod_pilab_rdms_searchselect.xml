@@ -20,6 +20,7 @@
             <splitrsaclass>SplitRankRSA</splitrsaclass>
             <splitrsaclassargs></splitrsaclassargs>
             <split></split>
+            <testsplit></testsplit>
             <cvsplit></cvsplit>
             <glmclass>GLM</glmclass>
             <glmvarargs>
