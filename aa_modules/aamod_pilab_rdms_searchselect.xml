@@ -36,6 +36,7 @@
                 <stream>pilab_epi</stream>
                 <stream>pilab_design</stream>
                 <stream>pilab_rois</stream>
+                <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_data_rdms_sess</stream>
