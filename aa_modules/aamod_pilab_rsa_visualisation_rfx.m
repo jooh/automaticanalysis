@@ -15,9 +15,6 @@ switch task
         pidir = fullfile(aas_getstudypath(aap),'pilab');
         figdir = fullfile(pidir,'figures');
 
-        plot_lindisc(figdir,meanres,'mtarget',ts.mtarget,'errtarget',...
-            ts.errtarget,'ptarget',ts.ptarget,'mlabel',ts.mlabel,...
-            'errlabel',ts.errlabel,'pthresh',ts.pthresh);
         if ~isempty(ts.pluginpath)
             % call on mean
             feval(ts.pluginpath,figdir,meanres,'mtarget',ts.mtarget,...
@@ -25,6 +22,11 @@ switch task
                 'mlabel',ts.mlabel,'errlabel',ts.errlabel,...
                 'pthresh',ts.pthresh);
         end
+
+        % standard plots
+        plot_lindisc(figdir,meanres,'mtarget',ts.mtarget,'errtarget',...
+            ts.errtarget,'ptarget',ts.ptarget,'mlabel',ts.mlabel,...
+            'errlabel',ts.errlabel,'pthresh',ts.pthresh);
 
     case 'checkrequirements'
         

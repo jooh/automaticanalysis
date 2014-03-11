@@ -31,6 +31,7 @@
             <minvoxeln>0</minvoxeln>
             <batchsize>10000</batchsize>
             <setclass></setclass>
+            <crosscon></crosscon>
             
             <inputstreams>
                 <stream>pilab_epi</stream>

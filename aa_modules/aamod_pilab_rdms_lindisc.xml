@@ -9,9 +9,7 @@
             </qsub>
             <permanenceofoutput>3</permanenceofoutput>
 
-            <!-- parameter for splitvol -->
             <split></split>
-            <!-- (goes to split parameter) -->
             <cvsplit></cvsplit>
             <glmclass>GLM</glmclass>
             <glmvarargs>
@@ -19,11 +17,10 @@
             </glmvarargs>
             <crossvalidate>0</crossvalidate>
             <sterrunits>1</sterrunits>
-
-            <!-- used here-->
             <minvoxeln>0</minvoxeln>
             <batchsize>10000</batchsize>
             <setclass></setclass>
+            <crosscon></crosscon>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
