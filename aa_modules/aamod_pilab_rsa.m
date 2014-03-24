@@ -22,6 +22,11 @@ switch task
                 ts.predictorfun);
             predictors = feval(ts.predictorfun);
         end
+        if ~isempty(ts.selectpredictorinds)
+            assert(isempty(ts.removepredictorinds),...
+                'cannot both select and remove predictor inds');
+            predictors = predictors(ts.selectpredictorinds);
+        end
         predictors(ts.removepredictorinds) = [];
         ncon = length(predictors);
 
