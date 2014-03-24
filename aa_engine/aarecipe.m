@@ -189,12 +189,13 @@ else
             
             % Get a list of all the branch IDs that exist in the output
             oBranchIDs = [outstages.module.branchID];
-            [oLabels oIndex] = unique(oBranchIDs);
+            % AH HA - r2013a breaks old unique indexing here
+            [oLabels oIndex] = unique(oBranchIDs,'last');
             numOutBranches = length(oLabels);
             
             % Get a list of all the branch IDs that exist in the new stuff
             nBranchIDs = [extrastages.module.branchID];
-            [nLabels nIndex] = unique(nBranchIDs);
+            [nLabels nIndex] = unique(nBranchIDs,'last');
             numNewBranches = length(nLabels);
             
             % Number of stages in the new stuff
