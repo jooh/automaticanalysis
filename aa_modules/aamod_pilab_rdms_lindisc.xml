@@ -18,9 +18,10 @@
             <crossvalidate>0</crossvalidate>
             <sterrunits>1</sterrunits>
             <minvoxeln>0</minvoxeln>
-            <batchsize>10000</batchsize>
+            <batchsize>5000</batchsize>
             <setclass></setclass>
             <crosscon></crosscon>
+            <searchvol>0</searchvol>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
