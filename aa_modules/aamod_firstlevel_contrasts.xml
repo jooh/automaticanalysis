@@ -83,6 +83,7 @@ You must specify one or more contrasts here using one of the following formats
         </contrast>
     </contrasts>
 -->
+            <contrastplugin></contrastplugin>
             <contrasts>
                 <subject></subject>
                 <eachagainstbaseline>0</eachagainstbaseline>
