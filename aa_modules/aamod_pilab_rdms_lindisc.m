@@ -54,6 +54,7 @@ switch task
             'sterrunits',ts.sterrunits,'crossvalidate',ts.crossvalidate,...
             'batchsize',ts.batchsize,'crosscon',ts.crosscon,...
             'searchvol',ts.searchvol);
+
         outpath_mean = fullfile(pidir,'rdms_mean.mat');
         save(outpath_mean,'disvol');
 
