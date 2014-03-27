@@ -21,6 +21,7 @@
             </splitrsaclassargs>
             <nperm>1</nperm>
             <nboot>0</nboot>
+            <selectpredictorinds></selectpredictorinds>
             <removepredictorinds></removepredictorinds>
             <predictorfun></predictorfun>
 

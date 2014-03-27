@@ -11,30 +11,33 @@
 
             <roiroot></roiroot>
             <subdir></subdir>
-            <supersplit></supersplit>
             <predictorfun></predictorfun>
             <removepredictorinds></removepredictorinds>
-            <ns>1 10 100 1000</ns>
+            <selectpredictorinds></selectpredictorinds>
+
+            <!-- arguments for roidata2rdmvol_lindisc_searchselect -->
+            <maskns>1 10 100 1000</maskns>
             <rsaclass>RankRSA</rsaclass>
             <rsaclassargs></rsaclassargs>
-            <splitrsaclass>SplitRankRSA</splitrsaclass>
-            <splitrsaclassargs></splitrsaclassargs>
             <split></split>
+            <subsplit></subsplit>
+            <testsubsplit></testsubsplit>
             <cvsplit></cvsplit>
             <glmclass>GLM</glmclass>
             <glmvarargs>
                 <item></item>
             </glmvarargs>
-            <crossvalidate>0</crossvalidate>
+            <crossvalidate>1</crossvalidate>
             <sterrunits>1</sterrunits>
             <minvoxeln>0</minvoxeln>
-            <batchsize>10000</batchsize>
             <setclass></setclass>
+            <crosscon></crosscon>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
                 <stream>pilab_design</stream>
                 <stream>pilab_rois</stream>
+                <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_data_rdms_sess</stream>

@@ -55,10 +55,9 @@ switch task
             selected_sessions = 1:nsess;
             nsess_all = nsess;
         end
-
         
-        % Load up contrasts from task settings
         [fle subjname ext]=fileparts(subj_dir);
+        % Load up contrasts from task settings
         contrasts_set=find(strcmp({ts.contrasts.subject},subjname));
         if (isempty(contrasts_set))
             % Try for wildcard
@@ -67,8 +66,13 @@ switch task
                 aas_log(aap,true,'Can''t find declaration of what contrasts to use - insert this in a local copy of aamod_firstlevel_contrasts.xml or put into user script');
             end;
         end
-        
         contrasts=ts.contrasts(contrasts_set);
+
+        if ~isempty(ts.contrastplugin)
+            % use a function plugin to overwrite current cons
+            contrasts.con = feval(ts.contrastplugin,subjname);
+        end
+
         % add contrasts for each task regressor v baseline?
         if contrasts.eachagainstbaseline
             basev = zeros(1,length(SPM.Sess(1).col));

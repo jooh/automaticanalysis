@@ -42,11 +42,7 @@ switch task
 
         % check that parfor is available
         if ~matlabpool('size')
-            try
-                matlabpool;
-            catch
-                warning('no matlabpool available')
-            end
+            warning('no matlabpool available')
         end
 
         % prepare output
@@ -56,7 +52,9 @@ switch task
             designvol,epivol,'split',ts.split,'glmvarargs',...
             ts.glmvarargs,'cvsplit',ts.cvsplit,'glmclass',ts.glmclass,...
             'sterrunits',ts.sterrunits,'crossvalidate',ts.crossvalidate,...
-            'batchsize',ts.batchsize);
+            'batchsize',ts.batchsize,'crosscon',ts.crosscon,...
+            'searchvol',ts.searchvol);
+
         outpath_mean = fullfile(pidir,'rdms_mean.mat');
         save(outpath_mean,'disvol');
 
