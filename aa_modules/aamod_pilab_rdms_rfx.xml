@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='RFX analysis of RDM discrimnants' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <nperm>1</nperm>
+            <nboot>0</nboot>
+
+            <inputstreams>
+                <stream>pilab_data_rdms_mean</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_rdms_rfx</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
