@@ -11,10 +11,8 @@
             <permanenceofoutput>3</permanenceofoutput>
 
             <maxn>200</maxn>
-            <alphacolor></alphacolor>
             <nrows>2</nrows>
             <cmap></cmap>
-            <mdstimsize></mdstimsize>
 
             <inputstreams>
                 <stream>pilab_data_rdms_mean</stream>

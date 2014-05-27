@@ -10,14 +10,20 @@
             
             <permanenceofoutput>3</permanenceofoutput>
 
-            <maxn>200</maxn>
-            <alphacolor></alphacolor>
+            <!-- for plotrdms_batch -->
             <nrows>2</nrows>
             <cmap></cmap>
-            <mdstimsize></mdstimsize>
+            <gridlines></gridlines>
+            <gridcolor></gridcolor>
+            <ranktransform>1</ranktransform>
+
+            <!-- for here -->
+            <maxn>200</maxn>
+            <pluginpath></pluginpath>
+            <target>mean</target>
 
             <inputstreams>
-                <stream>pilab_data_rdms_group_mean</stream>
+                <stream>pilab_rdms_rfx</stream>
                 <stream>pilab_stimuli</stream>
             </inputstreams>
             <outputstreams>
