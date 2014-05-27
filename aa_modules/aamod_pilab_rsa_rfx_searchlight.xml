@@ -12,6 +12,9 @@
             <nperm>1</nperm>
             <nboot>0</nboot>
             <transfun></transfun>
+            <varsmoothfwhm></varsmoothfwhm>
+            <setclass></setclass>
+            <contrasts></contrasts>
             
             <inputstreams>
                 <stream>pilab_rsa_r</stream>
