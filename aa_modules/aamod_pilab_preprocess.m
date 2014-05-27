@@ -93,6 +93,13 @@ switch task
             designvol.data = feval(ts.setclass,designvol.data);
         end
 
+        if ~isempty(ts.resortind)
+            if ischar(ts.resortind)
+                ts.resortind = feval(ts.resortind,designvol.nfeatures);
+            end
+            fprintf('resorting regressors in designvol.\n');
+            designvol = designvol(:,ts.resortind);
+        end
 
         % output
         fprintf('saving...\n');

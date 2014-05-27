@@ -23,6 +23,9 @@
 
             <!-- downcasting to lower precision -->
             <setclass></setclass>
+
+            <!-- sorting of regressors -->
+            <resortind></resortind>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
