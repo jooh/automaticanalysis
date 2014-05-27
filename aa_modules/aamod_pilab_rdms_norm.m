@@ -54,11 +54,11 @@ switch task
         aas_log(aap,1,sprintf('Unknown task %s',task));
 end
 
-function normdisvol = dumptodiskandnorm(disvol,segpath,outdir,mask)
+function normdisvol = dumptodiskandnorm(disvol,segpath,outdir,normmask)
 
 % first dump each dissimilarity to disk
 filenames = cell(disvol.nsamples,1);
-inds = disvol.linind;
+mask = disvol.mask;
 V = disvol.header;
 datamat = disvol.data;
 
@@ -66,13 +66,13 @@ fprintf('dumping %d dissimilarities to disk...',disvol.nsamples);
 tic;
 parfor d = 1:disvol.nsamples
     filenames{d} = fullfile(outdir,sprintf('dissimilarity_%04d.nii',d));
-    datavec2nifti(datamat(d,:),inds,filenames{d},V);
+    datavec2nifti(datamat(d,:),mask,filenames{d},V);
 end
 fprintf('finished in %s\n',seconds2str(toc));
 
 VI = spm_vol(char(filenames));
 % normalise in memory (spm_write_sn doesn't return all headers unless you
-% wrap it in arrayfun like this)
+% wrap it in a loop like this)
 fprintf('normalising dissimilarities...');
 tic;
 parfor v = 1:length(VI)
@@ -84,4 +84,5 @@ fprintf('finished in %s\n',seconds2str(toc));
 dat = {VO.dat};
 dat = cat(4,dat{:});
 % make new instance with header (minus the data)
-normdisvol = MriVolume(dat,mask,'header',rmfield(VO(1),'dat'));
+normdisvol = MriVolume(dat,normmask,'header',rmfield(VO(1),'dat'));
+assert(~any(isnan(normdisvol.data(:))),'nans in normalised disvol');
