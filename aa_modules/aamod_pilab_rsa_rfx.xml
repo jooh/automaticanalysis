@@ -13,6 +13,7 @@
             <nboot>0</nboot>
             <transfun></transfun>
             <targetfield>r</targetfield>
+            <contrasts></contrasts>
             
             <inputstreams>
                 <stream>pilab_rsa_r</stream>

@@ -23,7 +23,8 @@ switch task
         fprintf('running roidata_rfx with %d subjects \n',nsub);
         tic;
         meanres = roidata_rfx(subres,'nperm',ts.nperm,'nboot',ts.nboot,...
-            'targetfield',ts.targetfield,'transfun',ts.transfun);
+            'targetfield',ts.targetfield,'transfun',ts.transfun,...
+            'contrasts',ts.contrasts);
         fprintf('finished in %s.\n',seconds2str(toc));
 
         % save and describe
