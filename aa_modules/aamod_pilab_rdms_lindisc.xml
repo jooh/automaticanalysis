@@ -22,6 +22,7 @@
             <setclass></setclass>
             <crosscon></crosscon>
             <searchvol>0</searchvol>
+            <demean>0</demean>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
