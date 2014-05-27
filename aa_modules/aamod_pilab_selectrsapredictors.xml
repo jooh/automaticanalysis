@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='select RSA predictors' modality='MRI' >
+            <qsub>
+                <timeBase>1</timeBase>
+                <memoryBase>1</memoryBase>
+            </qsub>
+            <permanenceofoutput>1</permanenceofoutput>
+
+            <predictorfun></predictorfun>
+            <nrows>3</nrows>
+            <inputstreams>
+                <stream>pilab_stimuli</stream>
+                <stream>pilab_rsapredictors</stream>
+            </inputstreams>
+            
+            <outputstreams>
+                <stream>pilab_rsapredictors</stream>
+            </outputstreams>
+        </currenttask>
+    </tasklist>
+</aap>
