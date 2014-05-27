@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='import pilab stimuli' modality='MRI' >
+            <qsub>
+                <timeBase>1</timeBase>
+                <memoryBase>1</memoryBase>
+            </qsub>
+            <permanenceofoutput>1</permanenceofoutput>
+            <stimfun></stimfun>
+            <selectinds></selectinds>
+            <plotdims></plotdims>
+            <donumbers>1</donumbers>
+            <resortind></resortind>
+
+            <inputstreams>
+            </inputstreams>
+            
+            <outputstreams>
+                <stream>pilab_stimuli</stream>
+            </outputstreams>
+        </currenttask>
+    </tasklist>
+</aap>
