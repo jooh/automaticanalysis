@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='visualise group predictor RDMs' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <!-- for plotrdms_batch -->
+            <nrows>2</nrows>
+            <cmap></cmap>
+            <gridlines></gridlines>
+            <gridcolor></gridcolor>
+            <ranktransform>1</ranktransform>
+
+            <!-- for here -->
+            <pluginpath></pluginpath>
+
+            <inputstreams>
+                <stream>pilab_rsapredictors</stream>
+                <stream>pilab_stimuli</stream>
+            </inputstreams>
+            <outputstreams>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
