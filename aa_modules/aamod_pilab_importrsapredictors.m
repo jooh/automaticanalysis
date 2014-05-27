@@ -1,6 +1,7 @@
-% Create predictor RDMs for idanddistinct study.
-% [aap,resp]=aamod_pilab_rsapredictors_oneback(aap,task,subj)
-function [aap,resp]=aamod_pilab_rsapredictors_oneback(aap,task,subj)
+% Import predictor RDMs for RSA.
+%
+% [aap,resp]=aamod_pilab_importrsapredictors(aap,task,subj)
+function [aap,resp]=aamod_pilab_importrsapredictors(aap,task,subj)
 
 resp = '';
 
@@ -22,7 +23,19 @@ switch task
         % save and describe
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         mkdirifneeded(pidir);
-        outpath = fullfile(pidir,'idanddistinct_rsapredictors.mat');
+        outpath = fullfile(pidir,'pilab_rsapredictors.mat');
+
+        if ~isempty(ts.resortind)
+            if ischar(ts.resortind)
+                ts.resortind = feval(ts.resortind,numel(stimuli));
+            end
+            rdmmat = asrdmmat(rdms);
+            rdmmat = rdmmat(ts.resortind,ts.resortind,:);
+            % assume the stimuli are already sorted appropriately
+            for c = 1:length(rdms)
+                rdms(c).RDM = rdmmat(:,:,c);
+            end
+        end
         save(outpath,'rdms');
 
         figdir = fullfile(pidir,'figures');
@@ -32,30 +45,27 @@ switch task
         % Also make quick diagnostic figures
         for r = 1:length(rdms)
             % base rdm
-            F = plotrdms(rdms(r),'labels',{stimuli.image},'nrows',...
-                ts.nrows,'titles',rdms(r).name);
+            F = figure;
+            rdmplot(gca,rdms(r),'labels',{stimuli.image},'nrows',...
+                ts.nrows);
             printstandard(fullfile(figdir,['predictor_rdm_' rdms(r).name]));
             close(F);
-            im = intensity2rgb(rdms(r).RDM,jet(1e3));
+            im = intensity2rgb(rdms(r).RDM,cmap_bwr);
             imwrite(im,fullfile(figdir,sprintf('predictor_rawrdm_%s.png',...
                 rdms(r).name)),'PNG');
         end
         % show second-order RSM
-        F = figure;
-        % as big as it will go...
-        set(F,'units','pixels','position',get(0,'screensize'));
         rsm = corr(asrdmvec(rdms),'rows','pairwise','type','spearman');
-        F = plotrdms(rsm,'labels',stripbadcharacters({rdms.name},' '),...
-            'docb',true,'colorbarargs',{'label','spearman rho'},...
-            'titles','second-order similarity','fighand',F,...
-            'rotatelabels',90,'cmap',jet(1e3));
+        F = figurebetter([],'huge',1);
+        subplot(1,2,1);
+        [ax,intmap,cmap] = rdmplot(gca,rsm,'limits',[-1 1]);
+        axis(ax,'on');
+        set(ax,'yticklabel',stripbadcharacters({rdms.name},' '),...
+            'xticklabel',[]);
+        sax = subplot(1,2,2);
+        c = colorbarbetter(sax,intmap,cmap,'label','spearman rho');
         printstandard(fullfile(figdir,'predictor_so_rsm'));
         close(F);
-        % mds - nah, too many nans
-        %F = plotrdms(1-rsm,'labels',{rdms.name},'domds',true,'titles',...
-            %'second-order similarity','dordm',false);
-        %printstandard(fullfile(figdir,'predictor_so_mds'));
-        %close(F);
     case 'checkrequirements'
     otherwise
         aas_log(aap,1,sprintf('Unknown task %s',task));
