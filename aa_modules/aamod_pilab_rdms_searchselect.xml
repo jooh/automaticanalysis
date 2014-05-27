@@ -21,7 +21,6 @@
             <rsaclassargs></rsaclassargs>
             <split></split>
             <subsplit></subsplit>
-            <testsubsplit></testsubsplit>
             <cvsplit></cvsplit>
             <glmclass>GLM</glmclass>
             <glmvarargs>
