@@ -25,11 +25,14 @@ switch task
         if ~isempty(ts.selectpredictorinds)
             assert(isempty(ts.removepredictorinds),...
                 'cannot both select and remove predictor inds');
+            if ischar(ts.selectpredictorinds)
+                ts.selectpredictorinds = eval(ts.selectpredictorinds);
+            end
             predictors = predictors(ts.selectpredictorinds);
         end
         predictors(ts.removepredictorinds) = [];
         ncon = length(predictors);
-
+        
         % this is a bit hacky but sometimes it is advantageous to drop the
         % precision before carting off to roidata_rsa
         if ~isempty(ts.setclass)
@@ -40,7 +43,23 @@ switch task
             end
         end
 
-        % cart off to refactored rsapermtest function
+        % partial rho support. The beauty of this approach is that
+        % roidata_rsa does not need to know that this is the analysis we're
+        % running...
+        if ~isempty(ts.partialpredictors)
+            [~,partialind] = intersect({predictors.name},...
+                ts.partialpredictors);
+            assert(~isempty(partialind),'no match for partialpredictors');
+            assert(isempty(ts.rsaclassargs),...
+                'rsaclassargs must be empty for partial RSA');
+            assert(isempty(ts.splitrsaclass),...
+                'no split RSA support for partial RSA at present');
+            ts.rsaclassargs = {predictors(partialind)};
+            % doesn't make sense to fit these anymore
+            predictors(partialind) = [];
+        end
+        ncon = length(predictors);
+
         fprintf('running roidata_rsa with %d predictors and %d rois\n',...
             ncon,disvol.nfeatures);
         tic;
@@ -53,6 +72,19 @@ switch task
 
         % save and describe
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
+
+        if isempty(ts.outputmode)
+            switch class(disvol)
+                case 'BaseVolume'
+                    ts.outputmode = 'roi';
+                    fprintf('auto-set outputmode to roi\n');
+                case 'MriVolume'
+                    ts.outputmode = 'searchlight';
+                    fprintf('auto-set outputmode to searchlight\n');
+                otherwise
+                    error('unknown outputmode for class %s',class(disvol));
+            end
+        end
 
         switch ts.outputmode
             case 'roi'
@@ -78,7 +110,7 @@ switch task
                         ppath = fullfile(pidir,sprintf(...
                             'rsa_-log10p_%s.nii',outname));
                         disvol.data2file(-log10(res.pperm(c,:)),ppath);
-                        pfwe = maxstatpfwe(squeeze(res.nulldist(c,:,:))');
+                        pfwe = permpfwe(squeeze(res.nulldist(c,:,:))');
                         pfwepath = fullfile(pidir,sprintf(...
                             'rsa_-log10pFWE_%s.nii',outname));
                         disvol.data2file(-log10(pfwe),pfwepath);
