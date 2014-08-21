@@ -21,20 +21,25 @@
             </splitrsaclassargs>
             <nperm>1</nperm>
             <nboot>0</nboot>
-            <selectpredictorinds></selectpredictorinds>
-            <removepredictorinds></removepredictorinds>
-            <partialpredictors></partialpredictors>
-            <predictorfun></predictorfun>
+            <fitmethod></fitmethod>
+            <fitmethodargs><item></item></fitmethodargs>
+            <customfun></customfun>
 
             <!-- arguments used here -->
+            <input>mean</input>
+            <predictorfun></predictorfun>
             <outputmode></outputmode>
+            <fitmethodpredictors></fitmethodpredictors>
+            <partialpredictors></partialpredictors>
+            <selectpredictorinds></selectpredictorinds>
+            <removepredictorinds></removepredictorinds>
             <!-- gets feval'ed on data and model. Useful for e.g. dropping
                  precision to single. One could also imagine using gpuArray
                  here. -->
-            <setclass></setclass>
             
             <inputstreams>
                 <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_data_rdms_sess</stream>
                 <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>
