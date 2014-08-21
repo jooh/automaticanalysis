@@ -14,12 +14,14 @@
             <transfun></transfun>
             <targetfield>r</targetfield>
             <contrasts></contrasts>
+            <minn></minn>
             
             <inputstreams>
                 <stream>pilab_rsa_r</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_rsa_r_rfx</stream>
+                <stream>pilab_rsa_r_group</stream>
             </outputstreams>
             
         </currenttask>

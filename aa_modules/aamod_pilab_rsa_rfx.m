@@ -22,15 +22,19 @@ switch task
 
         fprintf('running roidata_rfx with %d subjects \n',nsub);
         tic;
-        meanres = roidata_rfx(subres,'nperm',ts.nperm,'nboot',ts.nboot,...
-            'targetfield',ts.targetfield,'transfun',ts.transfun,...
-            'contrasts',ts.contrasts);
+        [meanres,groupres] = roidata_rfx(subres,'nperm',ts.nperm,...
+            'nboot',ts.nboot,'targetfield',ts.targetfield,...
+            'transfun',ts.transfun,'contrasts',ts.contrasts,...
+            'minn',ts.minn);
         fprintf('finished in %s.\n',seconds2str(toc));
 
         % save and describe
         outpath = fullfile(pidir,'rsa_r_rfx.mat');
         save(outpath,'meanres');
         aap=aas_desc_outputs(aap,'pilab_rsa_r_rfx',outpath);
+        outpath = fullfile(pidir,'rsa_r_group.mat');
+        save(outpath,'groupres');
+        aap=aas_desc_outputs(aap,'pilab_rsa_r_group',outpath);
 
     case 'checkrequirements'
         
