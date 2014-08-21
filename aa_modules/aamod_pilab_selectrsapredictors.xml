@@ -9,9 +9,7 @@
             <permanenceofoutput>1</permanenceofoutput>
 
             <predictorfun></predictorfun>
-            <nrows>3</nrows>
             <inputstreams>
-                <stream>pilab_stimuli</stream>
                 <stream>pilab_rsapredictors</stream>
             </inputstreams>
             
