@@ -11,6 +11,7 @@ switch task
         % get stimuli (NB, we use subject 1's stimuli as an example)
         spath = aas_getfiles_bystream(aap,1,'pilab_stimuli');
         stimuli = loadbetter(spath);
+        groupres = loadbetter(aas_getfiles_bystream(aap,'pilab_rdms_group'));
         
         % prepare output dirs
         pidir = fullfile(aas_getstudypath(aap),'pilab');
@@ -34,6 +35,20 @@ switch task
             'cmap',ts.cmap,'nrows',ts.nrows,'gridlines',ts.gridlines,...
             'gridcolor',ts.gridcolor,'ranktransform',ts.ranktransform);
 
+        for roi = 1:numel(meanres.cols_roi)
+            roidata = squeeze(groupres.t(:,roi,:));
+            if ts.ranktransform==1
+                roidata = tiedrank(roidata);
+            end
+            % nb we omit the labels here because this figure has many
+            % panels and gets quite messy
+            F(roi) = rdmfig(roidata,meanres.z_subject,[],[],'labels',[],...
+                'cmap',ts.cmap,'gridlines',ts.gridlines,'gridcolor',...
+                ts.gridcolor);
+            set(F(roi),'name',['singles ' meanres.cols_roi{roi}]);
+        end
+        printbyname(F,figdir);
+        close(F);
 
     case 'checkrequirements'
         
