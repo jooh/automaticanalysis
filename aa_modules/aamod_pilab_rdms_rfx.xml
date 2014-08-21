@@ -18,6 +18,7 @@
             </inputstreams>
             <outputstreams>
                 <stream>pilab_rdms_rfx</stream>
+                <stream>pilab_rdms_group</stream>
             </outputstreams>
             
         </currenttask>
