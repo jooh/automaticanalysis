@@ -23,6 +23,7 @@
             
             <inputstreams>
                 <stream>pilab_rsa_r_rfx</stream>
+                <stream>pilab_rsa_r_group</stream>
             </inputstreams>
             <outputstreams>
             </outputstreams>
