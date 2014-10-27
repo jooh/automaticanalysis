@@ -44,7 +44,12 @@ switch task
         ts = aap.tasklist.currenttask.settings;
 
         if ~isempty(ts.pluginpath)
-            feval(ts.pluginpath,meanpredictors,stimuli,figdir,ts);
+            if ~iscell(ts.pluginpath)
+                ts.pluginpath = {ts.pluginpath};
+            end
+            for n = 1:numel(ts.pluginpath)
+                feval(ts.pluginpath{n},meanpredictors,stimuli,figdir,ts);
+            end
         end
 
         plotrdms_batch('data',meanpredictors,'labels',stimuli,...
