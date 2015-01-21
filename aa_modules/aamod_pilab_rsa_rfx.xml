@@ -14,10 +14,13 @@
             <transfun></transfun>
             <targetfield>r</targetfield>
             <contrasts></contrasts>
+            <customfits></customfits>
             <minn></minn>
             
             <inputstreams>
                 <stream>pilab_rsa_r</stream>
+                <stream>pilab_rsa_nulldist</stream>
+                <stream>pilab_rsa_bootdist</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_rsa_r_rfx</stream>
