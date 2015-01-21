@@ -9,6 +9,9 @@
             </qsub>
             <permanenceofoutput>3</permanenceofoutput>
 
+            <!-- match sample size (necessary for e.g. permuteruns) -->
+            <matchn>0</matchn>
+
             <!-- trend removal -->
             <covariatedeg></covariatedeg>
             <medianfilter></medianfilter>
