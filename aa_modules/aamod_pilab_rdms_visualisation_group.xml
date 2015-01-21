@@ -11,6 +11,8 @@
             <permanenceofoutput>3</permanenceofoutput>
 
             <!-- for plotrdms_batch -->
+            <rowind></rowind>
+            <colind></colind>
             <nrows>2</nrows>
             <cmap></cmap>
             <gridlines></gridlines>
@@ -21,6 +23,7 @@
             <maxn>200</maxn>
             <pluginpath></pluginpath>
             <target>mean</target>
+            <runstandardplots>1</runstandardplots>
 
             <inputstreams>
                 <stream>pilab_rdms_group</stream>
