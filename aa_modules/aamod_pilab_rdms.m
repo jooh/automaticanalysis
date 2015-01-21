@@ -82,7 +82,7 @@ switch task
             outpaths_sessrdms = [outpaths_sessrdms; outpath_sessdata];
         end
         % make average RDM across sessions and save
-        disvol = MriVolume(sumdata/vol.desc.samples.nunique.chunks,...
+        disvol = SPMVolume(sumdata/vol.desc.samples.nunique.chunks,...
             sessdisvolcell{1},'metafeatures',mfeatures);
         outpath_mean = fullfile(pidir,'rdms_mean.mat');
         save(outpath_mean,'disvol');
