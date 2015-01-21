@@ -15,14 +15,15 @@
             <glmvarargs>
                 <item></item>
             </glmvarargs>
-            <crossvalidate>0</crossvalidate>
-            <sterrunits>1</sterrunits>
+            <crossvalidate>1</crossvalidate>
+            <sterrunits>0</sterrunits>
             <minvoxeln>0</minvoxeln>
             <batchsize>5000</batchsize>
             <setclass></setclass>
             <crosscon></crosscon>
             <searchvol>0</searchvol>
             <demean>0</demean>
+            <nperms>0</nperms>
             
             <inputstreams>
                 <stream>pilab_epi</stream>
@@ -32,6 +33,8 @@
             <outputstreams>
                 <stream>pilab_data_rdms_sess</stream>
                 <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_data_rdms_nulldist</stream>
+                <stream>pilab_data_rdms_sessnulldist</stream>
             </outputstreams>
             
         </currenttask>
