@@ -13,23 +13,50 @@ switch task
             'pilab_rsa_r_group'));
         ts = aap.tasklist.currenttask.settings;
 
+        % get RDMs
+        nsub = length(aap.acq_details.subjects);
+        for s = 1:nsub
+            predictors{s} = loadbetter(aas_getfiles_bystream(aap,s,...
+                'pilab_rsapredictors'));
+        end
+        % average
+        npredict = numel(predictors{1});
+        ptest = cellfun(@numel,predictors,'uniformoutput',false);
+        assert(isequal(npredict,ptest{:}),...
+            'different n predictors across subjects');
+        for p = 1:npredict
+            meanpredictors(p).name = predictors{1}(p).name;
+            ntest = cellfun(@(thisp)thisp(p).name,predictors,...
+                'uniformoutput',false);
+            assert(isequal(meanpredictors(p).name,ntest{:}),...
+                'badly sorted predictors');
+            rdms = cellfun(@(thisp)thisp(p).RDM,predictors,...
+                'uniformoutput',false);
+            if isstruct(rdms{1})
+                meanpredictors(p).RDM = rdms{1};
+            else
+                meanpredictors(p).RDM = matmean(rdms{:});
+            end
+        end
+
         % prepare output
         pidir = fullfile(aas_getstudypath(aap),'pilab');
         figdir = fullfile(pidir,'figures');
 
+        arglist = {figdir,meanres,groupres,meanpredictors,...
+            'mtarget',ts.mtarget,...
+            'errtarget',ts.errtarget,'ptarget',ts.ptarget,...
+            'mlabel',ts.mlabel,'errlabel',ts.errlabel,...
+            'pthresh',ts.pthresh,'extracongroups',ts.extracongroups};
         if ~isempty(ts.pluginpath)
             % call on mean
-            feval(ts.pluginpath,figdir,meanres,groupres,...
-                'mtarget',ts.mtarget,...
-                'errtarget',ts.errtarget,'ptarget',ts.ptarget,...
-                'mlabel',ts.mlabel,'errlabel',ts.errlabel,...
-                'pthresh',ts.pthresh);
+            feval(ts.pluginpath,arglist{:});
         end
 
         % standard plots
-        plot_roidata(figdir,meanres,groupres,'mtarget',ts.mtarget,...
-            'errtarget',ts.errtarget,'ptarget',ts.ptarget,'mlabel',...
-            ts.mlabel,'errlabel',ts.errlabel,'pthresh',ts.pthresh);
+        if ts.runstandardplots
+            plot_roidata(arglist{:});
+        end
 
     case 'checkrequirements'
         
