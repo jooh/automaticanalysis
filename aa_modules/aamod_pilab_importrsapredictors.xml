@@ -12,7 +12,6 @@
             <nrows>3</nrows>
             <resortind></resortind>
             <inputstreams>
-                <stream>pilab_stimuli</stream>
             </inputstreams>
             
             <outputstreams>

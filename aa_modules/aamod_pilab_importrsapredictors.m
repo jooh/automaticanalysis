@@ -12,10 +12,6 @@ switch task
         % find subject name
         subname = aap.acq_details.subjects(subj).mriname;
 
-        % get stimuli
-        spath = aas_getfiles_bystream(aap,subj,'pilab_stimuli');
-        stimuli = loadbetter(spath);
-
         ts = aap.tasklist.currenttask.settings;
 
         rdms = feval(ts.predictorfun,subname,stimuli);
