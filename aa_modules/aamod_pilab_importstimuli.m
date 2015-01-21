@@ -35,6 +35,21 @@ switch task
         save(outpath,'stimuli');
         aap = aas_desc_outputs(aap,subj,'pilab_stimuli',outpath);
 
+        % write out as images
+        imdir = fullfile(pidir,'images');
+        mkdirifneeded(imdir);
+        hasalpha = isfield(stimuli,'alpha');
+        for s = 1:numel(stimuli)
+            im = stimuli(s).image;
+            args = {};
+            if hasalpha
+                args = {'alpha',stimuli(s).alpha};
+            end
+            imwrite(stimuli(s).image,...
+                fullfile(imdir,sprintf('stimulus_%02d.png',s)),'PNG',...
+                args{:});
+        end
+
         % Also make a quick diagnostic figure
         fighand = showimages(stimuli,[],ts.plotdims,[],ts.donumbers);
         figout = fullfile(pidir,...
