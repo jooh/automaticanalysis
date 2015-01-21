@@ -24,10 +24,10 @@ switch task
         % model
         spmpath = aas_getfiles_bystream(aap,subj,'firstlevel_spm');
 
-        [epivol,designvol] = spm2vol(spmpath,'mask',orgmask,...
-            'assumeconvolved=1');
-
         ts = aap.tasklist.currenttask.settings;
+        [epivol,designvol] = spm2vol(spmpath,'mask',mpath,...
+            'ignorelabels',ts.ignorelabels);
+
         if aap.tasklist.currenttask.settings.maskbybright
             % replicate GLMdenoise EPI intensity mask
             meanepi = mean(epivol.data,1);
@@ -40,9 +40,14 @@ switch task
         mask = epivol.mask;
         norg = sum(orgmask(:));
         nnow = sum(mask(:));
-        fprintf(['removed %d zero/nan/dark features from epivol ' ...
-            'and mask (%.2f%% of total)\n'],norg-nnow,100*...
+        logstr(['removed %d zero/nan/dark features from epivol ' ...
+            'and mask (%.0f%% of total)\n'],norg-nnow,100*...
             ((norg-nnow)/norg));
+
+        logstr('output designvol has %d samples, %d features\n',...
+            designvol.nsamples,designvol.nfeatures);
+        logstr('output epivol has %d samples, %d features\n',...
+            epivol.nsamples,epivol.nfeatures);
 
         % save and describe
         outdir = fullfile(aas_getsubjpath(aap,subj),'pilab');
