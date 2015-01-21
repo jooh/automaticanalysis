@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='partial model RDM from data and model RDMs' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <partialpredictors></partialpredictors>
+            <rsaclass></rsaclass>
+            <rsaclassargs>
+                <item></item>
+            </rsaclassargs>
+
+            <!-- arguments used here -->
+            <predictorfun></predictorfun>
+            <outputmode></outputmode>
+            <selectpredictorinds></selectpredictorinds>
+            <removepredictorinds></removepredictorinds>
+            
+            <inputstreams>
+                <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_rsapredictors</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_rsapredictors</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
