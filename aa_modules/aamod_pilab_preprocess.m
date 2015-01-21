@@ -14,6 +14,30 @@ switch task
         epivol = loadbetter(epipath);
         ts = aap.tasklist.currenttask.settings;
 
+        if ts.matchn
+            nperchunk = arrayfun(@(c)sum(epivol.meta.samples.chunks==c),...
+                epivol.desc.samples.unique.chunks);
+            targetn = min(nperchunk);
+            if all(targetn == nperchunk);
+                logstr('all chunks have same number of samples\n');
+            else
+                logstr('matching nsamples to smallest chunk (%d)\n',...
+                    targetn);
+                % this might actually be a tad hairy. need to apply the
+                % same to design and epi obviously
+                goodsamp = false(epivol.nsamples,1);
+                for c = 1:epivol.desc.samples.nunique.chunks
+                    chunkind = find(epivol.meta.samples.chunks == ...
+                        epivol.desc.samples.unique.chunks(c));
+                    goodsamp(chunkind(1:targetn)) = true;
+                end
+                epivol = epivol(goodsamp,:);
+                designvol = designvol(goodsamp,:);
+                logstr('removed %d samples (%2.0f%% of total)\n',...
+                    sum(~goodsamp),100*sum(~goodsamp) / numel(goodsamp));
+            end
+        end
+
         % de-trend config
         if strcmp(ts.covariatedeg,'adaptive')
             ts.covariatedeg = vol2covdeg(epivol);
@@ -21,19 +45,19 @@ switch task
 
         % first high-pass trend removal
         if ~isempty(ts.covariatedeg)
-            fprintf('polynomial detrend (degree=%.0f)\n',ts.covariatedeg);
+            logstr('polynomial detrend (degree=%.0f)\n',ts.covariatedeg);
             filterbychunk(epivol,'polydetrend',ts.covariatedeg);
             filterbychunk(designvol,'polydetrend',ts.covariatedeg);
         end
 
         if ~isempty(ts.medianfilter) && ts.medianfilter
-            fprintf('median filter (n=%.0f)\n',ts.medianfilter);
+            logstr('median filter (n=%.0f)\n',ts.medianfilter);
             filterbychunk(epivol,'medianfilter',ts.medianfilter);
             filterbychunk(designvol,'medianfilter',ts.medianfilter);
         end
 
         if ts.sgdetrend
-            fprintf('Savitzky-Golay detrend (k=%.0f,f=%.0f)\n',...
+            logstr('Savitzky-Golay detrend (k=%.0f,f=%.0f)\n',...
                 ts.sgolayK,ts.sgolayF);
             % insure double
             epivol.data = double(epivol.data);
@@ -43,7 +67,7 @@ switch task
         end
 
         if ts.zscore
-            fprintf('Z-scoring samples\n')
+            logstr('Z-scoring samples\n')
             filterbychunk(epivol,'zscore',[],1);
             filterbychunk(designvol,'zscore',[],1);
         end
@@ -69,7 +93,7 @@ switch task
             designvol = designvol(:,coninds);
             % project out bad cons
             if ~isempty(ignoreinds)
-                fprintf('projecting out %d covariates\n',...
+                logstr('projecting out %d covariates\n',...
                     size(covariates,2));
                 for c = 1:epivol.desc.samples.nunique.chunks
                     chunkind = epivol.meta.samples.chunks == ...
@@ -88,7 +112,7 @@ switch task
 
         % now set class last - so maximal precision for pre-processing
         if ~isempty(ts.setclass)
-            fprintf('setting data to %s\n',ts.setclass);
+            logstr('setting data to %s\n',ts.setclass);
             epivol.data = feval(ts.setclass,epivol.data);
             designvol.data = feval(ts.setclass,designvol.data);
         end
@@ -97,12 +121,12 @@ switch task
             if ischar(ts.resortind)
                 ts.resortind = feval(ts.resortind,designvol.nfeatures);
             end
-            fprintf('resorting regressors in designvol.\n');
+            logstr('resorting regressors in designvol.\n');
             designvol = designvol(:,ts.resortind);
         end
 
         % output
-        fprintf('saving...\n');
+        logstr('saving...\n');
         pidir = fullfile(aas_getsubjpath(aap,subj),'pilab');
         out = fullfile(pidir,'epivol.mat');
         save(out,'epivol','-v7.3');
