@@ -68,21 +68,21 @@ parfor d = 1:disvol.nsamples
     filenames{d} = fullfile(outdir,sprintf('dissimilarity_%04d.nii',d));
     datavec2nifti(datamat(d,:),mask,filenames{d},V);
 end
-fprintf('finished in %s\n',seconds2str(toc));
 
+maskind = find(normmask);
+nfeat = numel(maskind);
+featind = 1:nfeat;
+% no preallocation of datavecs because it's parfor
 VI = spm_vol(char(filenames));
 % normalise in memory (spm_write_sn doesn't return all headers unless you
 % wrap it in a loop like this)
-fprintf('normalising dissimilarities...');
-tic;
+fprintf('\nnormalising dissimilarities...');
 parfor v = 1:length(VI)
     VO(v) = spm_write_sn(VI(v),segpath);
+    datavecs(v,featind) = VO(v).dat(maskind);
 end
 fprintf('finished in %s\n',seconds2str(toc));
-% VO = arrayfun(@(v)spm_write_sn(v,segpath),VI);
-% extract data in 4D matrix form
-dat = {VO.dat};
-dat = cat(4,dat{:});
+
 % make new instance with header (minus the data)
-normdisvol = MriVolume(dat,normmask,'header',rmfield(VO(1),'dat'));
+normdisvol = SPMVolume(datavecs,normmask,'header',rmfield(VO(1),'dat'));
 assert(~any(isnan(normdisvol.data(:))),'nans in normalised disvol');
