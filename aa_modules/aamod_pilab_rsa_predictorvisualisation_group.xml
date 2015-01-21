@@ -13,12 +13,15 @@
             <!-- for plotrdms_batch -->
             <nrows>2</nrows>
             <cmap></cmap>
+            <rowind></rowind>
+            <colind></colind>
             <gridlines></gridlines>
             <gridcolor></gridcolor>
             <ranktransform>1</ranktransform>
 
             <!-- for here -->
             <pluginpath></pluginpath>
+            <runstandardplots>1</runstandardplots>
 
             <inputstreams>
                 <stream>pilab_rsapredictors</stream>

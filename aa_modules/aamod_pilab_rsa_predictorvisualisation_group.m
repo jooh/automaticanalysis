@@ -22,15 +22,19 @@ switch task
         ptest = cellfun(@numel,predictors,'uniformoutput',false);
         assert(isequal(npredict,ptest{:}),...
             'different n predictors across subjects');
+        meanpredictors = predictors{1};
         for p = 1:npredict
-            meanpredictors(p).name = predictors{1}(p).name;
             ntest = cellfun(@(thisp)thisp(p).name,predictors,...
                 'uniformoutput',false);
             assert(isequal(meanpredictors(p).name,ntest{:}),...
                 'badly sorted predictors');
             rdms = cellfun(@(thisp)thisp(p).RDM,predictors,...
                 'uniformoutput',false);
-            meanpredictors(p).RDM = matmean(rdms{:});
+            if isstruct(rdms{1})
+                meanpredictors(p).RDM = rdms{1};
+            else
+                meanpredictors(p).RDM = matmean(rdms{:});
+            end
         end
 
         % get stimuli (NB, we use subject 1's stimuli as an example)
@@ -52,10 +56,27 @@ switch task
             end
         end
 
-        plotrdms_batch('data',meanpredictors,'labels',stimuli,...
-            'figdir',figdir,...
-            'cmap',ts.cmap,'nrows',ts.nrows,'gridlines',ts.gridlines,...
-            'gridcolor',ts.gridcolor,'ranktransform',ts.ranktransform);
+        if ts.runstandardplots
+            rowlabels = stimuli;
+            collabels = stimuli;
+            if ~isempty(ts.rowind)
+                if ischar(ts.rowind)
+                    ts.rowind = eval(ts.rowind);
+                end
+                rowlabels = stimuli(ts.rowind);
+            end
+            if ~isempty(ts.colind)
+                if ischar(ts.colind)
+                    ts.colind = eval(ts.colind);
+                end
+                collabels = stimuli(ts.colind);
+            end
+
+            plotrdms_batch('data',meanpredictors,'ylabels',rowlabels,...
+                'xlabels',collabels,'figdir',figdir,...
+                'cmap',ts.cmap,'nrows',ts.nrows,'gridlines',ts.gridlines,...
+                'gridcolor',ts.gridcolor,'ranktransform',ts.ranktransform);
+        end
 
     case 'checkrequirements'
         
