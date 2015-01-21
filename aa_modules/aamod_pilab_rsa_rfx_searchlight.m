@@ -18,12 +18,14 @@ switch task
         V = spm_vol(maskpath);
         mask = spm_read_vols(V) > 0;
 
-        % need to convert searchlight niftis to subres format
         parfor s = 1:nsub
-            niftis = aas_getfiles_bystream(aap,s,'pilab_rsa_r');
-            subres(s) = nifti2roidata(niftis,mask,'r',ts.setclass);
+            subres(s) = loadbetter(aas_getfiles_bystream(aap,s,...
+                'pilab_rsa_r'));
+            nullres{s} = loadbetter(aas_getfiles_bystream(aap,s,...
+                'pilab_rsa_nulldist'));
+            bootres{s} = loadbetter(aas_getfiles_bystream(aap,s,...
+                'pilab_rsa_bootdist'));
         end
-
         names = {aap.acq_details.subjects.mriname};
         [subres.name] = names{:};
 
@@ -40,7 +42,9 @@ switch task
             ts.nperm,'nboot',ts.nboot,...
             'targetfield','r','transfun',ts.transfun,...
             'assumeregister',true,'varsmoothmask',varsmoothmask,...
-            'varsmoothfwhm',ts.varsmoothfwhm,'contrasts',ts.contrasts);
+            'varsmoothfwhm',ts.varsmoothfwhm,'contrasts',ts.contrasts,...
+            'customfits',ts.customfits,'subnull',nullres,'subboot',...
+            bootres);
         fprintf('finished in %s.\n',seconds2str(toc));
 
         % save mats
@@ -48,7 +52,7 @@ switch task
 
         % save and describe
         % need to dump out each r and p as a nifti
-        % probably easiest to first make an MriVolume instance and then use
+        % probably easiest to first make an SPMVolume instance and then use
         % its methods
         ncon = length(meanres.rows_contrast);
         rpaths = cell(ncon,1);
@@ -75,7 +79,7 @@ switch task
                 datadumper(meanres.pseudot(con,:),pseudotpath);
             end
 
-            if strcmp(meanres.ptails{con},'both')
+            if strcmp(meanres.tail{con},'both')
                 % need to write out three maps for each result - all p, or
                 % each side
                 thismap = mapstowrite;

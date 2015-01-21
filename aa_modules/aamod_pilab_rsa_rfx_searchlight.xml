@@ -15,9 +15,12 @@
             <varsmoothfwhm></varsmoothfwhm>
             <setclass></setclass>
             <contrasts></contrasts>
+            <customfits></customfits>
             
             <inputstreams>
                 <stream>pilab_rsa_r</stream>
+                <stream>pilab_rsa_nulldist</stream>
+                <stream>pilab_rsa_bootdist</stream>
                 <stream>pilab_mask_group</stream>
             </inputstreams>
             <outputstreams>
