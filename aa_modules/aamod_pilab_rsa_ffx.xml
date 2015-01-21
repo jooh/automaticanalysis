@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='fixed effects group representational similarity analysis' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <!-- arguments for roidata_rsa -->
+            <rsaclass></rsaclass>
+            <rsaclassargs>
+                <item></item>
+            </rsaclassargs>
+            <splitrsaclass></splitrsaclass>
+            <splitrsaclassargs>
+                <item></item>
+            </splitrsaclassargs>
+            <nperm>1</nperm>
+            <nboot>0</nboot>
+            <fitmethod></fitmethod>
+            <fitmethodargs><item></item></fitmethodargs>
+            <customfun></customfun>
+            <contrasts></contrasts>
+            <customfits></customfits>
+            <bootmeth></bootmeth>
+            <bootprep></bootprep>
+
+            <!-- arguments used here -->
+            <input>mean</input>
+            <predictorfun></predictorfun>
+            <outputmode></outputmode>
+            <fitmethodpredictors></fitmethodpredictors>
+            <partialpredictors></partialpredictors>
+            <selectpredictorinds></selectpredictorinds>
+            <removepredictorinds></removepredictorinds>
+            
+            <inputstreams>
+                <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_rsapredictors</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_rsa_r_ffx</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>
