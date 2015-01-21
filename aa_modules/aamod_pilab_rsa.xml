@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aap>
     <tasklist>
-        <currenttask domain='subject' desc='permutation test for data-predictor RDM comparison' modality='MRI'>
+        <currenttask domain='subject' desc='representational similarity analysis' modality='MRI'>
             
             <qsub>
                 <timeBase>0.5</timeBase>
@@ -15,7 +15,7 @@
             <rsaclassargs>
                 <item></item>
             </rsaclassargs>
-            <splitrsaclass></splitrsaclass>
+            Pearson<splitrsaclass></splitrsaclass>
             <splitrsaclassargs>
                 <item></item>
             </splitrsaclassargs>
@@ -24,6 +24,10 @@
             <fitmethod></fitmethod>
             <fitmethodargs><item></item></fitmethodargs>
             <customfun></customfun>
+            <bootmeth></bootmeth>
+            <bootprep></bootprep>
+            <customfits></customfits>
+            <contrasts></contrasts>
 
             <!-- arguments used here -->
             <input>mean</input>
@@ -33,13 +37,13 @@
             <partialpredictors></partialpredictors>
             <selectpredictorinds></selectpredictorinds>
             <removepredictorinds></removepredictorinds>
-            <!-- gets feval'ed on data and model. Useful for e.g. dropping
-                 precision to single. One could also imagine using gpuArray
-                 here. -->
+            <permtype>rsa</permtype>
             
             <inputstreams>
                 <stream>pilab_data_rdms_mean</stream>
                 <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_data_rdms_nulldist</stream>
+                <stream>pilab_data_rdms_sessnulldist</stream>
                 <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>
