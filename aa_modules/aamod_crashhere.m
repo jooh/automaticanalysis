@@ -1,6 +1,6 @@
 % dummy module to stop processing at a given stage
 
-function [aap,resp]=aamod_crashhere(aap,task)
+function [aap,resp]=aamod_crashhere(aap,task,subj)
 
 resp='';
 
