@@ -124,7 +124,7 @@ switch task
                 % save result as mat
                 outpath_r = fullfile(pidir,'rsa_r_ffx.mat');
                 save(outpath_r,'res');
-                aap=aas_desc_outputs(aap,'pilab_rsa_r_ffx',...
+                aap=aas_desc_outputs(aap,'pilab_res_ffx',...
                     outpath_r);
 
             case 'searchlight'
@@ -149,7 +149,7 @@ switch task
                         disvol{1}.data2file(-log10(pfwe),pfwepath);
                     end
                 end
-                aap=aas_desc_outputs(aap,'pilab_rsa_r_ffx',rpaths);
+                aap=aas_desc_outputs(aap,'pilab_res_ffx',rpaths);
             otherwise
                 error('unknown outputmode: %s',ts.outputmode);
         end

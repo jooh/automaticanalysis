@@ -22,7 +22,7 @@
             <pthresh>.05</pthresh>
             
             <inputstreams>
-                <stream>pilab_rsa_r</stream>
+                <stream>pilab_result</stream>
             </inputstreams>
             <outputstreams>
             </outputstreams>

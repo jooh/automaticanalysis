@@ -44,7 +44,7 @@
                 <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>
-                <stream>pilab_rsa_r_ffx</stream>
+                <stream>pilab_res_ffx</stream>
             </outputstreams>
             
         </currenttask>

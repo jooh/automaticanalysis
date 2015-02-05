@@ -9,7 +9,7 @@ switch task
     case 'doit'
         % get the results
         res = loadbetter(aas_getfiles_bystream(aap,subj,...
-            'pilab_rsa_r'));
+            'pilab_result'));
 
         ts = aap.tasklist.currenttask.settings;
         % prepare output

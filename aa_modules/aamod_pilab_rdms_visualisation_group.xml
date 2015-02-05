@@ -26,8 +26,8 @@
             <runstandardplots>1</runstandardplots>
 
             <inputstreams>
-                <stream>pilab_rdms_group</stream>
-                <stream>pilab_rdms_rfx</stream>
+                <stream>pilab_result_group</stream>
+                <stream>pilab_result_rfx</stream>
                 <stream>pilab_stimuli</stream>
             </inputstreams>
             <outputstreams>

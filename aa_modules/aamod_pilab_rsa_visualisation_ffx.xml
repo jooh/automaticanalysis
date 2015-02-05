@@ -23,7 +23,7 @@
             <pthresh>.05</pthresh>
             
             <inputstreams>
-                <stream>pilab_rsa_r_ffx</stream>
+                <stream>pilab_res_ffx</stream>
                 <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>

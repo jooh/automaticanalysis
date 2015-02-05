@@ -21,11 +21,13 @@
             <mlabel>mean</mlabel>
             <errlabel>\pm1 standard error</errlabel>
             <pthresh>.05</pthresh>
+            <groupmtarget>r</groupmtarget>
+            <groupptarget>pperm</groupptarget>
             <extracongroups><item></item></extracongroups>
             
             <inputstreams>
-                <stream>pilab_rsa_r_rfx</stream>
-                <stream>pilab_rsa_r_group</stream>
+                <stream>pilab_result_rfx</stream>
+                <stream>pilab_result_group</stream>
                 <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>

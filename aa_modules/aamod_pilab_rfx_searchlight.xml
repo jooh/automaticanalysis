@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='rfx group analysis of rsa searchlight results' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <nperm>1</nperm>
+            <nboot>0</nboot>
+            <transfun></transfun>
+            <varsmoothfwhm></varsmoothfwhm>
+            <setclass></setclass>
+            <contrasts></contrasts>
+            <customfits></customfits>
+            
+            <inputstreams>
+                <stream>pilab_result</stream>
+                <stream>pilab_result_nulldist</stream>
+                <stream>pilab_result_bootdist</stream>
+                <stream>pilab_mask_group</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_result_rfx</stream>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>

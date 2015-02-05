@@ -8,9 +8,9 @@ resp='';
 switch task
     case 'doit'
         % get the results
-        meanres = loadbetter(aas_getfiles_bystream(aap,'pilab_rsa_r_rfx'));
+        meanres = loadbetter(aas_getfiles_bystream(aap,'pilab_result_rfx'));
         groupres = loadbetter(aas_getfiles_bystream(aap,...
-            'pilab_rsa_r_group'));
+            'pilab_result_group'));
         ts = aap.tasklist.currenttask.settings;
 
         % get RDMs
@@ -47,7 +47,9 @@ switch task
             'mtarget',ts.mtarget,...
             'errtarget',ts.errtarget,'ptarget',ts.ptarget,...
             'mlabel',ts.mlabel,'errlabel',ts.errlabel,...
-            'pthresh',ts.pthresh,'extracongroups',ts.extracongroups};
+            'pthresh',ts.pthresh,'extracongroups',ts.extracongroups,...
+            'groupmtarget',ts.groupmtarget,'groupptarget',...
+            ts.groupptarget};
         if ~isempty(ts.pluginpath)
             % call on mean
             feval(ts.pluginpath,arglist{:});

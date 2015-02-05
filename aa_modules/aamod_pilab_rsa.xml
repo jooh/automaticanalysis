@@ -47,9 +47,9 @@
                 <stream>pilab_rsapredictors</stream>
             </inputstreams>
             <outputstreams>
-                <stream>pilab_rsa_r</stream>
-                <stream>pilab_rsa_nulldist</stream>
-                <stream>pilab_rsa_bootdist</stream>
+                <stream>pilab_result</stream>
+                <stream>pilab_result_nulldist</stream>
+                <stream>pilab_result_bootdist</stream>
             </outputstreams>
             
         </currenttask>

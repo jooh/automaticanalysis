@@ -8,7 +8,7 @@ resp='';
 switch task
     case 'doit'
         % get the results
-        meanres = loadbetter(aas_getfiles_bystream(aap,'pilab_rsa_r_ffx'));
+        meanres = loadbetter(aas_getfiles_bystream(aap,'pilab_res_ffx'));
         ts = aap.tasklist.currenttask.settings;
         nsub = length(aap.acq_details.subjects);
 

@@ -7,7 +7,7 @@ resp='';
 switch task
     case 'doit'
         % get RDMs
-        meanres = loadbetter(aas_getfiles_bystream(aap,'pilab_rdms_rfx'));
+        meanres = loadbetter(aas_getfiles_bystream(aap,'pilab_result_rfx'));
         % get stimuli (NB, we use subject 1's stimuli as an example)
         spath = aas_getfiles_bystream(aap,1,'pilab_stimuli');
         stimuli = loadbetter(spath);
@@ -27,7 +27,7 @@ switch task
             collabels = stimuli(ts.colind);
         end
 
-        groupres = loadbetter(aas_getfiles_bystream(aap,'pilab_rdms_group'));
+        groupres = loadbetter(aas_getfiles_bystream(aap,'pilab_result_group'));
         
         % prepare output dirs
         pidir = fullfile(aas_getstudypath(aap),'pilab');
@@ -56,7 +56,7 @@ switch task
                 'gridcolor',ts.gridcolor,'ranktransform',ts.ranktransform);
 
             for roi = 1:numel(meanres.cols_roi)
-                roidata = squeeze(groupres.t(:,roi,:));
+                roidata = squeeze(groupres.d(:,roi,:));
                 if ts.ranktransform==1
                     roidata = ranktrans(roidata);
                 end
