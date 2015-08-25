@@ -13,6 +13,7 @@
             <nboot>0</nboot>
             <transfun></transfun>
             <varsmoothfwhm></varsmoothfwhm>
+            <targetfield>r</targetfield>
             <setclass></setclass>
             <contrasts></contrasts>
             <customfits></customfits>
