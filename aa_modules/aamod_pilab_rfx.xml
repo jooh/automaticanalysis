@@ -17,11 +17,10 @@
             <customfits></customfits>
             <minn></minn>
             <keepnans>0</keepnans>
+            <multpdim>roi</multpdim>
             
             <inputstreams>
                 <stream>pilab_result</stream>
-                <stream>pilab_result_nulldist</stream>
-                <stream>pilab_result_bootdist</stream>
             </inputstreams>
             <outputstreams>
                 <stream>pilab_result_rfx</stream>
