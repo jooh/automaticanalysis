@@ -22,7 +22,8 @@
             <!-- for here -->
             <maxn>200</maxn>
             <pluginpath></pluginpath>
-            <target>mean</target>
+            <mtarget>mean</mtarget>
+            <groupmtarget>d</groupmtarget>
             <runstandardplots>1</runstandardplots>
 
             <inputstreams>
