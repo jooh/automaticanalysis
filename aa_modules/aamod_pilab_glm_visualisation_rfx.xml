@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='study' desc='visualise GLM RFX result' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <!-- path to custom plot function in addition to plot_lindisc
+                 -->
+            <pluginpath></pluginpath>
+            <runstandardplots>1</runstandardplots>
+
+            <!-- arguments for plot_lindisc -->
+            <mtarget>mean</mtarget>
+            <errtarget>sterr</errtarget>
+            <ptarget>ppara</ptarget>
+            <mlabel>mean</mlabel>
+            <errlabel>\pm1 standard error</errlabel>
+            <pthresh>.05</pthresh>
+            <groupmtarget>b</groupmtarget>
+            <groupptarget>pperm</groupptarget>
+            <extracongroups><item></item></extracongroups>
+            
+            <inputstreams>
+                <stream>pilab_result_rfx</stream>
+                <stream>pilab_result_group</stream>
+            </inputstreams>
+            <outputstreams>
+            </outputstreams>
+            
+        </currenttask>
+    </tasklist>
+</aap>

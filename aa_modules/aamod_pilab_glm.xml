@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='Single subject fitted univariate responses' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <glmclass>GLM</glmclass>
+            <glmclassargs>
+                <item></item>
+            </glmclassargs>
+            <nperm>1</nperm>
+            <nboot>0</nboot>
+            <customfun></customfun>
+            <customfits></customfits>
+            <contrasts></contrasts>
+            <outputmode></outputmode>
+            <bootmeth>bootstrapruns</bootmeth>
+            <bootprep>preparerunboots</bootprep>
+            <permmeth>permuteruns</permmeth>
+            <permprep>preparerunperms</permprep>
+
+            <inputstreams>
+                <stream>pilab_epi</stream>
+                <stream>pilab_design</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_result</stream>
+                <stream>pilab_result_nulldist</stream>
+                <stream>pilab_result_bootdist</stream>
+            </outputstreams>
+        </currenttask>
+    </tasklist>
+</aap>
