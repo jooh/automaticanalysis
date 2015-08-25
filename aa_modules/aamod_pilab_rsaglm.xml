@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aap>
+    <tasklist>
+        <currenttask domain='subject' desc='Single subject RSA GLM' modality='MRI'>
+            
+            <qsub>
+                <timeBase>0.5</timeBase>
+                <memoryBase>0.3</memoryBase>
+            </qsub>
+            <permanenceofoutput>3</permanenceofoutput>
+
+            <rsaclass>MultiRSA</rsaclass>
+            <rsaclassargs>
+                <item></item>
+            </rsaclassargs>
+            <nperm>1</nperm>
+            <nboot>0</nboot>
+            <bootmeth>bootstrapsamples</bootmeth>
+            <bootprep>preparesampleboots</bootprep>
+            <permmeth>permutesamples</permmeth>
+            <permprep>preparesampleperms</permprep>
+            <customfun></customfun>
+            <customfits></customfits>
+            <contrasts></contrasts>
+            <predictorfun></predictorfun>
+            <outputmode></outputmode>
+            <selectpredictorinds></selectpredictorinds>
+            <removepredictorinds></removepredictorinds>
+            <permtype>rsa</permtype>
+            <input>mean</input>
+
+            <inputstreams>
+                <stream>pilab_data_rdms_mean</stream>
+                <stream>pilab_data_rdms_sess</stream>
+                <stream>pilab_data_rdms_nulldist</stream>
+                <stream>pilab_data_rdms_sessnulldist</stream>
+                <stream>pilab_rsapredictors</stream>
+            </inputstreams>
+            <outputstreams>
+                <stream>pilab_result</stream>
+                <stream>pilab_result_nulldist</stream>
+                <stream>pilab_result_bootdist</stream>
+            </outputstreams>
+        </currenttask>
+    </tasklist>
+</aap>
