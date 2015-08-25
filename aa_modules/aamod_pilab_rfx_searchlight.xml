@@ -11,16 +11,14 @@
 
             <nperm>1</nperm>
             <nboot>0</nboot>
+            <targetfield>r</targetfield>
             <transfun></transfun>
             <varsmoothfwhm></varsmoothfwhm>
-            <setclass></setclass>
             <contrasts></contrasts>
             <customfits></customfits>
             
             <inputstreams>
                 <stream>pilab_result</stream>
-                <stream>pilab_result_nulldist</stream>
-                <stream>pilab_result_bootdist</stream>
                 <stream>pilab_mask_group</stream>
             </inputstreams>
             <outputstreams>
