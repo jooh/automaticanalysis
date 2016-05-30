@@ -18,7 +18,10 @@
             <sgdetrend>0</sgdetrend>
             <sgolayK></sgolayK>
             <sgolayF></sgolayF>
+
+            <!-- scaling -->
             <zscore>0</zscore>
+            <percentsignal>0</percentsignal>
 
             <!-- other covariate removal -->
             <targetlabels></targetlabels>
