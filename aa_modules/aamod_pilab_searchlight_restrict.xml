@@ -7,7 +7,7 @@
                 <memoryBase>5</memoryBase>
             </qsub>
             
-            <permanenceofoutput>2</permanenceofoutput>
+            <permanenceofoutput>3</permanenceofoutput>
             
             <minvox>10</minvox>
             <maxvox>Inf</maxvox>

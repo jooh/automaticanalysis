@@ -25,12 +25,13 @@ switch task
         [subres.name] = names{:};
 
         fprintf('running roidata_rfx with %d subjects \n',nsub);
-        tic;
-        [meanres,groupres] = roidata_rfx(subres,'nperm',ts.nperm,...
+        args = {'nperm',ts.nperm,...
             'nboot',ts.nboot,'targetfield',ts.targetfield,...
             'transfun',ts.transfun,'contrasts',ts.contrasts,...
             'minn',ts.minn,'customfits',ts.customfits,'subnull',nullres,...
-            'subboot',bootres);
+            'subboot',bootres};
+        tic;
+        [meanres,groupres] = roidata_rfx(subres,args{:});
         fprintf('finished in %s.\n',seconds2str(toc));
 
         % save and describe

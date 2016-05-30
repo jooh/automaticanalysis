@@ -51,7 +51,6 @@ switch task
             'groupmtarget',ts.groupmtarget,'groupptarget',...
             ts.groupptarget};
         if ~isempty(ts.pluginpath)
-            % call on mean
             feval(ts.pluginpath,arglist{:});
         end
 

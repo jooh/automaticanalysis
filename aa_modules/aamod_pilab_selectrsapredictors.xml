@@ -6,7 +6,7 @@
                 <timeBase>1</timeBase>
                 <memoryBase>1</memoryBase>
             </qsub>
-            <permanenceofoutput>1</permanenceofoutput>
+            <permanenceofoutput>3</permanenceofoutput>
 
             <predictorfun></predictorfun>
             <inputstreams>
