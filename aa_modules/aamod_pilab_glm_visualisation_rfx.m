@@ -12,25 +12,21 @@ switch task
         groupres = loadbetter(aas_getfiles_bystream(aap,...
             'pilab_result_group'));
         ts = aap.tasklist.currenttask.settings;
+        arglist = structfields2varargs(ts.roidataargs);
 
         % prepare output
         pidir = fullfile(aas_getstudypath(aap),'pilab');
         figdir = fullfile(pidir,'figures');
 
-        arglist = {figdir,meanres,groupres,[],...
-            'mtarget',ts.mtarget,...
-            'errtarget',ts.errtarget,'ptarget',ts.ptarget,...
-            'mlabel',ts.mlabel,'errlabel',ts.errlabel,...
-            'pthresh',ts.pthresh,'extracongroups',ts.extracongroups,...
-            'groupmtarget',ts.groupmtarget,'groupptarget',...
-            ts.groupptarget};
         if ~isempty(ts.pluginpath)
-            feval(ts.pluginpath,arglist{:});
+            feval(ts.pluginpath,meanres,groupres,arglist{:});
         end
 
         % standard plots
         if ts.runstandardplots
-            plot_roidata(arglist{:});
+            handles = roidata2figure(meanres,groupres,arglist{:});
+            printbyname([handles.figure],figdir);
+            close([handles.figure]);
         end
 
     case 'checkrequirements'

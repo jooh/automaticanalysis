@@ -9,22 +9,42 @@
             </qsub>
             <permanenceofoutput>3</permanenceofoutput>
 
-            <!-- path to custom plot function in addition to plot_lindisc
-                 -->
+            <!-- path to custom plot function -->
             <pluginpath></pluginpath>
             <runstandardplots>1</runstandardplots>
 
-            <!-- arguments for plot_lindisc -->
-            <mtarget>mean</mtarget>
-            <errtarget>sterr</errtarget>
-            <ptarget>ppara</ptarget>
-            <mlabel>mean</mlabel>
-            <errlabel>\pm1 standard error</errlabel>
-            <pthresh>.05</pthresh>
-            <groupmtarget>b</groupmtarget>
-            <groupptarget>pperm</groupptarget>
-            <extracongroups><item></item></extracongroups>
-            
+            <!-- arguments for roidata2figure -->
+            <roidataargs>
+                <roiind></roiind>
+                <conind>nocontrasts</conind>
+                <restarget>mean</restarget>
+                <grouptarget></grouptarget>
+                <errtarget>sterr</errtarget>
+                <axisscale></axisscale>
+                <xscalefactor></xscalefactor>
+                <barwidth></barwidth>
+                <fsize></fsize>
+                <facecolor></facecolor>
+                <edgecolor></edgecolor>
+                <groupmarkerstyle></groupmarkerstyle>
+                <groupmarkersize></groupmarkersize>
+                <groupfacecolor></groupfacecolor>
+                <groupedgecolor></groupedgecolor>
+                <noiseind></noiseind>
+                <noisecolor></noisecolor>
+                <precision></precision>
+                <specialval></specialval>
+                <specialtick></specialtick>
+                <docontrasts></docontrasts>
+                <dozerotest></dozerotest>
+                <xticklabels></xticklabels>
+                <ptarget></ptarget>
+                <baseline></baseline>
+                <ylab><item>mean</item><item>\pm1 standard error</item></ylab>
+                <padding></padding>
+                <removeunderscore></removeunderscore>
+            </roidataargs>
+
             <inputstreams>
                 <stream>pilab_result_rfx</stream>
                 <stream>pilab_result_group</stream>
