@@ -26,7 +26,7 @@ switch task
 
         ts = aap.tasklist.currenttask.settings;
         [epivol,designvol] = spm2vol(spmpath,'mask',mpath,...
-            'ignorelabels',ts.ignorelabels);
+            'ignorelabels',ts.ignorelabels,'blockmode',ts.blockmode);
 
         if aap.tasklist.currenttask.settings.maskbybright
             % replicate GLMdenoise EPI intensity mask

@@ -13,6 +13,7 @@
             <maskbybright>0</maskbybright>
             <brainthresh>99 .5</brainthresh>
             <ignorelabels></ignorelabels>
+            <blockmode>0</blockmode>
 
             <inputstreams>
                 <stream>pilab_mask</stream>
