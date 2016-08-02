@@ -31,6 +31,9 @@ switch task
             names = arrayfun(@(x)sprintf('poly%02d',x),1:deg,...
                 'uniformoutput',false);
             % add to SPM
+            if ~isfield(SPM.Sess,'C')
+                [SPM.Sess.C] = deal(struct('C',[],'name',{{}}));
+            end
             SPM.Sess(sess).C.C    = [SPM.Sess(sess).C.C ...
                 tm];
             SPM.Sess(sess).C.name = [...
