@@ -70,7 +70,7 @@ switch task
                         disvols{1}.data2mat(rdmrep{m}),ts.ylims,...
                         'mean spearman rho');
                     title('RDM reproducibility');
-                    printstandard(stripext(roiout{m}));
+                    printstandard(stripextension(roiout{m}));
                     close(F);
                 end
             case 'roi'
