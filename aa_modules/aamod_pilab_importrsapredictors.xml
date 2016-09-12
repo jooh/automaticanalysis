@@ -6,12 +6,13 @@
                 <timeBase>1</timeBase>
                 <memoryBase>1</memoryBase>
             </qsub>
-            <permanenceofoutput>3</permanenceofoutput>
+            <permanenceofoutput>1</permanenceofoutput>
 
             <predictorfun></predictorfun>
             <nrows>3</nrows>
             <resortind></resortind>
             <inputstreams>
+                <stream>pilab_stimuli</stream>
             </inputstreams>
             
             <outputstreams>
