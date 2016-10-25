@@ -19,7 +19,7 @@ switch task
         figdir = fullfile(pidir,'figures');
 
         if ~isempty(ts.pluginpath)
-            feval(ts.pluginpath,meanres,groupres,arglist{:});
+            feval(ts.pluginpath,figdir,meanres,groupres,arglist{:});
         end
 
         % standard plots

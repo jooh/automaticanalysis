@@ -45,7 +45,7 @@ switch task
 
         arglist = structfields2varargs(ts.roidataargs);
         if ~isempty(ts.pluginpath)
-            feval(ts.pluginpath,meanres,groupres,meanpredictors,arglist{:});
+            feval(ts.pluginpath,figdir,meanres,groupres,meanpredictors,arglist{:});
         end
 
         % standard plots
