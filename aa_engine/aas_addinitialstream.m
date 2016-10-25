@@ -93,7 +93,7 @@ else
 end;
 
 % [AVG!]
-if strcmp(domain, 'session') && varargin{1} == 1
+if strcmp(domain, 'session') && isnumeric(varargin{1}) && varargin{1} == 1
     if isempty(aap.tasklist.main.module(1).extraparameters)
         aap.tasklist.main.module(1).extraparameters.aap.acq_details.selected_sessions = ...
             sessnum;
